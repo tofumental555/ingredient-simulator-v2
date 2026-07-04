@@ -1615,7 +1615,7 @@
   {
     "name": "ドンカラス",
     "no": 430,
-    "helpTime": 2700,
+    "helpTime": 3200,
     "ingredientFindRate": 14.3,
     "skillRate": 6.7,
     "skillType": "食材セレクトS",
