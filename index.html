@@ -7,7 +7,7 @@
   <!-- Google AdSense -->
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>チーム食材シミュレーター｜ポケモンスリープ攻略ツール</title>
+  <title>食材ポケモン厳選基準シミュレーター｜ポケモンスリープ攻略</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Nunito:wght@600;700;800&display=swap');
 
@@ -328,52 +328,15 @@
 <div class="pks-wrap">
 
   <div class="pks-eyebrow">POKEMON SLEEP TOOLS</div>
-  <h1>チーム食材シミュレーター</h1>
-  <p class="pks-sub">チーム5体の編成を決めて、21食分の食材が集まるか計算します。</p>
-
-  <!-- 注意書き -->
-  <div style="
-    background: rgba(169,142,232,0.08);
-    border: 1px solid rgba(169,142,232,0.3);
-    border-radius: 14px;
-    padding: 14px 16px;
-    margin-bottom: 20px;
-    font-size: 12px;
-    color: var(--pks-text-dim);
-    line-height: 1.85;
-  ">
-    <div style="font-size:12.5px;font-weight:800;color:var(--pks-star-soft);margin-bottom:8px;">📋 計算前提・注意事項</div>
-    <div>
-      <b style="color:var(--pks-text);">【計算前提】</b><br>
-      ・ 元気は常に <b style="color:var(--pks-green);">81%以上</b> を維持している想定です<br>
-      ・ <b style="color:var(--pks-green);">毎分タップ</b>（ログイン頻度高）を前提としています<br>
-      ・ 食材の所持数はあふれていない前提です<br>
-      ・ 24時間・7日間フル稼働での計算です<br>
-    </div>
-    <div style="margin-top:8px;">
-      <b style="color:var(--pks-text);">【お手伝いスピードボーナスについて】</b><br>
-      ・ <b>おてスピM(+14%)・おてスピS(+7%)</b> は持つポケモン<b>本人のみ</b>に適用<br>
-      ・ <b>おてぼ(+5%)</b> はチームに<b>編成されている間</b>、全員のスピードを上昇<br>
-      ・ 各ポケモンへの適用ボーナス = 自分のおてスピM/S + チームのおてぼ合計<br>
-      ・ この合算が <b style="color:var(--pks-star);">35%を超えたら35%</b> に丸めます<br>
-      ・ 例：おてぼ3体編成中(+15%) + 自分がおてスピM+S(+21%) = 36% → <b>35%</b><br>
-      ・ 食材ポケモンは交代運用のため、おてぼは枠数÷登録体数で按分計算します<br>
-    </div>
-    <div style="margin-top:8px;">
-      <b style="color:var(--pks-text);">【その他】</b><br>
-      ・ 食材確率はポケモンの基礎値×(1+食材確率M×36%+S×18%) で計算<br>
-      ・ いいキャンプチケット使用時はお手伝いスピード×1.2倍<br>
-      ・ 週頭在庫（前週の持ち越し食材）は料理登録画面で入力できます<br>
-      ・ 計算結果は目安です。実際のゲームと若干異なる場合があります
-    </div>
-    <div style="margin-top:8px;">
-      <b style="color:var(--pks-text);">【所持数あふれについて】</b><br>
-      ・ 1日＝起床15.5時間（毎分タップ・あふれなし）＋睡眠8.5時間<br>
-      ・ 睡眠中「毎分タップ」OFFの場合、所持数上限到達後は<br>
-      　食材を取れず<b style="color:var(--pks-star);">きのみ確率100%</b>になります（食材ロス）<br>
-      ・ 最大所持数アップS(+6)・M(+12)・L(+18) サブスキルに対応<br>
-      ・ 最大所持数データが未登録のポケモンはあふれ計算をスキップします
-    </div>
+  <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:16px;">
+    <a href="guide.html" style="font-family:'Zen Maru Gothic',sans-serif;font-size:12px;font-weight:900;padding:8px 16px;border-radius:10px;background:rgba(169,142,232,0.15);border:1.5px solid rgba(169,142,232,0.3);color:var(--pks-text);text-decoration:none;">📖 使用方法・開発目的</a>
+    <a href="https://www.tofumentalpapa.com" style="font-family:'Zen Maru Gothic',sans-serif;font-size:12px;font-weight:900;padding:8px 16px;border-radius:10px;background:rgba(169,142,232,0.15);border:1.5px solid rgba(169,142,232,0.3);color:var(--pks-text);text-decoration:none;">✏️ ブログへ</a>
+  </div>
+  <h1>食材ポケモン厳選基準シミュレーター</h1>
+  <p class="pks-sub">食材ポケモンの厳選基準を定量的に判断するシミュレーターです。</p>
+  <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:8px;">
+    <a href="guide.html" style="font-family:'Zen Maru Gothic',sans-serif;font-size:12px;font-weight:900;padding:8px 16px;border-radius:10px;background:rgba(169,142,232,0.15);border:1.5px solid rgba(169,142,232,0.3);color:var(--pks-text);text-decoration:none;">📖 使用方法・開発目的</a>
+    <a href="https://www.tofumentalpapa.com" style="font-family:'Zen Maru Gothic',sans-serif;font-size:12px;font-weight:900;padding:8px 16px;border-radius:10px;background:rgba(169,142,232,0.15);border:1.5px solid rgba(169,142,232,0.3);color:var(--pks-text);text-decoration:none;">✏️ ブログへ</a>
   </div>
 
   <div class="pks-steps">
@@ -404,15 +367,6 @@
             <button class="pks-counter-btn" onclick="changeComp('ing',-0.5)">−</button>
             <span class="pks-counter-val" id="compVal_ing">0</span>
             <button class="pks-counter-btn" onclick="changeComp('ing',0.5)">＋</button>
-          </div>
-        </div>
-        <div class="pks-comp-item">
-          <span class="pks-comp-emoji">🎯</span>
-          <div class="pks-comp-label">食材セレクト</div>
-          <div class="pks-counter">
-            <button class="pks-counter-btn" onclick="changeComp('selIng',-0.5)">−</button>
-            <span class="pks-counter-val" id="compVal_selIng">0</span>
-            <button class="pks-counter-btn" onclick="changeComp('selIng',0.5)">＋</button>
           </div>
         </div>
         <div class="pks-comp-item">
@@ -458,6 +412,57 @@
       </div>
     </div>
     <button class="pks-btn-primary" id="btnToStep1" disabled>次へ：ポケモンを登録する →</button>
+<!-- 注意書き -->
+  <div style="
+    background: rgba(169,142,232,0.08);
+    border: 1px solid rgba(169,142,232,0.3);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    font-size: 12px;
+    color: var(--pks-text-dim);
+    line-height: 1.85;
+  ">
+    <div style="font-size:12.5px;font-weight:800;color:var(--pks-star-soft);margin-bottom:8px;">📋 計算前提・注意事項</div>
+    <div>
+      <b style="color:var(--pks-text);">【計算前提】</b><br>
+      ・ 元気は常に <b style="color:var(--pks-green);">81%以上</b> を維持している想定です<br>
+      ・ <b style="color:var(--pks-green);">毎分タップ</b>（ログイン頻度高）を前提としています<br>
+      ・ 食材の所持数はあふれていない前提です<br>
+      ・ 24時間・7日間フル稼働での計算です<br>
+    </div>
+    <div style="margin-top:8px;">
+      <b style="color:var(--pks-text);">【お手伝いスピードボーナスについて】</b><br>
+      ・ <b>おてスピM(+14%)・おてスピS(+7%)</b> は持つポケモン<b>本人のみ</b>に適用<br>
+      ・ <b>おてぼ(+5%)</b> はチームに<b>編成されている間</b>、全員のスピードを上昇<br>
+      ・ 各ポケモンへの適用ボーナス = 自分のおてスピM/S + チームのおてぼ合計<br>
+      ・ この合算が <b style="color:var(--pks-star);">35%を超えたら35%</b> に丸めます<br>
+      ・ 例：おてぼ3体編成中(+15%) + 自分がおてスピM+S(+21%) = 36% → <b>35%</b><br>
+      ・ 食材ポケモンは交代運用のため、おてぼは枠数÷登録体数で按分計算します<br>
+    </div>
+    <div style="margin-top:8px;">
+      <b style="color:var(--pks-text);">【その他】</b><br>
+      ・ 食材確率はポケモンの基礎値×(1+食材確率M×36%+S×18%) で計算<br>
+      ・ いいキャンプチケット使用時はお手伝いスピード×1.2倍<br>
+      ・ 週頭在庫（前週の持ち越し食材）は料理登録画面で入力できます<br>
+      ・ 計算結果は目安です。実際のゲームと若干異なる場合があります
+    </div>
+    <div style="margin-top:8px;">
+      <b style="color:var(--pks-text);">【所持数あふれについて】</b><br>
+      ・ 1日＝起床15.5時間（毎分タップ・あふれなし）＋睡眠8.5時間<br>
+      ・ 睡眠中「毎分タップ」OFFの場合、所持数上限到達後は<br>
+      　食材を取れず<b style="color:var(--pks-star);">きのみ確率100%</b>になります（食材ロス）<br>
+      ・ 最大所持数アップS(+6)・M(+12)・L(+18) サブスキルに対応<br>
+      ・ 最大所持数データが未登録のポケモンはあふれ計算をスキップします
+    </div>
+    <div style="margin-top:8px;">
+      <b style="color:var(--pks-text);">【食材セレクトについて】</b><br>
+      ・ 食材セレクトポケモンのスキルレベルは<b style="color:var(--pks-star);">最大レベル前提</b>で試算しています<br>
+      ・ 睡眠中タップなしの場合、スキル発動は<br>
+      　きのみ・食材タイプ：<b>1日1回まで</b>、スキルタイプ：<b>1日2回まで</b>で計算<br>
+      ・ 食材セレクトは食材ポケモンと同じ枠で交代して運用します
+    </div>
+  </div>
 </div>
 
   <!-- ===== STEP 1: ポケモン登録 ===== -->
@@ -608,7 +613,6 @@ const SUB_LABELS  = ["Lv10","Lv25","Lv50","Lv70","Lv80"];
 const SLOT_CONFIG = [
   { key:"berry",  label:"きのみ",       emoji:"🍒", cls:"berry",  category:"きのみ" },
   { key:"ing",    label:"食材",         emoji:"🍳", cls:"ing",    category:"食材"   },
-  { key:"selIng", label:"食材セレクト", emoji:"🎯", cls:"seling", category:"selIng" },
   { key:"skill",  label:"スキル",       emoji:"⚡", cls:"skill",  category:"スキル" }
 ];
 
@@ -622,7 +626,7 @@ let recipeRows = [];
 let uid = 0;
 
 // 編成カウント
-const comp = { berry:0, ing:0, selIng:0, skill:0 };
+const comp = { berry:0, ing:0, skill:0 };
 
 // いいキャンプチケット
 let campTicket = false;
@@ -644,7 +648,7 @@ function toggleSleepTap() {
 let pokemonSlots = [];
 
 /* ===== DB読み込み ===== */
-const POKEMON_JSON_URL = "https://tofumental555.github.io/test/pokemon_data.json";
+const POKEMON_JSON_URL = "https://simulator.tofumentalpapa.com/pokemon_data.json";
 
 async function loadDB() {
   try {
@@ -674,7 +678,7 @@ function initEvents() {
   document.getElementById("btnToStep3").addEventListener("click", () => goStep(3));
   document.getElementById("btnBack2").addEventListener("click", () => goStep(2));
   document.getElementById("btnRestart").addEventListener("click", () => {
-    comp.berry = comp.ing = comp.selIng = comp.skill = 0;
+    comp.berry = comp.ing = comp.skill = 0;
     updateCompUI();
     recipeRows = [];
     document.getElementById("recipeList").innerHTML = "";
@@ -717,7 +721,7 @@ function changeComp(key, delta) {
 }
 
 function updateCompUI() {
-  const total = comp.berry + comp.ing + comp.selIng + comp.skill;
+  const total = comp.berry + comp.ing + comp.skill;
   SLOT_CONFIG.forEach(s => {
     const el = document.getElementById(`compVal_${s.key}`);
     if (el) {
@@ -753,12 +757,18 @@ function buildPokemonSlots(ingInitCount) {
     if (cfg.key === "ing" || cfg.key === "selIng") {
       // 食材/食材セレクトパネル：追加ボタンあり
       if (cfg.key === "ing") ingPanel = panel;
-      const panelId = cfg.key === "ing" ? "ingPanelInner" : "selIngPanelInner";
+      const panelId = "ingPanelInner"; // 食材・食材セレクト共通パネル
       const titleBar = document.createElement("div");
       titleBar.style.cssText = "display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;";
+      const addBtns = cfg.key === "ing"
+        ? `<div style="display:flex;gap:6px;">
+            <button class="pks-btn-add" style="width:auto;margin:0;padding:6px 12px;font-size:11px;" onclick="addIngPokemonCard(null,'ing')">＋ 食材</button>
+            <button class="pks-btn-add" style="width:auto;margin:0;padding:6px 12px;font-size:11px;color:#f4d03f;border-color:rgba(244,208,63,0.4);" onclick="addIngPokemonCard(null,'selIng')">🎯 セレクト</button>
+           </div>`
+        : `<button class="pks-btn-add" style="width:auto;margin:0;padding:6px 14px;font-size:12px;" onclick="addIngPokemonCard(null,'${cfg.key}')">＋ 追加</button>`;
       titleBar.innerHTML = `
-        <span class="pks-panel-title" style="margin-bottom:0" id="${cfg.key}PanelTitle">${cfg.emoji} ${cfg.label}ポケモン（枠${count}・登録${count}体）</span>
-        <button class="pks-btn-add" style="width:auto;margin:0;padding:6px 14px;font-size:12px;" onclick="addIngPokemonCard(null,'${cfg.key}')">＋ 追加</button>
+        <span class="pks-panel-title" style="margin-bottom:0" id="${cfg.key}PanelTitle">${cfg.emoji} ${cfg.label}ポケモン（枠${count}）</span>
+        ${addBtns}
       `;
       panel.appendChild(titleBar);
       panel.setAttribute("id", panelId);
@@ -855,12 +865,9 @@ function renumberIngCards() {
 
 function updateIngPanelTitle() {
   const ingCount = pokemonSlots.filter(s => s.slotType === "ing").length;
-  const el = document.getElementById("ingPanelTitle");
-  if (el) el.textContent = `🍳 食材ポケモン（枠${comp.ing}・登録${ingCount}体）`;
-
   const selIngCount = pokemonSlots.filter(s => s.slotType === "selIng").length;
-  const el2 = document.getElementById("selIngPanelTitle");
-  if (el2) el2.textContent = `🎯 食材セレクトポケモン（枠${comp.selIng}・登録${selIngCount}体）`;
+  const el = document.getElementById("ingPanelTitle");
+  if (el) el.textContent = `🍳 食材ポケモン（枠${comp.ing}・食材${ingCount}体・セレクト${selIngCount}体）`;
 }
 
 /* ===== ポケモンフォームHTML ===== */
@@ -1178,11 +1185,25 @@ function calcWeekly(entry, teamOtebonus = 0) {
 
   // ── 食材セレクトスキル計算 ──
   // スキル発動回数 = hpw × skillRate% / 100
-  // 1回の発動でskillIngCount個を均等按分で各食材に
+  // 睡眠中タップなしの場合:
+  //   きのみ・食材タイプ = 1日最大1回（7日で最大7回）
+  //   スキルタイプ      = 1日最大2回（7日で最大14回）
   const skillIngResult = {};
   if (pokemon.skillIngredients && pokemon.skillIngredients.length > 0
       && pokemon.skillIngCount > 0 && pokemon.skillRate > 0) {
-    const skillTriggers = hpw * (pokemon.skillRate / 100);
+
+    let skillTriggers;
+    if (sleepTap) {
+      // 毎分タップあり: 通常計算
+      skillTriggers = hpw * (pokemon.skillRate / 100);
+    } else {
+      // 睡眠中タップなし: 1日あたりの上限を適用
+      const maxPerDay = (pokemon.category === "スキル") ? 2 : 1;
+      const normalTriggers = hpw * (pokemon.skillRate / 100); // 通常計算値
+      const cappedTriggers = maxPerDay * 7; // 上限値（週7日分）
+      skillTriggers = Math.min(normalTriggers, cappedTriggers);
+    }
+
     const ingPerTrigger = pokemon.skillIngCount / pokemon.skillIngredients.length;
     for (const ingName of pokemon.skillIngredients) {
       const k = normIng(ingName);
@@ -1381,7 +1402,7 @@ function calculate() {
   }
 
   // 食材枠 + 食材セレクト枠の合計で交代計算
-  const ingSlotCount = comp.ing + comp.selIng;
+  const ingSlotCount = comp.ing;
   const ingPokemons = pokemonSlots.filter(s => s.slotType === "ing" || s.slotType === "selIng");
   const ingN = ingPokemons.length;
   if (ingN > 0) {
