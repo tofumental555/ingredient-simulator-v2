@@ -362,7 +362,7 @@
         </div>
         <div class="pks-comp-item">
           <span class="pks-comp-emoji">🍳</span>
-          <div class="pks-comp-label">食材</div>
+          <div class="pks-comp-label">食材&amp;セレクト</div>
           <div class="pks-counter">
             <button class="pks-counter-btn" onclick="changeComp('ing',-0.5)">−</button>
             <span class="pks-counter-val" id="compVal_ing">0</span>
@@ -760,12 +760,7 @@ function buildPokemonSlots(ingInitCount) {
       const panelId = "ingPanelInner"; // 食材・食材セレクト共通パネル
       const titleBar = document.createElement("div");
       titleBar.style.cssText = "display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;";
-      const addBtns = cfg.key === "ing"
-        ? `<div style="display:flex;gap:6px;">
-            <button class="pks-btn-add" style="width:auto;margin:0;padding:6px 12px;font-size:11px;" onclick="addIngPokemonCard(null,'ing')">＋ 食材</button>
-            <button class="pks-btn-add" style="width:auto;margin:0;padding:6px 12px;font-size:11px;color:#f4d03f;border-color:rgba(244,208,63,0.4);" onclick="addIngPokemonCard(null,'selIng')">🎯 セレクト</button>
-           </div>`
-        : `<button class="pks-btn-add" style="width:auto;margin:0;padding:6px 14px;font-size:12px;" onclick="addIngPokemonCard(null,'${cfg.key}')">＋ 追加</button>`;
+      const addBtns = `<button class="pks-btn-add" style="width:auto;margin:0;padding:6px 14px;font-size:12px;" onclick="addIngPokemonCard(null,'${cfg.key}')">＋ 追加</button>`;
       titleBar.innerHTML = `
         <span class="pks-panel-title" style="margin-bottom:0" id="${cfg.key}PanelTitle">${cfg.emoji} ${cfg.label}ポケモン（枠${count}）</span>
         ${addBtns}
@@ -854,7 +849,7 @@ function removeIngPokemonCard(cardId, slotKey) {
 
 function renumberIngCards() {
   ["ing", "selIng"].forEach(key => {
-    const cfg = SLOT_CONFIG.find(c => c.key === key);
+    const cfg = key === "selIng" ? SELING_CFG : SLOT_CONFIG.find(c => c.key === key);
     if (!cfg) return;
     pokemonSlots.filter(s => s.slotType === key).forEach((s, i) => {
       const el = document.getElementById(`ingCardLabel_${s.cardId}`);
@@ -1124,6 +1119,16 @@ function calcWeekly(entry, teamOtebonus = 0) {
   if (natureDown === "foodDown") fr *= 0.8;
   fr = Math.max(0, Math.min(1, fr));
 
+  // ── スキル確率 ──
+  // 基礎skillRate × (1 + 0.36×スキル確率M + 0.18×スキル確率S) × 性格補正
+  const skillM = activeSubs.filter(s => s === "スキル確率M").length;
+  const skillS = activeSubs.filter(s => s === "スキル確率S").length;
+  let skillRate = (pokemon.skillRate ?? 0) / 100;
+  skillRate *= (1 + 0.36 * skillM + 0.18 * skillS);
+  if (natureUp   === "skillUp")   skillRate *= 1.1;
+  if (natureDown === "skillDown") skillRate *= 0.9;
+  skillRate = Math.max(0, skillRate);
+
   // ── 食材スロット ──
   const slots = level < 30 ? [1] : level < 60 ? [1, 2] : [1, 2, 3];
   const sp = 1 / slots.length; // スロット配分係数
@@ -1194,14 +1199,39 @@ function calcWeekly(entry, teamOtebonus = 0) {
 
     let skillTriggers;
     if (sleepTap) {
-      // 毎分タップあり: 通常計算
-      skillTriggers = hpw * (pokemon.skillRate / 100);
+      // 毎分タップあり: 24時間上限なし
+      skillTriggers = hpw * skillRate;
     } else {
-      // 睡眠中タップなし: 1日あたりの上限を適用
-      const maxPerDay = (pokemon.category === "スキル") ? 2 : 1;
-      const normalTriggers = hpw * (pokemon.skillRate / 100); // 通常計算値
-      const cappedTriggers = maxPerDay * 7; // 上限値（週7日分）
-      skillTriggers = Math.min(normalTriggers, cappedTriggers);
+      // 睡眠中タップなし:
+      // 起床中（15.5h）: 上限なし
+      // 睡眠中（8.5h）: きのみ・食材タイプ最大1回/日、スキルタイプ最大2回/日
+      //   かつ所持数上限に達したらスキルも発動しない
+
+      const AWAKE_H = 15.5;
+      const SLEEP_H = 8.5;
+      const DAY_H   = 24;
+
+      // 起床中の発動回数（上限なし）
+      const awakeTriggersPerDay = (AWAKE_H / DAY_H) * (hpw / 7) * skillRate * DAY_H
+        / (AWAKE_H / DAY_H * DAY_H); // = hpw/7 * skillRate * (AWAKE_H/24)
+      const awakeTriggers7 = (AWAKE_H / DAY_H) * hpw * skillRate;
+
+      // 睡眠中の発動回数（上限あり）
+      const sleepMaxPerNight = (pokemon.category === "スキル") ? 2 : 1;
+
+      // 所持数が上限に達するまでの睡眠中お手伝い回数
+      let sleepHelpsAvailable = (SLEEP_H * 3600) / interval;
+      if (maxInventory != null && maxInventory > 0 && avgPerHelp > 0) {
+        const helpsUntilFull = maxInventory / avgPerHelp;
+        sleepHelpsAvailable = Math.min(sleepHelpsAvailable, helpsUntilFull);
+      }
+
+      // 睡眠中のスキル発動回数（上限と所持数制限の両方を考慮）
+      const sleepTriggersNormal = sleepHelpsAvailable * skillRate; // 通常なら何回発動するか
+      const sleepTriggersCapped = Math.min(sleepTriggersNormal, sleepMaxPerNight); // 上限適用
+      const sleepTriggers7 = sleepTriggersCapped * 7; // 週7日分
+
+      skillTriggers = awakeTriggers7 + sleepTriggers7;
     }
 
     const ingPerTrigger = pokemon.skillIngCount / pokemon.skillIngredients.length;
@@ -1529,9 +1559,17 @@ function renderResult(have, need, surplus, perPokemon, allOk, minRatio, surplusD
     </div>`;
   }).join("");
 
-  // 実際にかかる日数（食材ポケモンの稼働日数合計/枠数）
-  // actualDaysがあればそれを使う、なければminRatioから推定
-  const daysNeeded = actualDays !== null ? actualDays : (needKeys.length > 0 ? (7 / minRatio) : 0);
+  // 全食材が揃うまでの日数
+  // 集め切れる場合: actualDays（実稼働日数）を使用
+  // 集め切れない場合: 7 / minRatio（現在の収集ペースで何日かかるか）
+  let daysNeeded;
+  if (allOk) {
+    daysNeeded = actualDays !== null ? actualDays : (needKeys.length > 0 ? (7 / minRatio) : 0);
+  } else {
+    // 不足している場合: 必要量 / 1日あたり収集ペース = 何日かかるか
+    // minRatio = have/need なので、need日数 = 7 / minRatio
+    daysNeeded = needKeys.length > 0 ? (7 / minRatio) : 7;
+  }
 
   // 時間的余力 or 不足
   let detailHtml = "";
@@ -1541,7 +1579,7 @@ function renderResult(have, need, surplus, perPokemon, allOk, minRatio, surplusD
       <div class="pks-surplus-val">${daysNeeded.toFixed(1)} 日</div>
       <div class="pks-surplus-desc">
         7日間で余裕をもって準備できます。<br>
-        充足率：${(minRatio*100).toFixed(0)}% ／ 余裕：${(7-daysNeeded).toFixed(1)}日分
+        余力：${(7 - daysNeeded).toFixed(1)}日分 ／ 充足率：${(minRatio*100).toFixed(0)}%
       </div>
     </div>`;
   } else {
@@ -1550,7 +1588,8 @@ function renderResult(have, need, surplus, perPokemon, allOk, minRatio, surplusD
       .map(k=>`・${k}：あと ${(need[k]-(have[k]??0)).toFixed(1)} 個不足`)
       .join("<br>");
     detailHtml = `<div class="pks-shortage">
-      <div class="pks-shortage-label">⏱ 全食材が揃うまでの日数：<span style="font-size:18px;font-weight:900;color:var(--pks-red);">${daysNeeded.toFixed(1)} 日必要</span></div>
+      <div class="pks-shortage-label">⏱ 全食材を集めるのに必要な日数</div>
+      <div style="font-family:'Zen Maru Gothic',sans-serif;font-size:26px;font-weight:900;color:var(--pks-red);margin:4px 0;">${daysNeeded.toFixed(1)} 日必要</div>
       <div class="pks-shortage-item" style="margin-top:8px;">
         <b style="color:var(--pks-red);">⚠️ 不足している食材</b><br>
         ${shortages}
