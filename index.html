@@ -362,7 +362,7 @@
         </div>
         <div class="pks-comp-item">
           <span class="pks-comp-emoji">🍳</span>
-          <div class="pks-comp-label">食材&amp;セレクト</div>
+          <div class="pks-comp-label">食材</div>
           <div class="pks-counter">
             <button class="pks-counter-btn" onclick="changeComp('ing',-0.5)">−</button>
             <span class="pks-counter-val" id="compVal_ing">0</span>
@@ -460,7 +460,6 @@
       ・ 食材セレクトポケモンのスキルレベルは<b style="color:var(--pks-star);">最大レベル前提</b>で試算しています<br>
       ・ 睡眠中タップなしの場合、スキル発動は<br>
       　きのみ・食材タイプ：<b>1日1回まで</b>、スキルタイプ：<b>1日2回まで</b>で計算<br>
-      ・ 食材セレクトは食材ポケモンと同じ枠で交代して運用します
     </div>
   </div>
 </div>
@@ -1197,41 +1196,36 @@ function calcWeekly(entry, teamOtebonus = 0) {
   if (pokemon.skillIngredients && pokemon.skillIngredients.length > 0
       && pokemon.skillIngCount > 0 && pokemon.skillRate > 0) {
 
+    // ── スキル発動回数計算 ──
+    const AWAKE_SECS = 15.5 * 3600;
+    const SLEEP_SECS = 8.5 * 3600;
     let skillTriggers;
+    let skillTriggersAwake7 = 0;  // 起床中週間発動回数（表示用）
+    let skillTriggersSleep7 = 0;  // 睡眠中週間発動回数（表示用）
+
     if (sleepTap) {
       // 毎分タップあり: 24時間上限なし
       skillTriggers = hpw * skillRate;
+      skillTriggersAwake7 = skillTriggers;
     } else {
-      // 睡眠中タップなし:
       // 起床中（15.5h）: 上限なし
-      // 睡眠中（8.5h）: きのみ・食材タイプ最大1回/日、スキルタイプ最大2回/日
-      //   かつ所持数上限に達したらスキルも発動しない
+      const awakeHelpsPerWeek = AWAKE_SECS / interval * 7;
+      skillTriggersAwake7 = awakeHelpsPerWeek * skillRate;
 
-      const AWAKE_H = 15.5;
-      const SLEEP_H = 8.5;
-      const DAY_H   = 24;
-
-      // 起床中の発動回数（上限なし）
-      const awakeTriggersPerDay = (AWAKE_H / DAY_H) * (hpw / 7) * skillRate * DAY_H
-        / (AWAKE_H / DAY_H * DAY_H); // = hpw/7 * skillRate * (AWAKE_H/24)
-      const awakeTriggers7 = (AWAKE_H / DAY_H) * hpw * skillRate;
-
-      // 睡眠中の発動回数（上限あり）
-      const sleepMaxPerNight = (pokemon.category === "スキル") ? 2 : 1;
-
-      // 所持数が上限に達するまでの睡眠中お手伝い回数
-      let sleepHelpsAvailable = (SLEEP_H * 3600) / interval;
+      // 睡眠中（8.5h）: 所持数があふれるまでのお手伝い回数 × skillRate
+      // → 上限（スキルタイプ2回/日、きのみ・食材1回/日）と比較して小さい方を使用
+      const sleepHelpsPerNight = SLEEP_SECS / interval;
+      let sleepHelpsEffective = sleepHelpsPerNight;
       if (maxInventory != null && maxInventory > 0 && avgPerHelp > 0) {
         const helpsUntilFull = maxInventory / avgPerHelp;
-        sleepHelpsAvailable = Math.min(sleepHelpsAvailable, helpsUntilFull);
+        sleepHelpsEffective = Math.min(sleepHelpsPerNight, helpsUntilFull);
       }
+      const sleepMaxPerNight = (pokemon.category === "スキル") ? 2 : 1;
+      const sleepTriggersCalc = sleepHelpsEffective * skillRate; // 期待値
+      const sleepTriggersCapped = Math.min(sleepTriggersCalc, sleepMaxPerNight); // 上限適用
+      skillTriggersSleep7 = sleepTriggersCapped * 7;
 
-      // 睡眠中のスキル発動回数（上限と所持数制限の両方を考慮）
-      const sleepTriggersNormal = sleepHelpsAvailable * skillRate; // 通常なら何回発動するか
-      const sleepTriggersCapped = Math.min(sleepTriggersNormal, sleepMaxPerNight); // 上限適用
-      const sleepTriggers7 = sleepTriggersCapped * 7; // 週7日分
-
-      skillTriggers = awakeTriggers7 + sleepTriggers7;
+      skillTriggers = skillTriggersAwake7 + skillTriggersSleep7;
     }
 
     const ingPerTrigger = pokemon.skillIngCount / pokemon.skillIngredients.length;
@@ -1331,6 +1325,79 @@ function restorePokemonSettings(saved) {
       if (body) { body.classList.add("open"); }
       if (arrow) arrow.textContent = "▲";
     }
+  }
+}
+
+// スキル発動回数情報を計算（表示用）
+function calcSkillTriggersInfo(entry, teamOtebonus) {
+  if (!entry) return null;
+  const {pokemon, level, subs, natureUp, natureDown} = entry;
+  if (!pokemon.skillIngredients || pokemon.skillIngredients.length === 0) return null;
+
+  const SUB_UNLOCK = [10, 25, 50, 70, 80];
+  const activeSubs = subs.filter((_, i) => level >= SUB_UNLOCK[i]);
+  const skillM = activeSubs.filter(s => s === "スキル確率M").length;
+  const skillS = activeSubs.filter(s => s === "スキル確率S").length;
+  let skillRate = (pokemon.skillRate ?? 0) / 100;
+  skillRate *= (1 + 0.36 * skillM + 0.18 * skillS);
+  if (natureUp === "skillUp")   skillRate *= 1.1;
+  if (natureDown === "skillDown") skillRate *= 0.9;
+  skillRate = Math.max(0, skillRate);
+
+  const LEVEL_TIME_COEF = 0.002;
+  const BASE_DIVISOR = 2.222;
+  const WEEK_SECONDS = 7 * 86400;
+  const levelCoef = 1 - (level - 1) * LEVEL_TIME_COEF;
+
+  // おてスピ補正
+  const speedM = activeSubs.filter(s => s === "おてスピM").length;
+  const speedS = activeSubs.filter(s => s === "おてスピS").length;
+  const oteBonus = activeSubs.filter(s => s === "おてぼ").length;
+  let tf = 1.0;
+  if (natureUp === "speedUp") tf *= 0.9;
+  if (natureDown === "speedDown") tf *= 1.075;
+  tf *= Math.pow(0.86, speedM);
+  tf *= Math.pow(0.93, speedS);
+  tf *= (1 - Math.min(teamOtebonus, 0.35));
+  const campCoef = campTicket ? (1 / 1.2) : 1.0;
+  const interval = (pokemon.helpTime * levelCoef * tf * campCoef) / BASE_DIVISOR;
+  const hpw = WEEK_SECONDS / interval;
+
+  const AWAKE_SECS = 15.5 * 3600;
+  const SLEEP_SECS = 8.5 * 3600;
+
+  if (sleepTap) {
+    const total = hpw * skillRate;
+    return { total, awake: total, sleep: null };
+  } else {
+    const awakeHelpsPerWeek = AWAKE_SECS / interval * 7;
+    const awake = awakeHelpsPerWeek * skillRate;
+
+    // 所持数あふれ考慮
+    const fr = (pokemon.ingredientFindRate ?? 0) / 100;
+    const berryPerHelp = (pokemon.category === "きのみ" ? 2 : 1);
+    const slots = level < 30 ? [1] : level < 60 ? [1,2] : [1,2,3];
+    let avgIng = 0;
+    for (const slot of slots) {
+      let cnt = 0;
+      if (slot === 1) cnt = pokemon["1a"] ?? 0;
+      else if (slot === 2) cnt = pokemon["2a"] ?? 0;
+      else cnt = pokemon["3a"] ?? 0;
+      avgIng += cnt / slots.length;
+    }
+    const avgPerHelp = (1 - fr) * berryPerHelp + fr * avgIng;
+    const maxInv = pokemon.maxInventory != null ? pokemon.maxInventory : null;
+
+    const sleepHelpsPerNight = SLEEP_SECS / interval;
+    let sleepHelpsEff = sleepHelpsPerNight;
+    if (maxInv && avgPerHelp > 0) {
+      sleepHelpsEff = Math.min(sleepHelpsPerNight, maxInv / avgPerHelp);
+    }
+    const sleepMax = (pokemon.category === "スキル") ? 2 : 1;
+    const sleepCalc = sleepHelpsEff * skillRate;
+    const sleepCapped = Math.min(sleepCalc, sleepMax);
+    const sleep = sleepCapped * 7;
+    return { total: awake + sleep, awake, sleep, sleepMax };
   }
 }
 
@@ -1462,7 +1529,8 @@ function calculate() {
     haveFixed = mergeIng(haveFixed, scaledWeekly);
     const displayDaily = calcDaily(e, teamOtebonus);
     const workDaysFixed = 7 * scale;
-    perPokemon.push({ name: e.pokemon.name, slotType: slot.slotType, daily: displayDaily, workDays: workDaysFixed });
+    const skillInfo = calcSkillTriggersInfo(e, teamOtebonus);
+    perPokemon.push({ name: e.pokemon.name, slotType: slot.slotType, daily: displayDaily, workDays: workDaysFixed, skillInfo });
   }
 
   // ── STEP2: 21食分の必要量を計算 ──
@@ -1510,7 +1578,8 @@ function calculate() {
     for (const [k, v] of Object.entries(weekly)) scaledWeekly[k] = v * scale;
     have = mergeIng(have, scaledWeekly);
     const displayDaily = calcDaily(e, teamOtebonus);
-    perPokemon.push({ name: e.pokemon.name, slotType: "ing", daily: displayDaily, workDays: workDays[i] });
+    const skillInfo = calcSkillTriggersInfo(e, teamOtebonus);
+    perPokemon.push({ name: e.pokemon.name, slotType: "ing", daily: displayDaily, workDays: workDays[i], skillInfo });
   });
 
   // ── STEP6: 充足判定 ──
@@ -1607,9 +1676,20 @@ function renderResult(have, need, surplus, perPokemon, allOk, minRatio, surplusD
       .filter(([,v])=>v>0.01)
       .map(([k,v])=>`<div class="pks-pb-row"><span class="pks-pb-ing">${k}</span><span class="pks-pb-val">${v.toFixed(2)}個/日</span></div>`)
       .join("");
+    // スキル発動回数表示
+    let skillLine = "";
+    if (p.skillInfo) {
+      if (sleepTap) {
+        skillLine = `<div class="pks-pb-row"><span class="pks-pb-ing">スキル発動（週）</span><span style="color:var(--pks-purple);font-weight:700;">${p.skillInfo.total.toFixed(1)}回</span></div>`;
+      } else {
+        skillLine = `<div class="pks-pb-row"><span class="pks-pb-ing">スキル発動（昼）</span><span style="color:var(--pks-purple);font-weight:700;">${p.skillInfo.awake.toFixed(1)}回/週</span></div>`
+          + `<div class="pks-pb-row"><span class="pks-pb-ing">スキル発動（夜・上限${p.skillInfo.sleepMax}回/日）</span><span style="color:var(--pks-purple);font-weight:700;">${p.skillInfo.sleep.toFixed(1)}回/週</span></div>`;
+      }
+    }
     return `<div class="pks-pb-card">
       <div class="pks-pb-name">${slotEmoji[p.slotType]??""} ${p.name}${workNote}</div>
       ${lines||'<div style="font-size:11px;color:var(--pks-text-dim)">食材なし</div>'}
+      ${skillLine}
     </div>`;
   }).join("");
 
