@@ -2411,4 +2411,64 @@
     "3c": 9,
     "maxInventory": 25
   }
+    {
+    "name": "ゴウカザル",
+    "no": 392,
+    "helpTime": 2400,
+    "ingredientFindRate": 10.6,
+    "skillRate": 3.3,
+    "skillType": "きのみバースト",
+    "type": "かくとう",
+    "category": "スキル",
+    "ingredientA": "げきからハーブ",
+    "ingredientB": "あったかジンジャー",
+    "ingredientC": "めざましコーヒー",
+    "1a": 1,
+    "2a": 2,
+    "2b": 3,
+    "3a": 4,
+    "3b": 4,
+    "3c": 3,
+    "maxInventory": 28
+  }
+    {
+    "name": "ドダイトス",
+    "no": 389,
+    "helpTime": 2900,
+    "ingredientFindRate": 15.6,
+    "skillRate": 4.8,
+    "skillType": "げんきオールS",
+    "type": "くさ",
+    "category": "スキル",
+    "ingredientA": "あじわいキノコ",
+    "ingredientB": "ほっこりポテト",
+    "ingredientC": "あったかジンジャー",
+    "1a": 1,
+    "2a": 2,
+    "2b": 3,
+    "3a": 4,
+    "3b": 5,
+    "3c": 6,
+    "maxInventory": 27
+  }
+    {
+    "name": "エンペルト",
+    "no": 395,
+    "helpTime": 3200,
+    "ingredientFindRate": 16.8,
+    "skillRate": 3.8,
+    "skillType": "おてつだいサポートS",
+    "type": "はがね",
+    "category": "きのみ",
+    "ingredientA": "とくせんエッグ",
+    "ingredientB": "ふといながねぎ",
+    "ingredientC": "あまいミツ",
+    "1a": 1,
+    "2a": 2,
+    "2b": 1,
+    "3a": 4,
+    "3b": 2,
+    "3c": 4,
+    "maxInventory": 28
+  }
 ]
