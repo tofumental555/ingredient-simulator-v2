@@ -2411,7 +2411,7 @@
     "3c": 9,
     "maxInventory": 25
   },
-    {
+  {
     "name": "ゴウカザル",
     "no": 392,
     "helpTime": 2400,
@@ -2431,7 +2431,7 @@
     "3c": 3,
     "maxInventory": 28
   },
-    {
+  {
     "name": "ドダイトス",
     "no": 389,
     "helpTime": 2900,
@@ -2451,7 +2451,7 @@
     "3c": 6,
     "maxInventory": 27
   },
-    {
+  {
     "name": "エンペルト",
     "no": 395,
     "helpTime": 3200,
