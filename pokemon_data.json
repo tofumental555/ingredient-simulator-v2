@@ -2510,6 +2510,7 @@
     "3b": 4,
     "3c": 5,
     "maxInventory": 21,
+    "skillIngCount": 18,
     "skillIngredients": [
       "げきからハーブ",
       "あったかジンジャー",
