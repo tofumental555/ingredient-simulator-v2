@@ -2509,6 +2509,11 @@
     "3a": 4,
     "3b": 4,
     "3c": 5,
-    "maxInventory": 21
+    "maxInventory": 21,
+    "skillIngredients": [
+      "げきからハーブ",
+      "あったかジンジャー",
+      "マメミート"
+    ]
   }
 ]
