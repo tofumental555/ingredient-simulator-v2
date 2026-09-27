@@ -2492,6 +2492,26 @@
     "maxInventory": 30
   },
   {
+    "name": "ミュウツー",
+    "no": 150,
+    "helpTime": 2300,
+    "ingredientFindRate": 16.0,
+    "skillRate": 2.9,
+    "skillType": "サイコブレイク",
+    "type": "エスパー",
+    "category": "スキル",
+    "ingredientA": "ワカクサ大豆",
+    "ingredientB": "ワカクサコーン",
+    "ingredientC": "ほっこりポテト",
+    "1a": 1,
+    "2a": 2,
+    "2b": 2,
+    "3a": 4,
+    "3b": 3,
+    "3c": 3,
+    "maxInventory": 24
+  },
+  {
     "name": "ルチャブル",
     "no": 701,
     "helpTime": 2400,
