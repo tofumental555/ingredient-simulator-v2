@@ -86,12 +86,13 @@
     label { display: block; font-size: 11px; font-weight: 700; color: var(--pks-text-dim); margin-bottom: 4px; }
     .pks-sw { position: relative; }
     .pks-sw::after { content: "▾"; position: absolute; right: 11px; top: 50%; transform: translateY(-50%); color: var(--pks-purple); font-size: 11px; pointer-events: none; }
-    select, input[type="number"] {
+    select, input[type="number"], input[type="text"], textarea {
       width: 100%; font-family: 'Nunito', sans-serif; font-size: 13.5px; font-weight: 700;
       color: var(--pks-text); background: rgba(22,16,41,0.6);
       border: 1.5px solid var(--pks-border); border-radius: 9px; padding: 8px 11px; appearance: none; outline: none;
     }
-    select:focus, input[type="number"]:focus { border-color: var(--pks-purple); }
+    textarea { resize: vertical; font-size: 12px; line-height: 1.5; }
+    select:focus, input[type="number"]:focus, input[type="text"]:focus, textarea:focus { border-color: var(--pks-purple); }
     .pks-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .pks-subs { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
     .pks-subs .pks-sw:last-child { grid-column: span 2; }
@@ -323,6 +324,36 @@
     .pks-accordion-btn:hover { border-color: var(--pks-purple); color: var(--pks-text); }
     .pks-accordion-body { display: none; margin-top: 8px; }
     .pks-accordion-body.open { display: block; }
+
+    /* ===== 保存・呼び出し ===== */
+    .pks-saved-bar { margin-bottom: 10px; }
+    .pks-save-row {
+      display: grid; grid-template-columns: 1fr auto; gap: 8px;
+      align-items: center; margin-top: 10px;
+    }
+    .pks-save-btn {
+      font-family: 'Zen Maru Gothic', sans-serif; font-size: 12.5px; font-weight: 800;
+      color: var(--pks-green); background: rgba(127,217,168,0.12);
+      border: 1.5px solid var(--pks-border-green); border-radius: 9px;
+      padding: 8px 14px; min-height: 38px; cursor: pointer; white-space: nowrap;
+      touch-action: manipulation;
+    }
+    .pks-save-msg { font-size: 11.5px; min-height: 16px; margin-top: 6px; line-height: 1.6; }
+    .pks-note { font-size: 11.5px; color: var(--pks-text-dim); line-height: 1.8; margin-bottom: 12px; }
+    .pks-saved-item {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      background: rgba(22,16,41,0.5); border: 1.5px solid var(--pks-border);
+      border-radius: 10px; padding: 8px 11px; margin-bottom: 6px;
+    }
+    .pks-saved-main { min-width: 0; }
+    .pks-saved-name { font-size: 12.5px; font-weight: 800; color: var(--pks-star-soft); word-break: break-all; }
+    .pks-saved-meta { font-size: 10.5px; color: var(--pks-text-dim); margin-top: 2px; }
+    .pks-saved-empty { font-size: 12px; color: var(--pks-text-dim); padding: 6px 2px 10px; }
+    .pks-danger-link {
+      display: block; margin: 10px auto 0; background: none; border: none;
+      color: var(--pks-red); font-size: 11px; text-decoration: underline; cursor: pointer;
+    }
+    .pks-divider { border: none; border-top: 1px solid var(--pks-border); margin: 14px 0; }
   </style>
 </head>
 <body>
@@ -488,12 +519,55 @@
       ・ 睡眠中タップなしの場合、スキル発動は<br>
       　きのみ・食材タイプ：<b>1日1回まで</b>、スキルタイプ：<b>1日2回まで</b>で計算<br>
     </div>
+    <div style="margin-top:8px;">
+      <b style="color:var(--pks-text);">【ポケモンの保存について】</b><br>
+      ・ 登録したポケモンは「保存」で<b>この端末のブラウザ</b>に記録され、次回以降は呼び出して使えます<br>
+      ・ ブラウザのデータ削除や端末の変更で消えるため、「書き出し」でのバックアップをおすすめします<br>
+    </div>
   </div>
 </div>
 
   <!-- ===== STEP 1: ポケモン登録 ===== -->
   <div id="step1" class="pks-hidden">
     <div id="pokemonSections"></div>
+
+    <!-- 保存ポケモンの管理（書き出し・読み込み） -->
+    <div class="pks-panel" id="savedManagerPanel">
+      <div class="pks-panel-title">📚 保存したポケモン</div>
+      <p class="pks-note">
+        各カードの「💾 保存」で登録したポケモンの一覧です。データはこの端末のブラウザ内に保存されます。
+        ブラウザのデータ削除や端末の変更で消えるため、「書き出し」でバックアップしてください。
+      </p>
+      <div id="savedList"></div>
+
+      <hr class="pks-divider">
+
+      <div class="pks-panel-title" style="font-size:12px;margin-bottom:8px;">⬇ 書き出し（バックアップ）</div>
+      <button class="pks-btn-secondary" type="button" onclick="exportDownload()" style="margin-top:0">ファイルで書き出す（.json）</button>
+      <button class="pks-btn-secondary" type="button" onclick="exportCopy()">JSONをコピーする</button>
+      <textarea id="exportText" class="pks-hidden" rows="5" readonly style="margin-top:8px;"></textarea>
+
+      <hr class="pks-divider">
+
+      <div class="pks-panel-title" style="font-size:12px;margin-bottom:8px;">⬆ 読み込み（復元・他の端末から移行）</div>
+      <div class="field">
+        <label for="importFile">JSONファイルを選ぶ</label>
+        <input type="file" id="importFile" accept=".json,application/json" onchange="importFromFile(this)"
+               style="width:100%;font-size:12px;color:var(--pks-text-dim);">
+      </div>
+      <div class="field">
+        <label for="importText">またはJSONを貼り付ける</label>
+        <textarea id="importText" rows="4" placeholder='{"app":"pokesleep-ingredient-simulator", ...}'></textarea>
+      </div>
+      <button class="pks-btn-secondary" type="button" onclick="importFromTextarea()" style="margin-top:0">貼り付けた内容を読み込む</button>
+      <p class="pks-note" style="margin-top:8px;margin-bottom:0;">
+        読み込みは「追加」です。すでに保存済みのデータは消えず、同じ内容のものはスキップされます。
+      </p>
+
+      <div id="savedMsg" class="pks-save-msg"></div>
+      <button class="pks-danger-link" type="button" onclick="deleteAllSaved()">保存データをすべて削除</button>
+    </div>
+
     <button class="pks-btn-secondary" id="btnBack0">← 編成を修正</button>
     <button class="pks-btn-primary" id="btnToStep2">次へ：料理を登録する →</button>
   </div>
@@ -692,6 +766,10 @@ async function loadDB() {
 }
 
 function initEvents() {
+  // 保存済みポケモンを読み込み
+  loadSavedFromStorage();
+  renderSavedManager();
+
   document.getElementById("btnToStep1").addEventListener("click", () => {
     const saved = savePokemonSettings();
     // 食材ポケモンの登録体数を保持（編成変更で増減する可能性があるため）
@@ -923,6 +1001,11 @@ function optsPattern() {
 
 function pokemonFormHTML(pre, category) {
   return `
+    <div class="pks-saved-bar">
+      <div class="pks-sw">
+        <select id="${pre}_saved" data-saved-cat="${category || ""}" onchange="onSavedSelect('${pre}')">${optsSaved(category)}</select>
+      </div>
+    </div>
     <div class="field">
       <label>ポケモン</label>
       <div class="pks-sw"><select id="${pre}_p">${optsPokemon(category)}</select></div>
@@ -958,6 +1041,11 @@ function pokemonFormHTML(pre, category) {
         </div>
       </div>
     </div>
+    <div class="pks-save-row">
+      <input type="text" id="${pre}_label" maxlength="40" placeholder="保存名（任意）">
+      <button class="pks-save-btn" type="button" onclick="saveCurrentPokemon('${pre}')">💾 保存</button>
+    </div>
+    <div class="pks-save-msg" id="${pre}_msg"></div>
   `;
 }
 
@@ -967,6 +1055,339 @@ function toggleAccordion(id) {
   if (!body) return;
   const isOpen = body.classList.toggle('open');
   if (arrow) arrow.textContent = isOpen ? '▲' : '▼';
+}
+
+/* ===== 保存ポケモン（localStorage）・書き出し・読み込み ===== */
+const SAVED_KEY = "pks_ing_sim_saved_pokemon_v1";
+const SAVED_MAX = 200;
+let savedPokemon = []; // [{id,label,p,lv,pat,nu,nd,subs}]
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function newSavedId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+// 保存・読み込み時の値検証（不正なJSONが混ざっても壊れないようにする）
+function sanitizeSaved(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  const p = String(raw.p ?? "").trim().slice(0, 60);
+  if (!p) return null;
+  let lv = Math.round(Number(raw.lv));
+  if (!Number.isFinite(lv)) lv = 50;
+  lv = Math.min(100, Math.max(1, lv));
+  const pat = PATTERNS.includes(raw.pat) ? raw.pat : "aab";
+  const nu = NATURES_UP.some(([v]) => v === raw.nu) ? raw.nu : "other";
+  const nd = NATURES_DOWN.some(([v]) => v === raw.nd) ? raw.nd : "other";
+  const subsIn = Array.isArray(raw.subs) ? raw.subs : [];
+  const subs = SUB_IDS.map((_, i) => SUB_SKILLS.includes(subsIn[i]) ? subsIn[i] : "その他");
+  const label = String(raw.label ?? "").trim().slice(0, 40) || `${p} Lv${lv}`;
+  const id = (typeof raw.id === "string" && /^[a-z0-9]{4,24}$/i.test(raw.id)) ? raw.id : newSavedId();
+  return { id, label, p, lv, pat, nu, nd, subs };
+}
+
+function sameContent(a, b) {
+  return a.p === b.p && a.lv === b.lv && a.pat === b.pat && a.nu === b.nu && a.nd === b.nd
+      && a.subs.join("|") === b.subs.join("|");
+}
+
+function uniqueLabel(base) {
+  let label = base, n = 2;
+  while (savedPokemon.some(s => s.label === label)) label = `${base} (${n++})`;
+  return label;
+}
+
+function loadSavedFromStorage() {
+  try {
+    const raw = localStorage.getItem(SAVED_KEY);
+    if (!raw) { savedPokemon = []; return true; }
+    const arr = JSON.parse(raw);
+    savedPokemon = (Array.isArray(arr) ? arr : []).map(sanitizeSaved).filter(Boolean).slice(0, SAVED_MAX);
+    return true;
+  } catch (e) {
+    console.warn("保存データの読み込みに失敗:", e);
+    savedPokemon = [];
+    return false;
+  }
+}
+
+function persistSaved() {
+  try {
+    localStorage.setItem(SAVED_KEY, JSON.stringify(savedPokemon));
+    return true;
+  } catch (e) {
+    console.warn("保存データの書き込みに失敗:", e);
+    return false;
+  }
+}
+
+const msgTimers = {};
+function showMsg(id, text, ok = true, ms = 4000) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = text;
+  el.style.color = ok ? "var(--pks-green)" : "var(--pks-red)";
+  clearTimeout(msgTimers[id]);
+  msgTimers[id] = setTimeout(() => { el.textContent = ""; }, ms);
+}
+
+// 枠のカテゴリ（きのみ/食材/スキル）に合うポケモンだけを呼び出し候補にする
+function savedForCategory(category) {
+  if (!category) return savedPokemon;
+  return savedPokemon.filter(s => {
+    const p = pokemonDB.find(x => x.name === s.p);
+    return p && p.category === category;
+  });
+}
+
+function optsSaved(category) {
+  const list = savedForCategory(category);
+  const head = `<option value="">📂 保存済みから呼び出す${list.length ? `（${list.length}件）` : "（なし）"}</option>`;
+  return head + list.map(s => {
+    const extra = s.label.includes(s.p) ? "" : `｜${s.p} Lv${s.lv}`;
+    return `<option value="${esc(s.id)}">${esc(s.label + extra)}</option>`;
+  }).join("");
+}
+
+function refreshAllSavedSelects() {
+  document.querySelectorAll("select[data-saved-cat]").forEach(el => {
+    el.innerHTML = optsSaved(el.dataset.savedCat || "");
+  });
+}
+
+// 保存データをフォームへ反映
+function applyPokemonData(pre, data) {
+  const pEl = document.getElementById(`${pre}_p`);
+  if (!pEl) return false;
+  if (![...pEl.options].some(o => o.value === data.p)) return false;
+  pEl.value = data.p;
+  const set = (suffix, val) => {
+    const el = document.getElementById(`${pre}_${suffix}`);
+    if (el) el.value = val;
+  };
+  set("lv", data.lv);
+  set("pat", data.pat);
+  set("nu", data.nu);
+  set("nd", data.nd);
+  SUB_IDS.forEach((sid, i) => set(sid, data.subs[i]));
+  const hasDetail = data.nu !== "other" || data.nd !== "other" || data.subs.some(s => s !== "その他");
+  if (hasDetail) {
+    document.getElementById(`${pre}_detail`)?.classList.add("open");
+    const arrow = document.getElementById(`${pre}_detail_arrow`);
+    if (arrow) arrow.textContent = "▲";
+  }
+  return true;
+}
+
+function onSavedSelect(pre) {
+  const sel = document.getElementById(`${pre}_saved`);
+  if (!sel) return;
+  const id = sel.value;
+  if (!id) return;
+  sel.value = "";
+  const data = savedPokemon.find(s => s.id === id);
+  if (!data) { showMsg(`${pre}_msg`, "保存データが見つかりません", false); return; }
+  if (applyPokemonData(pre, data)) {
+    const lab = document.getElementById(`${pre}_label`);
+    if (lab) lab.value = data.label;
+    showMsg(`${pre}_msg`, `「${data.label}」を呼び出しました`);
+  } else {
+    showMsg(`${pre}_msg`, "このポケモンはこの枠では選べません", false);
+  }
+}
+
+function saveCurrentPokemon(pre) {
+  const g = s => document.getElementById(`${pre}_${s}`)?.value;
+  const p = g("p");
+  if (!p) { showMsg(`${pre}_msg`, "ポケモンを選んでください", false); return; }
+  let lv = Math.round(Number(g("lv"))) || 50;
+  lv = Math.min(100, Math.max(1, lv));
+  const entry = {
+    p, lv,
+    pat: g("pat") || "aab",
+    nu: g("nu") || "other",
+    nd: g("nd") || "other",
+    subs: SUB_IDS.map(sid => g(sid) || "その他")
+  };
+
+  const typed = (g("label") || "").trim().slice(0, 40);
+  let label = typed;
+  let idx = -1;
+  if (typed) {
+    idx = savedPokemon.findIndex(s => s.label === typed); // 同名なら上書き
+  } else {
+    label = uniqueLabel(`${p} Lv${lv}`);                  // 名前なしなら自動で連番
+  }
+
+  let overwrote = false;
+  if (idx >= 0) {
+    savedPokemon[idx] = { ...entry, id: savedPokemon[idx].id, label };
+    overwrote = true;
+  } else {
+    if (savedPokemon.length >= SAVED_MAX) {
+      showMsg(`${pre}_msg`, `保存できるのは${SAVED_MAX}件までです。不要なものを削除してください`, false);
+      return;
+    }
+    savedPokemon.push({ ...entry, id: newSavedId(), label });
+  }
+
+  const labEl = document.getElementById(`${pre}_label`);
+  if (labEl) labEl.value = label;
+
+  const ok = persistSaved();
+  refreshAllSavedSelects();
+  renderSavedManager();
+  if (ok) {
+    showMsg(`${pre}_msg`, overwrote ? `「${label}」を上書き保存しました` : `「${label}」を保存しました`);
+  } else {
+    showMsg(`${pre}_msg`, "この端末には保存できませんでした（ブラウザの設定を確認してください）。「書き出し」でバックアップしてください", false, 8000);
+  }
+}
+
+function renderSavedManager() {
+  const box = document.getElementById("savedList");
+  if (!box) return;
+  if (!savedPokemon.length) {
+    box.innerHTML = `<div class="pks-saved-empty">まだ保存されたポケモンはありません。各カードの「💾 保存」で登録できます。</div>`;
+    return;
+  }
+  box.innerHTML = savedPokemon.map(s => `
+    <div class="pks-saved-item">
+      <div class="pks-saved-main">
+        <div class="pks-saved-name">${esc(s.label)}</div>
+        <div class="pks-saved-meta">${esc(s.p)} / Lv${s.lv} / ${esc(s.pat)}</div>
+      </div>
+      <button class="pks-remove-btn" type="button" onclick="deleteSaved('${esc(s.id)}')">削除</button>
+    </div>
+  `).join("");
+}
+
+function deleteSaved(id) {
+  const target = savedPokemon.find(s => s.id === id);
+  if (!target) return;
+  if (!confirm(`「${target.label}」を削除しますか？`)) return;
+  savedPokemon = savedPokemon.filter(s => s.id !== id);
+  persistSaved();
+  refreshAllSavedSelects();
+  renderSavedManager();
+  showMsg("savedMsg", "削除しました");
+}
+
+function deleteAllSaved() {
+  if (!savedPokemon.length) { showMsg("savedMsg", "削除するデータがありません", false); return; }
+  if (!confirm(`保存済みの${savedPokemon.length}件をすべて削除します。元に戻せません。よろしいですか？`)) return;
+  savedPokemon = [];
+  persistSaved();
+  refreshAllSavedSelects();
+  renderSavedManager();
+  showMsg("savedMsg", "すべて削除しました");
+}
+
+/* --- 書き出し --- */
+function buildExportJSON() {
+  return JSON.stringify({
+    app: "pokesleep-ingredient-simulator",
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    pokemon: savedPokemon
+  }, null, 2);
+}
+
+function exportDownload() {
+  if (!savedPokemon.length) { showMsg("savedMsg", "書き出すデータがありません", false); return; }
+  try {
+    const blob = new Blob([buildExportJSON()], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const ymd = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+    a.href = url;
+    a.download = `pokesleep_saved_pokemon_${ymd}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showMsg("savedMsg", "ファイルを書き出しました。保存されない場合は「JSONをコピーする」をお試しください", true, 7000);
+  } catch (e) {
+    console.warn(e);
+    showMsg("savedMsg", "ファイルの書き出しに失敗しました。「JSONをコピーする」をお試しください", false, 7000);
+  }
+}
+
+async function exportCopy() {
+  if (!savedPokemon.length) { showMsg("savedMsg", "コピーするデータがありません", false); return; }
+  const json = buildExportJSON();
+  const ta = document.getElementById("exportText");
+  try {
+    await navigator.clipboard.writeText(json);
+    showMsg("savedMsg", "JSONをコピーしました。メモ帳などに貼り付けて保管してください", true, 7000);
+  } catch (e) {
+    // クリップボードが使えない環境用：テキストを表示して手動コピー
+    if (ta) {
+      ta.value = json;
+      ta.classList.remove("pks-hidden");
+      ta.focus();
+      ta.select();
+    }
+    showMsg("savedMsg", "自動コピーできませんでした。下のテキストを全選択してコピーしてください", false, 9000);
+  }
+}
+
+/* --- 読み込み --- */
+function importFromText(text) {
+  let data;
+  try { data = JSON.parse(text); }
+  catch (e) { showMsg("savedMsg", "JSONとして読み込めませんでした。内容をご確認ください", false, 7000); return false; }
+
+  const arr = Array.isArray(data) ? data : (data && Array.isArray(data.pokemon) ? data.pokemon : null);
+  if (!arr) { showMsg("savedMsg", "対応していない形式のデータです", false, 7000); return false; }
+
+  let added = 0, dup = 0, invalid = 0, unknown = 0, over = 0;
+  for (const raw of arr) {
+    const s = sanitizeSaved(raw);
+    if (!s) { invalid++; continue; }
+    if (pokemonDB.length && !pokemonDB.some(p => p.name === s.p)) { unknown++; continue; }
+    if (savedPokemon.some(x => sameContent(x, s))) { dup++; continue; }
+    if (savedPokemon.length >= SAVED_MAX) { over++; continue; }
+    s.id = newSavedId();
+    s.label = uniqueLabel(s.label);
+    savedPokemon.push(s);
+    added++;
+  }
+
+  const ok = persistSaved();
+  refreshAllSavedSelects();
+  renderSavedManager();
+
+  const parts = [`${added}件を追加`];
+  if (dup)     parts.push(`同じ内容${dup}件はスキップ`);
+  if (unknown) parts.push(`データにないポケモン${unknown}件はスキップ`);
+  if (invalid) parts.push(`不正なデータ${invalid}件はスキップ`);
+  if (over)    parts.push(`上限超過${over}件はスキップ`);
+  if (!ok)     parts.push("※この端末には保存できませんでした");
+  showMsg("savedMsg", parts.join("／"), ok && added > 0, 9000);
+  return true;
+}
+
+function importFromFile(input) {
+  const f = input.files && input.files[0];
+  if (!f) return;
+  if (f.size > 1024 * 1024) {
+    showMsg("savedMsg", "ファイルが大きすぎます（1MBまで）", false);
+    input.value = "";
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => { importFromText(String(reader.result)); input.value = ""; };
+  reader.onerror = () => { showMsg("savedMsg", "ファイルを読み込めませんでした", false); input.value = ""; };
+  reader.readAsText(f);
+}
+
+function importFromTextarea() {
+  const ta = document.getElementById("importText");
+  const text = (ta?.value || "").trim();
+  if (!text) { showMsg("savedMsg", "JSONを貼り付けてください", false); return; }
+  if (importFromText(text) && ta) ta.value = "";
 }
 
 /* ===== 在庫行 ===== */
@@ -1379,15 +1800,15 @@ function calcSkillTriggersInfo(entry, teamOtebonus) {
   const levelCoef = 1 - (level - 1) * LEVEL_TIME_COEF;
 
   // おてスピ補正
+  // calcWeekly と同じ方式：自分のおてスピM/S + チームおてぼ合計を加算し、上限35%
   const speedM = activeSubs.filter(s => s === "おてスピM").length;
   const speedS = activeSubs.filter(s => s === "おてスピS").length;
-  const oteBonus = activeSubs.filter(s => s === "おてぼ").length;
   let tf = 1.0;
   if (natureUp === "speedUp") tf *= 0.9;
   if (natureDown === "speedDown") tf *= 1.075;
-  tf *= Math.pow(0.86, speedM);
-  tf *= Math.pow(0.93, speedS);
-  tf *= (1 - Math.min(teamOtebonus, 0.35));
+  const personalBonus = speedM * 0.14 + speedS * 0.07;
+  const totalBonus = Math.min(personalBonus + teamOtebonus, 0.35);
+  tf *= (1 - totalBonus);
   const campCoef = campTicket ? (1 / 1.2) : 1.0;
   const interval = (pokemon.helpTime * levelCoef * tf * campCoef) / BASE_DIVISOR;
   const hpw = WEEK_SECONDS / interval;
