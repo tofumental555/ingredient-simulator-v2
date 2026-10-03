@@ -353,6 +353,8 @@
       display: block; margin: 10px auto 0; background: none; border: none;
       color: var(--pks-red); font-size: 11px; text-decoration: underline; cursor: pointer;
     }
+    #eventBuffInputs.off { opacity: 0.45; }
+    .pks-event-note { font-size: 11px; color: var(--pks-text-dim); line-height: 1.8; margin-top: 10px; }
     .pks-divider { border: none; border-top: 1px solid var(--pks-border); margin: 14px 0; }
     .pks-saved-actions { display: flex; gap: 6px; flex-shrink: 0; }
     .pks-del-btn {
@@ -484,6 +486,35 @@
         </div>
       </div>
     </div>
+    <div class="pks-panel">
+      <div class="pks-panel-title">🎉 イベントバフ</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--pks-text);">イベントバフを適用する</div>
+          <div style="font-size:11px;color:var(--pks-text-dim);margin-top:2px;">OFFの間は、入力した数値を残したまま計算に反映しません</div>
+        </div>
+        <div class="pks-toggle-wrap" onclick="toggleEventBuff()" id="eventBuffToggleWrap">
+          <div class="pks-toggle" id="eventBuffToggle"></div>
+        </div>
+      </div>
+      <div id="eventBuffInputs" class="off">
+        <div class="pks-row2">
+          <div class="field">
+            <label for="eventAdd">食材タイプの食材獲得数（＋個）</label>
+            <input type="number" id="eventAdd" min="0" step="1" value="1" inputmode="decimal">
+          </div>
+          <div class="field">
+            <label for="eventMult">スキルで獲得する食材数（×倍）</label>
+            <input type="number" id="eventMult" min="0" step="0.1" value="1.5" inputmode="decimal">
+          </div>
+        </div>
+      </div>
+      <p class="pks-event-note">
+        ・「＋個」は食材タイプのポケモンの、お手伝い1回あたりの食材獲得数に加算します<br>
+        ・「×倍」は<b style="color:var(--pks-star);">食材セレクトのみ</b>計算に考慮します（食材ゲットSなど、そのほかのスキルで獲得する食材は計算対象外です）<br>
+        ・数値はイベントごとに手入力してください
+      </p>
+    </div>
     <button class="pks-btn-primary" id="btnToStep1" disabled style="margin-bottom:22px;">次へ：ポケモンを登録する →</button>
 <!-- 注意書き -->
   <div style="
@@ -533,6 +564,12 @@
       ・ 食材セレクトポケモンのスキルレベルは<b style="color:var(--pks-star);">最大レベル前提</b>で試算しています<br>
       ・ 睡眠中タップなしの場合、スキル発動は<br>
       　きのみ・食材タイプ：<b>1日1回まで</b>、スキルタイプ：<b>1日2回まで</b>で計算<br>
+    </div>
+    <div style="margin-top:8px;">
+      <b style="color:var(--pks-text);">【イベントバフについて】</b><br>
+      ・ 食材タイプのポケモンは、お手伝い1回あたりの食材獲得数に入力した個数を加算して計算します<br>
+      ・ スキルで獲得する食材数の倍率は、<b style="color:var(--pks-star);">食材セレクトのみ</b>計算に考慮します（そのほかのスキルは計算対象外）<br>
+      ・ トグルがOFFのときは通常の計算になります<br>
     </div>
     <div style="margin-top:8px;">
       <b style="color:var(--pks-text);">【ポケモンの保存について】</b><br>
@@ -759,6 +796,25 @@ function toggleSleepTap() {
   sleepTap = !sleepTap;
   const wrap = document.getElementById("sleepTapToggle").parentElement;
   wrap.classList.toggle("on", sleepTap);
+}
+
+// イベントバフ（手入力の数値＋適用トグル）
+let eventBuffOn = false;
+function toggleEventBuff() {
+  eventBuffOn = !eventBuffOn;
+  document.getElementById("eventBuffToggleWrap").classList.toggle("on", eventBuffOn);
+  document.getElementById("eventBuffInputs").classList.toggle("off", !eventBuffOn);
+}
+// add: 食材タイプの食材獲得数に加算する個数 / mult: 食材セレクトで獲得する食材数にかける倍率
+function getEventBuff() {
+  if (!eventBuffOn) return { on: false, add: 0, mult: 1 };
+  const rawAdd  = document.getElementById("eventAdd")?.value;
+  const rawMult = document.getElementById("eventMult")?.value;
+  let add = Number(rawAdd);
+  if (rawAdd === "" || rawAdd == null || !Number.isFinite(add) || add < 0) add = 0;
+  let mult = Number(rawMult);
+  if (rawMult === "" || rawMult == null || !Number.isFinite(mult) || mult <= 0) mult = 1;
+  return { on: true, add, mult };
 }
 
 // 登録済みポケモンスロット: [{slotType, slotLabel, prefix}]
@@ -1601,6 +1657,7 @@ function calcWeekly(entry, teamOtebonus = 0) {
   // teamOtebonus: チームに編成中のおてぼ持ちポケモン数×5%の合計
   if (!entry) return {};
   const {pokemon, level, pattern, natureUp, natureDown, subs} = entry;
+  const ev = getEventBuff(); // イベントバフ（OFFなら add=0, mult=1）
 
   // ── サブスキル解放レベルでフィルタリング ──
   // Lv10:1枠目, Lv25:2枠目, Lv50:3枠目, Lv70:4枠目, Lv80:5枠目
@@ -1673,6 +1730,8 @@ function calcWeekly(entry, teamOtebonus = 0) {
       else if (t === "b") { ing = pokemon.ingredientB; cnt = pokemon["3b"] ?? 0; }
       else                { ing = pokemon.ingredientC; cnt = pokemon["3c"] ?? 0; }
     }
+    // イベントバフ: 食材タイプは食材獲得数に加算（所持数あふれ計算にも反映される）
+    if (ing && cnt > 0 && pokemon.category === "食材") cnt += ev.add;
     slotIngMap[slot] = { ing, cnt };
     if (ing && cnt > 0) avgIngPerHelp += cnt * sp;
   }
@@ -1751,7 +1810,8 @@ function calcWeekly(entry, teamOtebonus = 0) {
       skillTriggers = skillTriggersAwake7 + skillTriggersSleep7;
     }
 
-    const ingPerTrigger = pokemon.skillIngCount / pokemon.skillIngredients.length;
+    // イベントバフ: 食材セレクトで獲得する食材数に倍率をかける
+    const ingPerTrigger = (pokemon.skillIngCount * ev.mult) / pokemon.skillIngredients.length;
     for (const ingName of pokemon.skillIngredients) {
       const k = normIng(ingName);
       skillIngResult[k] = (skillIngResult[k] ?? 0) + skillTriggers * ingPerTrigger;
@@ -1900,12 +1960,14 @@ function calcSkillTriggersInfo(entry, teamOtebonus) {
     const fr = (pokemon.ingredientFindRate ?? 0) / 100;
     const berryPerHelp = (pokemon.category === "きのみ" ? 2 : 1);
     const slots = level < 30 ? [1] : level < 60 ? [1,2] : [1,2,3];
+    const evAdd = getEventBuff().add;
     let avgIng = 0;
     for (const slot of slots) {
       let cnt = 0;
       if (slot === 1) cnt = pokemon["1a"] ?? 0;
       else if (slot === 2) cnt = pokemon["2a"] ?? 0;
       else cnt = pokemon["3a"] ?? 0;
+      if (cnt > 0 && pokemon.category === "食材") cnt += evAdd; // イベントバフ
       avgIng += cnt / slots.length;
     }
     const avgPerHelp = (1 - fr) * berryPerHelp + fr * avgIng;
@@ -2136,6 +2198,12 @@ function calculate() {
 function renderResult(have, need, surplus, perPokemon, allOk, minRatio, surplusDays, stockMap={}, teamOtebonus=0, actualDays=null) {
   const needKeys = Object.keys(need);
 
+  // イベントバフ適用中の表示
+  const evInfo = getEventBuff();
+  const evNote = evInfo.on
+    ? `<div style="font-size:11px;color:var(--pks-star);margin-top:4px;">🎉 イベントバフ適用中（食材タイプ＋${evInfo.add}個／食材セレクト×${evInfo.mult}倍）</div>`
+    : "";
+
   // 食材充足バー
   const ingHtml = needKeys.map(k => {
     const h=have[k]??0, n=need[k];
@@ -2227,6 +2295,7 @@ function renderResult(have, need, surplus, perPokemon, allOk, minRatio, surplusD
       <div class="pks-verdict-main ${allOk?"ok":"ng"}">${allOk?"✅ 21食分 準備OK！":"❌ 食材が不足しています"}</div>
       <div class="pks-verdict-sub">1週間（7日）・21食分シミュレーション結果</div>
       ${teamOtebonus > 0 ? `<div style="font-size:11px;color:var(--pks-green);margin-top:4px;">🤝 チームおてぼボーナス +${Math.round(teamOtebonus*100)}%（編成中のおてぼ持ち分・上限35%）</div>` : ""}
+      ${evNote}
       ${Object.keys(stockMap).length > 0 ? `<div style="font-size:11px;color:var(--pks-text-dim);margin-top:4px;">週頭在庫込み</div>` : ""}
     </div>
     ${needKeys.length?`<div class="pks-result-section-title">食材ごとの充足状況（週間）</div><div class="pks-ing-grid">${ingHtml}</div>`:""}
