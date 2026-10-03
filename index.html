@@ -354,6 +354,21 @@
       color: var(--pks-red); font-size: 11px; text-decoration: underline; cursor: pointer;
     }
     .pks-divider { border: none; border-top: 1px solid var(--pks-border); margin: 14px 0; }
+    .pks-saved-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .pks-del-btn {
+      font-family: 'Zen Maru Gothic', sans-serif; font-size: 12px; font-weight: 800;
+      min-width: 64px; min-height: 40px; padding: 6px 12px; border-radius: 9px;
+      color: var(--pks-red); background: rgba(255,126,126,0.15);
+      border: 1.5px solid rgba(255,126,126,0.45);
+      cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: rgba(255,126,126,0.3);
+    }
+    .pks-del-btn.danger { background: rgba(255,126,126,0.4); color: #fff; }
+    .pks-del-btn.cancel { color: var(--pks-text); background: rgba(169,142,232,0.15); border-color: var(--pks-border); }
+    .pks-saved-item.confirming { border-color: rgba(255,126,126,0.5); }
+    .pks-delall-box { margin-top: 12px; text-align: center; }
+    .pks-delall-confirm { background: rgba(255,126,126,0.08); border: 1.5px solid rgba(255,126,126,0.4); border-radius: 10px; padding: 10px; }
+    .pks-delall-confirm p { font-size: 12px; color: var(--pks-text); margin-bottom: 8px; line-height: 1.6; }
+    .pks-delall-confirm .pks-saved-actions { justify-content: center; }
   </style>
 </head>
 <body>
@@ -469,7 +484,7 @@
         </div>
       </div>
     </div>
-    <button class="pks-btn-primary" id="btnToStep1" disabled>次へ：ポケモンを登録する →</button>
+    <button class="pks-btn-primary" id="btnToStep1" disabled style="margin-bottom:22px;">次へ：ポケモンを登録する →</button>
 <!-- 注意書き -->
   <div style="
     background: rgba(169,142,232,0.08);
@@ -531,6 +546,9 @@
   <div id="step1" class="pks-hidden">
     <div id="pokemonSections"></div>
 
+    <button class="pks-btn-secondary" id="btnBack0">← 編成を修正</button>
+    <button class="pks-btn-primary" id="btnToStep2">次へ：料理を登録する →</button>
+
     <!-- 保存ポケモンの管理（書き出し・読み込み） -->
     <div class="pks-panel" id="savedManagerPanel">
       <div class="pks-panel-title">📚 保存したポケモン</div>
@@ -565,11 +583,8 @@
       </p>
 
       <div id="savedMsg" class="pks-save-msg"></div>
-      <button class="pks-danger-link" type="button" onclick="deleteAllSaved()">保存データをすべて削除</button>
+      <div id="savedDeleteAllBox"></div>
     </div>
-
-    <button class="pks-btn-secondary" id="btnBack0">← 編成を修正</button>
-    <button class="pks-btn-primary" id="btnToStep2">次へ：料理を登録する →</button>
   </div>
 
   <!-- ===== STEP 2: 料理登録 ===== -->
@@ -1245,43 +1260,101 @@ function saveCurrentPokemon(pre) {
   }
 }
 
+// 削除確認はconfirm()を使わず画面内で行う（アプリ内ブラウザやiframeでconfirm()が無効でも動くように）
+let pendingDeleteId = null;
+let pendingDeleteAll = false;
+
 function renderSavedManager() {
   const box = document.getElementById("savedList");
   if (!box) return;
   if (!savedPokemon.length) {
+    pendingDeleteId = null;
+    pendingDeleteAll = false;
     box.innerHTML = `<div class="pks-saved-empty">まだ保存されたポケモンはありません。各カードの「💾 保存」で登録できます。</div>`;
-    return;
+  } else {
+    box.innerHTML = savedPokemon.map(s => {
+      const meta = `${esc(s.p)} / Lv${s.lv} / ${esc(s.pat)}`;
+      if (s.id === pendingDeleteId) {
+        return `
+          <div class="pks-saved-item confirming">
+            <div class="pks-saved-main">
+              <div class="pks-saved-name">${esc(s.label)}</div>
+              <div class="pks-saved-meta" style="color:var(--pks-red);">削除しますか？</div>
+            </div>
+            <div class="pks-saved-actions">
+              <button class="pks-del-btn danger" type="button" onclick="confirmDeleteSaved('${esc(s.id)}')">削除する</button>
+              <button class="pks-del-btn cancel" type="button" onclick="cancelDeleteSaved()">やめる</button>
+            </div>
+          </div>`;
+      }
+      return `
+        <div class="pks-saved-item">
+          <div class="pks-saved-main">
+            <div class="pks-saved-name">${esc(s.label)}</div>
+            <div class="pks-saved-meta">${meta}</div>
+          </div>
+          <button class="pks-del-btn" type="button" onclick="askDeleteSaved('${esc(s.id)}')">削除</button>
+        </div>`;
+    }).join("");
   }
-  box.innerHTML = savedPokemon.map(s => `
-    <div class="pks-saved-item">
-      <div class="pks-saved-main">
-        <div class="pks-saved-name">${esc(s.label)}</div>
-        <div class="pks-saved-meta">${esc(s.p)} / Lv${s.lv} / ${esc(s.pat)}</div>
-      </div>
-      <button class="pks-remove-btn" type="button" onclick="deleteSaved('${esc(s.id)}')">削除</button>
-    </div>
-  `).join("");
+  renderDeleteAllBox();
 }
 
-function deleteSaved(id) {
+function renderDeleteAllBox() {
+  const el = document.getElementById("savedDeleteAllBox");
+  if (!el) return;
+  if (!savedPokemon.length) { el.innerHTML = ""; return; }
+  if (pendingDeleteAll) {
+    el.innerHTML = `
+      <div class="pks-delall-confirm">
+        <p>保存済みの${savedPokemon.length}件をすべて削除します。元に戻せません。よろしいですか？</p>
+        <div class="pks-saved-actions">
+          <button class="pks-del-btn danger" type="button" onclick="confirmDeleteAllSaved()">すべて削除する</button>
+          <button class="pks-del-btn cancel" type="button" onclick="cancelDeleteAllSaved()">やめる</button>
+        </div>
+      </div>`;
+  } else {
+    el.innerHTML = `<div class="pks-delall-box"><button class="pks-danger-link" type="button" onclick="askDeleteAllSaved()">保存データをすべて削除</button></div>`;
+  }
+}
+
+function askDeleteSaved(id) {
+  pendingDeleteId = id;
+  pendingDeleteAll = false;
+  renderSavedManager();
+}
+function cancelDeleteSaved() {
+  pendingDeleteId = null;
+  renderSavedManager();
+}
+function confirmDeleteSaved(id) {
   const target = savedPokemon.find(s => s.id === id);
-  if (!target) return;
-  if (!confirm(`「${target.label}」を削除しますか？`)) return;
+  pendingDeleteId = null;
+  if (!target) { renderSavedManager(); return; }
   savedPokemon = savedPokemon.filter(s => s.id !== id);
-  persistSaved();
+  const ok = persistSaved();
   refreshAllSavedSelects();
   renderSavedManager();
-  showMsg("savedMsg", "削除しました");
+  showMsg("savedMsg", ok ? `「${target.label}」を削除しました` : "削除しましたが、この端末への保存に失敗しました", ok);
 }
 
-function deleteAllSaved() {
-  if (!savedPokemon.length) { showMsg("savedMsg", "削除するデータがありません", false); return; }
-  if (!confirm(`保存済みの${savedPokemon.length}件をすべて削除します。元に戻せません。よろしいですか？`)) return;
+function askDeleteAllSaved() {
+  pendingDeleteAll = true;
+  pendingDeleteId = null;
+  renderSavedManager();
+}
+function cancelDeleteAllSaved() {
+  pendingDeleteAll = false;
+  renderSavedManager();
+}
+function confirmDeleteAllSaved() {
+  pendingDeleteAll = false;
+  pendingDeleteId = null;
   savedPokemon = [];
-  persistSaved();
+  const ok = persistSaved();
   refreshAllSavedSelects();
   renderSavedManager();
-  showMsg("savedMsg", "すべて削除しました");
+  showMsg("savedMsg", ok ? "すべて削除しました" : "削除しましたが、この端末への保存に失敗しました", ok);
 }
 
 /* --- 書き出し --- */
