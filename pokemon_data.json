@@ -2536,5 +2536,25 @@
       "あったかジンジャー",
       "マメミート"
     ]
-  }
+    },
+    {
+    "name": "モロバレル",
+    "no": 701,
+    "helpTime": 3500,
+    "ingredientFindRate": 20.4,
+    "skillRate": 4.7,
+    "skillType": "エナジーチャージS",
+    "type": "どく",
+    "category": "食材",
+    "ingredientA": "あじわいキノコ",
+    "ingredientB": "とくせんエッグ",
+    "ingredientC": "あんみんトマト",
+    "1a": 2,
+    "2a": 5,
+    "2b": 7,
+    "3a": 7,
+    "3b": 10,
+    "3c": 11,
+    "maxInventory": 19,
+    }
 ]
