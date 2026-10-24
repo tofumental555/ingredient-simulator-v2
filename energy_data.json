@@ -1,0 +1,1004 @@
+{
+ "meta": {
+  "version": 1,
+  "generated": "2026-10-24",
+  "sources": [
+   "wikiwiki.jp/poke_sleep (きのみ / 料理 / 料理/レシピの一覧 / 食材)",
+   "pokemongo-raku.com (食材基礎エナジー一覧)",
+   "game8.jp (エナジーチャージ値)"
+  ],
+  "notes": [
+   "lv0 = wikiレシピ一覧のLv0(レシピ画面)エナジー。食材の数ボーナス込み。数ボーナス表(料理ページ)は古いので使わない",
+   "最終エナジー=(lv0+Round(lv0×レシピレベルボーナス)+追加食材の基礎エナジー合計)×(1+フィールドボーナス)×イベントボーナス。大成功で×倍率",
+   "きのみ1個=Max(基礎+(Lv-1), Round(基礎×1.025^(Lv-1)))→×(1+フィールドボーナス)を切り上げ→好物は×2(順序は要確認)"
+  ]
+ },
+ "ingredients": [
+  {
+   "jp": "とくせんリンゴ",
+   "en": "Fancy Apple",
+   "base": 90
+  },
+  {
+   "jp": "モーモーミルク",
+   "en": "Moomoo Milk",
+   "base": 98
+  },
+  {
+   "jp": "ワカクサ大豆",
+   "en": "Greengrass Soybeans",
+   "base": 100
+  },
+  {
+   "jp": "あまいミツ",
+   "en": "Honey",
+   "base": 101
+  },
+  {
+   "jp": "マメミート",
+   "en": "Bean Sausage",
+   "base": 103
+  },
+  {
+   "jp": "あったかジンジャー",
+   "en": "Warming Ginger",
+   "base": 109
+  },
+  {
+   "jp": "あんみんトマト",
+   "en": "Snoozy Tomato",
+   "base": 110
+  },
+  {
+   "jp": "とくせんエッグ",
+   "en": "Fancy Egg",
+   "base": 115
+  },
+  {
+   "jp": "ピュアなオイル",
+   "en": "Pure Oil",
+   "base": 121
+  },
+  {
+   "jp": "ほっこりポテト",
+   "en": "Soft Potato",
+   "base": 124
+  },
+  {
+   "jp": "げきからハーブ",
+   "en": "Fiery Herb",
+   "base": 130
+  },
+  {
+   "jp": "ワカクサコーン",
+   "en": "Greengrass Corn",
+   "base": 140
+  },
+  {
+   "jp": "リラックスカカオ",
+   "en": "Soothing Cacao",
+   "base": 151
+  },
+  {
+   "jp": "めざましコーヒー",
+   "en": "Rousing Coffee",
+   "base": 153
+  },
+  {
+   "jp": "つやつやアボカド",
+   "en": "Glossy Avocado",
+   "base": 162
+  },
+  {
+   "jp": "あじわいキノコ",
+   "en": "Tasty Mushroom",
+   "base": 167
+  },
+  {
+   "jp": "ふといナガネギ",
+   "en": "Large Leek",
+   "base": 185
+  },
+  {
+   "jp": "ずっしりカボチャ",
+   "en": "Plump Pumpkin",
+   "base": 250
+  },
+  {
+   "jp": "おいしいしっぽ",
+   "en": "Slowpoke Tail",
+   "base": 342
+  }
+ ],
+ "berry": {
+  "types": [
+   {
+    "jp": "ノーマル",
+    "en": "Normal",
+    "berry": "キー",
+    "base": 28
+   },
+   {
+    "jp": "ほのお",
+    "en": "Fire",
+    "berry": "ヒメリ",
+    "base": 27
+   },
+   {
+    "jp": "みず",
+    "en": "Water",
+    "berry": "オレン",
+    "base": 31
+   },
+   {
+    "jp": "でんき",
+    "en": "Electric",
+    "berry": "ウブ",
+    "base": 25
+   },
+   {
+    "jp": "くさ",
+    "en": "Grass",
+    "berry": "ドリ",
+    "base": 30
+   },
+   {
+    "jp": "こおり",
+    "en": "Ice",
+    "berry": "チーゴ",
+    "base": 32
+   },
+   {
+    "jp": "かくとう",
+    "en": "Fighting",
+    "berry": "クラボ",
+    "base": 27
+   },
+   {
+    "jp": "どく",
+    "en": "Poison",
+    "berry": "カゴ",
+    "base": 32
+   },
+   {
+    "jp": "じめん",
+    "en": "Ground",
+    "berry": "フィラ",
+    "base": 29
+   },
+   {
+    "jp": "ひこう",
+    "en": "Flying",
+    "berry": "シーヤ",
+    "base": 24
+   },
+   {
+    "jp": "エスパー",
+    "en": "Psychic",
+    "berry": "マゴ",
+    "base": 26
+   },
+   {
+    "jp": "むし",
+    "en": "Bug",
+    "berry": "ラム",
+    "base": 24
+   },
+   {
+    "jp": "いわ",
+    "en": "Rock",
+    "berry": "オボン",
+    "base": 30
+   },
+   {
+    "jp": "ゴースト",
+    "en": "Ghost",
+    "berry": "ブリー",
+    "base": 26
+   },
+   {
+    "jp": "ドラゴン",
+    "en": "Dragon",
+    "berry": "ヤチェ",
+    "base": 35
+   },
+   {
+    "jp": "あく",
+    "en": "Dark",
+    "berry": "ウイ",
+    "base": 31
+   },
+   {
+    "jp": "はがね",
+    "en": "Steel",
+    "berry": "ベリブ",
+    "base": 33
+   },
+   {
+    "jp": "フェアリー",
+    "en": "Fairy",
+    "berry": "モモン",
+    "base": 26
+   }
+  ]
+ },
+ "recipeLevelBonusPercent": [
+  0,
+  2,
+  4,
+  6,
+  8,
+  9,
+  11,
+  13,
+  16,
+  18,
+  19,
+  21,
+  23,
+  24,
+  26,
+  28,
+  30,
+  31,
+  33,
+  35,
+  37,
+  40,
+  42,
+  45,
+  47,
+  50,
+  52,
+  55,
+  58,
+  61,
+  64,
+  67,
+  70,
+  74,
+  77,
+  81,
+  84,
+  88,
+  92,
+  96,
+  100,
+  104,
+  108,
+  113,
+  117,
+  122,
+  127,
+  132,
+  137,
+  142,
+  148,
+  153,
+  159,
+  165,
+  171
+ ],
+ "recipeLevelNote": "index=レベル-1。Lv55(+171%)まで。ゲーム側の上限は65(+234%)だがLv56〜64の値は未取得",
+ "greatSuccess": {
+  "baseRate": 0.1,
+  "sundayRate": 0.3,
+  "multiplier": 2,
+  "sundayMultiplier": 3,
+  "cookingChanceCap": 0.7,
+  "mealsPerWeek": 21,
+  "sundayMeals": 3,
+  "note": "日曜のみ3倍はユーザー指定。料理チャンスSのレベル別上昇値は未取得（手入力）"
+ },
+ "potCapacity": [
+  15,
+  18,
+  21,
+  24,
+  27,
+  30,
+  33,
+  36,
+  39,
+  42,
+  45,
+  48,
+  51,
+  54,
+  57
+ ],
+ "skillEnergy": {
+  "note": "wikiではなく第三者サイトの値(要確認)。Phase2(スキルエナジー)で使用予定。ランダムは範囲が0.5倍〜2倍(一様分布の平均は1.25倍と仮定)",
+  "charge_S": [
+   400,
+   569,
+   785,
+   1083,
+   1496,
+   2066,
+   3212
+  ],
+  "charge_M": [
+   880,
+   1251,
+   1726,
+   2383,
+   3290,
+   4546,
+   6858
+  ],
+  "charge_S_random_min": [
+   200,
+   284,
+   392,
+   542,
+   748,
+   1033,
+   1606
+  ],
+  "charge_S_random_max": [
+   800,
+   1138,
+   1570,
+   2166,
+   2992,
+   4132,
+   6424
+  ],
+  "names": {
+   "jp": {
+    "S": "エナジーチャージS",
+    "S_random": "エナジーチャージS(ランダム)",
+    "M": "エナジーチャージM"
+   },
+   "en": {
+    "S": "Charge Energy S",
+    "S_random": "Charge Energy S (Random Species)",
+    "M": "Charge Energy M"
+   }
+  },
+  "unsupported": [
+   "たくわえる / Stockpile Charge",
+   "ナイトメア系",
+   "料理チャンスS（大成功率上昇）"
+  ]
+ },
+ "recipes": {
+  "とくせんリンゴカレー": {
+   "count": 7,
+   "lv0": 748,
+   "estimated": false,
+   "en": [
+    "Fancy Apple Curry"
+   ]
+  },
+  "あぶりテールカレー": {
+   "count": 33,
+   "lv0": 7483,
+   "estimated": false,
+   "en": [
+    "Grilled Tail Curry"
+   ]
+  },
+  "サンパワートマトカレー": {
+   "count": 15,
+   "lv0": 2078,
+   "estimated": false,
+   "en": [
+    "\"Solar Power\" Tomato Curry"
+   ]
+  },
+  "ぜったいねむりバターカレー": {
+   "count": 55,
+   "lv0": 9010,
+   "estimated": false,
+   "en": [
+    "\"Dream Eater\" Butter Curry"
+   ]
+  },
+  "からくちネギもりカレー": {
+   "count": 32,
+   "lv0": 5900,
+   "estimated": false,
+   "en": [
+    "Spicy Leek Curry"
+   ]
+  },
+  "キノコのほうしカレー": {
+   "count": 23,
+   "lv0": 4162,
+   "estimated": false,
+   "en": [
+    "\"Spore\" Mushroom Curry"
+   ]
+  },
+  "おやこあいカレー": {
+   "count": 35,
+   "lv0": 4523,
+   "estimated": false,
+   "en": [
+    "\"Egg Bomb\" Curry"
+   ]
+  },
+  "満腹チーズバーグカレー": {
+   "count": 16,
+   "lv0": 1910,
+   "estimated": false,
+   "en": [
+    "Hearty Cheeseburger Curry"
+   ]
+  },
+  "ほっこりホワイトシチュー": {
+   "count": 22,
+   "lv0": 3181,
+   "estimated": false,
+   "en": [
+    "Soft Potato Chowder"
+   ]
+  },
+  "たんじゅんホワイトシチュー": {
+   "count": 7,
+   "lv0": 814,
+   "estimated": false,
+   "en": [
+    "Simple Chowder",
+    "Warm Moomoo Milk"
+   ]
+  },
+  "マメバーグカレー": {
+   "count": 7,
+   "lv0": 856,
+   "estimated": false,
+   "en": [
+    "Beanburger Curry"
+   ]
+  },
+  "ベイビィハニーカレー": {
+   "count": 7,
+   "lv0": 839,
+   "estimated": false,
+   "en": [
+    "Mild Honey Curry"
+   ]
+  },
+  "ニンジャカレー": {
+   "count": 50,
+   "lv0": 9445,
+   "estimated": false,
+   "en": [
+    "Ninja Curry"
+   ]
+  },
+  "ワカクサカレーパン": {
+   "count": 63,
+   "lv0": 10945,
+   "estimated": true,
+   "en": [
+    "Greengrass Curry Bread"
+   ]
+  },
+  "ひでりカツレツカレー": {
+   "count": 15,
+   "lv0": 1942,
+   "estimated": false,
+   "en": [
+    "\"Drought\" Katsu Curry"
+   ]
+  },
+  "とけるオムカレー": {
+   "count": 16,
+   "lv0": 2150,
+   "estimated": false,
+   "en": [
+    "Melty Omelette Curry"
+   ]
+  },
+  "ビルドアップマメカレー": {
+   "count": 26,
+   "lv0": 3372,
+   "estimated": false,
+   "en": [
+    "\"Bulk Up\" Bean Curry"
+   ]
+  },
+  "じゅうなんコーンシチュー": {
+   "count": 30,
+   "lv0": 4670,
+   "estimated": false,
+   "en": [
+    "\"Limber\" Corn Stew"
+   ]
+  },
+  "れんごくコーンキーマカレー": {
+   "count": 77,
+   "lv0": 13690,
+   "estimated": false,
+   "en": [
+    "\"Inferno\" Corn Keema Curry"
+   ]
+  },
+  "ピヨピヨパンチ辛口カレー": {
+   "count": 33,
+   "lv0": 5702,
+   "estimated": false,
+   "en": [
+    "\"Dizzy Punch\" Spicy Curry"
+   ]
+  },
+  "めざめるパワーシチュー": {
+   "count": 92,
+   "lv0": 19061,
+   "estimated": false,
+   "en": [
+    "\"Hidden Power\" Perk-Up Stew"
+   ]
+  },
+  "いあいぎりすき焼きカレー": {
+   "count": 101,
+   "lv0": 20655,
+   "estimated": false,
+   "en": [
+    "\"Cut\" Sukiyaki Curry"
+   ]
+  },
+  "なりきりバケッチャシチュー": {
+   "count": 69,
+   "lv0": 15621,
+   "estimated": false,
+   "en": [
+    "\"Role Play\" Pumpkaboo Stew"
+   ]
+  },
+  "とびはねるカレーうどん": {
+   "count": 112,
+   "lv0": 25539,
+   "estimated": true,
+   "en": [
+    "\"Bounce\" Curry Udon"
+   ]
+  },
+  "しんりょくアボカドグラタン": {
+   "count": 115,
+   "lv0": 24802,
+   "estimated": false,
+   "en": [
+    "\"Overgrow\" Avocado Gratin"
+   ]
+  },
+  "とくせんリンゴサラダ": {
+   "count": 8,
+   "lv0": 855,
+   "estimated": false,
+   "en": [
+    "Fancy Apple Salad",
+    "Fancy Apple Juice"
+   ]
+  },
+  "マメハムサラダ": {
+   "count": 8,
+   "lv0": 978,
+   "estimated": false,
+   "en": [
+    "Bean Ham Salad"
+   ]
+  },
+  "あんみんトマトサラダ": {
+   "count": 8,
+   "lv0": 1045,
+   "estimated": false,
+   "en": [
+    "Snoozy Tomato Salad"
+   ]
+  },
+  "ゆきかきシーザーサラダ": {
+   "count": 16,
+   "lv0": 1898,
+   "estimated": false,
+   "en": [
+    "\"Snow Cloak\" Caesar Salad"
+   ]
+  },
+  "ねっぷうとうふサラダ": {
+   "count": 16,
+   "lv0": 2114,
+   "estimated": false,
+   "en": [
+    "\"Heat Wave\" Tofu Salad"
+   ]
+  },
+  "うるおいとうふサラダ": {
+   "count": 24,
+   "lv0": 3113,
+   "estimated": false,
+   "en": [
+    "\"Water Veil\" Tofu Salad"
+   ]
+  },
+  "みだれづきコーンサラダ": {
+   "count": 17,
+   "lv0": 2785,
+   "estimated": false,
+   "en": [
+    "\"Fury Attack\" Corn Salad"
+   ]
+  },
+  "メロメロりんごのチーズサラダ": {
+   "count": 23,
+   "lv0": 2655,
+   "estimated": false,
+   "en": [
+    "\"Dazzling\" Apple Cheese Salad"
+   ]
+  },
+  "めんえきネギサラダ": {
+   "count": 15,
+   "lv0": 2845,
+   "estimated": false,
+   "en": [
+    "\"Immunity\" Leek Salad"
+   ]
+  },
+  "モーモーカプレーゼ": {
+   "count": 23,
+   "lv0": 2942,
+   "estimated": false,
+   "en": [
+    "Moomoo Caprese Salad"
+   ]
+  },
+  "ばかぢからワイルドサラダ": {
+   "count": 23,
+   "lv0": 3046,
+   "estimated": false,
+   "en": [
+    "\"Superpower\" Extreme Salad"
+   ]
+  },
+  "ムラっけチョコミートサラダ": {
+   "count": 23,
+   "lv0": 3665,
+   "estimated": false,
+   "en": [
+    "\"Contrary\" Chocolate Meat Salad"
+   ]
+  },
+  "くいしんぼうポテトサラダ": {
+   "count": 36,
+   "lv0": 5040,
+   "estimated": false,
+   "en": [
+    "\"Gluttony\" Potato Salad"
+   ]
+  },
+  "オーバーヒートサラダ": {
+   "count": 35,
+   "lv0": 5225,
+   "estimated": false,
+   "en": [
+    "\"Overheat\" Ginger Salad"
+   ]
+  },
+  "キノコのほうしサラダ": {
+   "count": 33,
+   "lv0": 5859,
+   "estimated": false,
+   "en": [
+    "\"Spore\" Mushroom Salad"
+   ]
+  },
+  "ヤドンテールのペッパーサラダ": {
+   "count": 35,
+   "lv0": 8169,
+   "estimated": false,
+   "en": [
+    "Slowpoke Tail Pepper Salad"
+   ]
+  },
+  "めいそうスイートサラダ": {
+   "count": 49,
+   "lv0": 7675,
+   "estimated": false,
+   "en": [
+    "\"Calm Mind\" Fruit Salad"
+   ]
+  },
+  "ニンジャサラダ": {
+   "count": 57,
+   "lv0": 11659,
+   "estimated": false,
+   "en": [
+    "Ninja Salad"
+   ]
+  },
+  "ワカクササラダ": {
+   "count": 62,
+   "lv0": 11393,
+   "estimated": false,
+   "en": [
+    "Greengrass Salad"
+   ]
+  },
+  "クロスチョップドサラダ": {
+   "count": 56,
+   "lv0": 8755,
+   "estimated": false,
+   "en": [
+    "\"Cross Chop\" Salad"
+   ]
+  },
+  "まけんきコーヒーサラダ": {
+   "count": 100,
+   "lv0": 20218,
+   "estimated": false,
+   "en": [
+    "\"Defiant\" Coffee-Dressed Salad"
+   ]
+  },
+  "ごろごろねっとうサラダ": {
+   "count": 95,
+   "lv0": 25356,
+   "estimated": false,
+   "en": [
+    "\"Scald\" Chunky Salad"
+   ]
+  },
+  "じならしワカモレチップス": {
+   "count": 105,
+   "lv0": 25162,
+   "estimated": false,
+   "en": [
+    "\"Bulldoze\" Guacamole and Chips"
+   ]
+  },
+  "りんごさんヨーグルトサラダ": {
+   "count": 104,
+   "lv0": 19293,
+   "estimated": false,
+   "en": [
+    "\"Apple Acid\" Yogurt-Dressed Salad"
+   ]
+  },
+  "はなふぶきミモザサラダ": {
+   "count": 69,
+   "lv0": 11881,
+   "estimated": false,
+   "en": [
+    "\"Petal Blizzard\" Layered Salad"
+   ]
+  },
+  "みつあつめチョコワッフル": {
+   "count": 115,
+   "lv0": 25484,
+   "estimated": false,
+   "en": [
+    "\"Honey Gather\" Chocolate Waffles"
+   ]
+  },
+  "ドキドキこわいかおパンケーキ": {
+   "count": 103,
+   "lv0": 24354,
+   "estimated": false,
+   "en": [
+    "\"Scary Face\" Pancakes"
+   ]
+  },
+  "ドオーのエクレア": {
+   "count": 102,
+   "lv0": 20885,
+   "estimated": false,
+   "en": [
+    "Clodsire Éclair"
+   ]
+  },
+  "スパークスパイスコーラ": {
+   "count": 87,
+   "lv0": 17494,
+   "estimated": false,
+   "en": [
+    "\"Zing Zap\" Spiced Cola"
+   ]
+  },
+  "フラワーギフトマカロン": {
+   "count": 77,
+   "lv0": 13834,
+   "estimated": false,
+   "en": [
+    "\"Flower Gift\" Macarons"
+   ]
+  },
+  "おちゃかいコーンスコーン": {
+   "count": 67,
+   "lv0": 10925,
+   "estimated": false,
+   "en": [
+    "\"Teatime\" Corn Scone"
+   ]
+  },
+  "グラスミキサースムージー": {
+   "count": 48,
+   "lv0": 8165,
+   "estimated": false,
+   "en": [
+    "\"Leaf Tornado\" Smoothie"
+   ]
+  },
+  "プリンのプリンアラモード": {
+   "count": 55,
+   "lv0": 7594,
+   "estimated": false,
+   "en": [
+    "Jigglypuff's Fruity Flan"
+   ]
+  },
+  "かたやぶりコーンティラミス": {
+   "count": 40,
+   "lv0": 7125,
+   "estimated": false,
+   "en": [
+    "\"Mold Breaker\" Corn Tiramisu"
+   ]
+  },
+  "はやおきコーヒーゼリー": {
+   "count": 42,
+   "lv0": 6793,
+   "estimated": false,
+   "en": [
+    "\"Early Bird\" Coffee Jelly"
+   ]
+  },
+  "だいばくはつポップコーン": {
+   "count": 36,
+   "lv0": 6048,
+   "estimated": false,
+   "en": [
+    "\"Explosion\" Popcorn"
+   ]
+  },
+  "ちからもちソイドーナッツ": {
+   "count": 35,
+   "lv0": 5547,
+   "estimated": false,
+   "en": [
+    "\"Huge Power\" Soy Donuts"
+   ]
+  },
+  "ネロリのデトックスティー": {
+   "count": 35,
+   "lv0": 5065,
+   "estimated": false,
+   "en": [
+    "Neroli's Restorative Tea"
+   ]
+  },
+  "ふくつのジンジャークッキー": {
+   "count": 35,
+   "lv0": 4921,
+   "estimated": false,
+   "en": [
+    "\"Steadfast\" Ginger Cookies"
+   ]
+  },
+  "あくまのキッスフルーツオレ": {
+   "count": 35,
+   "lv0": 4734,
+   "estimated": false,
+   "en": [
+    "\"Lovely Kiss\" Smoothie"
+   ]
+  },
+  "あまいかおりチョコケーキ": {
+   "count": 24,
+   "lv0": 3378,
+   "estimated": false,
+   "en": [
+    "\"Sweet Scent\" Chocolate Cake"
+   ]
+  },
+  "はなびらのまいチョコタルト": {
+   "count": 22,
+   "lv0": 3314,
+   "estimated": false,
+   "en": [
+    "\"Petal Dance\" Chocolate Tart"
+   ]
+  },
+  "はりきりプロテインスムージー": {
+   "count": 23,
+   "lv0": 3263,
+   "estimated": false,
+   "en": [
+    "\"Hustle\" Protein Smoothie"
+   ]
+  },
+  "おおきいマラサダ": {
+   "count": 23,
+   "lv0": 3015,
+   "estimated": false,
+   "en": [
+    "Big Malasada"
+   ]
+  },
+  "マイペースやさいジュース": {
+   "count": 16,
+   "lv0": 1924,
+   "estimated": false,
+   "en": [
+    "\"Stalwart\" Vegetable Juice"
+   ]
+  },
+  "かるわざソイケーキ": {
+   "count": 15,
+   "lv0": 1924,
+   "estimated": false,
+   "en": [
+    "\"Cloud Nine\" Soy Cake"
+   ]
+  },
+  "ひのこのジンジャーティー": {
+   "count": 16,
+   "lv0": 1913,
+   "estimated": false,
+   "en": [
+    "\"Ember\" Ginger Tea"
+   ]
+  },
+  "じゅくせいスイートポテト": {
+   "count": 14,
+   "lv0": 1907,
+   "estimated": false,
+   "en": [
+    "\"Fluffy\" Sweet Potatoes"
+   ]
+  },
+  "ねがいごとアップルパイ": {
+   "count": 16,
+   "lv0": 1748,
+   "estimated": false,
+   "en": [
+    "\"Lucky Chant\" Apple Pie"
+   ]
+  },
+  "クラフトサイコソーダ": {
+   "count": 9,
+   "lv0": 1079,
+   "estimated": false,
+   "en": [
+    "Craft Soda Pop"
+   ]
+  },
+  "くだけるアボカドサラダ": {
+   "count": 42,
+   "lv0": 7125,
+   "estimated": false,
+   "en": [
+    "Luscious Avocado Salad"
+   ],
+   "notInJpTool": true
+  },
+  "とくせんリンゴジュース": {
+   "count": 8,
+   "lv0": 855,
+   "estimated": false,
+   "en": [
+    "Fancy Apple Juice"
+   ],
+   "notInJpTool": true
+  },
+  "モーモーホットミルク": {
+   "count": 7,
+   "lv0": 814,
+   "estimated": false,
+   "en": [
+    "Warm Moomoo Milk"
+   ],
+   "notInJpTool": true
+  }
+ },
+ "unverified": [
+  "ワカクサカレーパン・とびはねるカレーうどん(lv0はwiki一覧に無く、食材数の段階から概算)",
+  "料理チャンスS・たくわえるの効果値",
+  "レシピLv56以上のボーナス",
+  "好物×2とフィールドボーナスの適用順",
+  "スキルエナジー値(第三者サイト)"
+ ]
+}
