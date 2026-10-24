@@ -1,0 +1,2774 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2480117696040690"
+     crossorigin="anonymous"></script>
+  <title>【テスト版】食材ポケモン厳選基準シミュレーター｜ポケモンスリープ攻略</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Nunito:wght@600;700;800&display=swap');
+
+    :root {
+      --pks-night-deep: #161029;
+      --pks-night-panel: #251c47;
+      --pks-night-panel-2: #2f2459;
+      --pks-purple: #a98ee8;
+      --pks-star: #ffd166;
+      --pks-star-soft: #ffe9b0;
+      --pks-text: #ece6fa;
+      --pks-text-dim: #9b8fc2;
+      --pks-green: #7fd9a8;
+      --pks-red: #ff7e7e;
+      --pks-border: rgba(169,142,232,0.25);
+      --pks-border-green: rgba(127,217,168,0.4);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', 'Zen Maru Gothic', sans-serif;
+      color: var(--pks-text);
+      background:
+        radial-gradient(ellipse 600px 300px at 15% 0%, rgba(169,142,232,0.18), transparent 60%),
+        radial-gradient(ellipse 500px 400px at 90% 20%, rgba(255,209,102,0.08), transparent 55%),
+        linear-gradient(180deg, var(--pks-night-deep) 0%, #1d1638 100%);
+      min-height: 100vh;
+      padding: 24px 16px 80px;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        radial-gradient(2px 2px at 10% 15%, rgba(255,209,102,0.7), transparent),
+        radial-gradient(2px 2px at 80% 10%, rgba(255,209,102,0.5), transparent),
+        radial-gradient(1.5px 1.5px at 60% 30%, rgba(236,230,250,0.6), transparent),
+        radial-gradient(2px 2px at 30% 60%, rgba(169,142,232,0.5), transparent),
+        radial-gradient(1.5px 1.5px at 90% 70%, rgba(255,209,102,0.4), transparent);
+      z-index: 0;
+    }
+    .pks-wrap { position: relative; z-index: 1; max-width: 520px; margin: 0 auto; }
+
+    .pks-eyebrow {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 11px; font-weight: 800; letter-spacing: 0.12em;
+      color: var(--pks-star); margin-bottom: 8px;
+    }
+    .pks-eyebrow::before { content: "✦"; font-size: 13px; }
+    h1 { font-family: 'Zen Maru Gothic', sans-serif; font-size: 22px; font-weight: 900; color: #fff; margin-bottom: 4px; }
+    .pks-sub { font-size: 12.5px; color: var(--pks-text-dim); margin-bottom: 22px; line-height: 1.7; }
+
+    /* ステップバー */
+    .pks-steps { display: flex; gap: 5px; margin-bottom: 22px; }
+    .pks-step {
+      flex: 1; text-align: center; font-size: 10.5px; font-weight: 800;
+      padding: 7px 2px; border-radius: 10px;
+      border: 1.5px solid var(--pks-border); color: var(--pks-text-dim); letter-spacing: 0.02em;
+    }
+    .pks-step.active { background: linear-gradient(135deg, var(--pks-night-panel), var(--pks-night-panel-2)); border-color: var(--pks-purple); color: var(--pks-text); }
+    .pks-step.done { background: rgba(127,217,168,0.1); border-color: var(--pks-border-green); color: var(--pks-green); }
+
+    /* パネル */
+    .pks-panel {
+      background: linear-gradient(165deg, var(--pks-night-panel) 0%, var(--pks-night-panel-2) 100%);
+      border: 1px solid var(--pks-border); border-radius: 20px; padding: 18px 16px; margin-bottom: 14px;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+    .pks-panel-title { font-family: 'Zen Maru Gothic', sans-serif; font-size: 13px; font-weight: 900; color: var(--pks-star-soft); margin-bottom: 14px; }
+
+    /* フォーム */
+    .field { margin-bottom: 10px; }
+    label { display: block; font-size: 11px; font-weight: 700; color: var(--pks-text-dim); margin-bottom: 4px; }
+    .pks-sw { position: relative; }
+    .pks-sw::after { content: "▾"; position: absolute; right: 11px; top: 50%; transform: translateY(-50%); color: var(--pks-purple); font-size: 11px; pointer-events: none; }
+    select, input[type="number"], input[type="text"], textarea {
+      width: 100%; font-family: 'Nunito', sans-serif; font-size: 13.5px; font-weight: 700;
+      color: var(--pks-text); background: rgba(22,16,41,0.6);
+      border: 1.5px solid var(--pks-border); border-radius: 9px; padding: 8px 11px; appearance: none; outline: none;
+    }
+    textarea { resize: vertical; font-size: 12px; line-height: 1.5; }
+    select:focus, input[type="number"]:focus, input[type="text"]:focus, textarea:focus { border-color: var(--pks-purple); }
+    .pks-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .pks-subs { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+    .pks-subs .pks-sw:last-child { grid-column: span 2; }
+
+    /* 編成カウンター */
+    .pks-comp-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .pks-comp-item {
+      background: rgba(22,16,41,0.5);
+      border: 1.5px solid var(--pks-border);
+      border-radius: 12px;
+      padding: 12px;
+    }
+    .pks-comp-label {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--pks-text);
+      margin-bottom: 8px;
+      display: block;
+    }
+    .pks-comp-item .pks-comp-emoji { font-size: 18px; display: block; margin-bottom: 4px; }
+    .pks-counter {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .pks-counter-btn {
+      width: 44px; height: 44px;
+      background: rgba(169,142,232,0.18);
+      border: 1.5px solid var(--pks-border);
+      border-radius: 10px;
+      color: var(--pks-purple);
+      font-size: 22px;
+      font-weight: 900;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      line-height: 1;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: rgba(169,142,232,0.3);
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .pks-counter-val {
+      font-family: 'Zen Maru Gothic', sans-serif;
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--pks-text);
+      min-width: 24px;
+      text-align: center;
+    }
+    .pks-comp-total {
+      text-align: center;
+      font-family: 'Zen Maru Gothic', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 10px;
+      border-radius: 10px;
+      margin-bottom: 6px;
+    }
+    .pks-comp-total.ok { background: rgba(127,217,168,0.1); color: var(--pks-green); border: 1px solid var(--pks-border-green); }
+    .pks-comp-total.ng { background: rgba(255,126,126,0.08); color: var(--pks-red); border: 1px solid rgba(255,126,126,0.25); }
+
+    /* ポケモンカード */
+    .pks-pokemon-card {
+      background: rgba(22,16,41,0.5);
+      border: 1.5px solid var(--pks-border);
+      border-radius: 13px;
+      padding: 13px;
+      margin-bottom: 10px;
+    }
+    .pks-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .pks-card-label { font-size: 11px; font-weight: 800; color: var(--pks-star); letter-spacing: 0.06em; }
+
+    /* タイプ別カラー */
+    .pks-card-label.berry  { color: #f4a36f; }
+    .pks-card-label.ing    { color: var(--pks-star); }
+    .pks-card-label.skill  { color: #a0d4ff; }
+    .pks-card-label.healer { color: var(--pks-green); }
+    .pks-card-label.seling { color: #f4d03f; }
+
+    /* ボタン */
+    .pks-btn-primary {
+      width: 100%; font-family: 'Zen Maru Gothic', sans-serif; font-size: 14px; font-weight: 900;
+      letter-spacing: 0.04em; color: #2a1f4d;
+      background: linear-gradient(135deg, var(--pks-star) 0%, #ffb84d 100%);
+      border: none; border-radius: 12px; padding: 13px; cursor: pointer; margin-top: 6px; display: block;
+    }
+    .pks-btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+    .pks-btn-secondary {
+      width: 100%; font-family: 'Zen Maru Gothic', sans-serif; font-size: 13px; font-weight: 700;
+      color: var(--pks-text); background: rgba(169,142,232,0.12);
+      border: 1.5px solid var(--pks-border); border-radius: 12px; padding: 11px;
+      cursor: pointer; margin-top: 8px; display: block;
+    }
+
+    /* 料理行 */
+    .pks-recipe-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 64px 36px;
+      gap: 6px;
+      align-items: end;
+      margin-bottom: 8px;
+    }
+    .pks-recipe-row input[type="number"] { padding: 8px 8px; }
+    .pks-recipe-remove {
+      background: rgba(255,126,126,0.12); border: 1px solid rgba(255,126,126,0.25);
+      color: var(--pks-red); border-radius: 8px; height: 36px; width: 36px;
+      font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .pks-btn-add {
+      width: 100%; font-family: 'Zen Maru Gothic', sans-serif; font-size: 12.5px; font-weight: 700;
+      color: var(--pks-purple); background: rgba(169,142,232,0.08);
+      border: 1.5px dashed rgba(169,142,232,0.35); border-radius: 11px;
+      padding: 9px; cursor: pointer; margin-top: 4px; display: block;
+    }
+    .pks-remove-btn {
+      background: rgba(255,126,126,0.15);
+      border: 1px solid rgba(255,126,126,0.35);
+      color: var(--pks-red);
+      border-radius: 7px;
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .pks-total-line { text-align: right; font-size: 12px; color: var(--pks-text-dim); margin-top: 8px; }
+    .pks-total-line.ok { color: var(--pks-green); }
+    .pks-total-line.ng { color: var(--pks-red); }
+
+    /* 結果 */
+    .pks-verdict { text-align: center; padding: 18px 0 14px; }
+    .pks-verdict-main { font-family: 'Zen Maru Gothic', sans-serif; font-size: 26px; font-weight: 900; margin-bottom: 3px; }
+    .pks-verdict-main.ok { color: var(--pks-green); }
+    .pks-verdict-main.ng { color: var(--pks-red); }
+    .pks-verdict-sub { font-size: 12px; color: var(--pks-text-dim); }
+    .pks-ing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 12px; }
+    .pks-ing-card { background: rgba(22,16,41,0.5); border-radius: 10px; padding: 10px 11px; }
+    .pks-ing-name { font-size: 10.5px; color: var(--pks-text-dim); margin-bottom: 4px; }
+    .pks-ing-bar-bg { background: rgba(255,255,255,0.06); border-radius: 4px; height: 4px; margin-bottom: 5px; overflow: hidden; }
+    .pks-ing-bar { height: 100%; border-radius: 4px; }
+    .pks-ing-bar.ok { background: var(--pks-green); }
+    .pks-ing-bar.ng { background: var(--pks-red); }
+    .pks-ing-nums { display: flex; justify-content: space-between; font-size: 11px; }
+    .pks-ing-have.ok { color: var(--pks-green); }
+    .pks-ing-have.ng { color: var(--pks-red); }
+    .pks-ing-need { color: var(--pks-text-dim); }
+    .pks-surplus { background: rgba(127,217,168,0.08); border: 1.5px solid var(--pks-border-green); border-radius: 12px; padding: 13px 15px; margin-top: 12px; }
+    .pks-surplus-label { font-size: 11px; font-weight: 700; color: var(--pks-green); margin-bottom: 4px; }
+    .pks-surplus-val { font-family: 'Zen Maru Gothic', sans-serif; font-size: 24px; font-weight: 900; color: var(--pks-green); }
+    .pks-surplus-desc { font-size: 11.5px; color: var(--pks-text-dim); margin-top: 2px; }
+    .pks-shortage { background: rgba(255,126,126,0.07); border: 1.5px solid rgba(255,126,126,0.28); border-radius: 12px; padding: 13px 15px; margin-top: 12px; }
+    .pks-shortage-label { font-size: 11px; font-weight: 700; color: var(--pks-red); margin-bottom: 6px; }
+    .pks-shortage-item { font-size: 12.5px; color: var(--pks-text-dim); line-height: 1.9; }
+    .pks-extra { background: rgba(169,142,232,0.07); border: 1px solid var(--pks-border); border-radius: 12px; padding: 12px 14px; margin-top: 10px; }
+    .pks-extra-label { font-size: 11px; font-weight: 700; color: var(--pks-purple); margin-bottom: 5px; }
+    .pks-extra-item { font-size: 12px; color: var(--pks-text-dim); line-height: 1.9; }
+
+    .pks-footnote { text-align: center; font-size: 11px; color: var(--pks-text-dim); opacity: 0.6; margin-top: 24px; }
+    .pks-hidden { display: none !important; }
+
+    /* 結果セクションタイトル */
+    .pks-result-section-title {
+      font-size: 11.5px; font-weight: 800; color: var(--pks-text-dim);
+      margin: 12px 0 8px; letter-spacing: 0.03em;
+    }
+
+    /* ポケモン別食材内訳 */
+    .pks-pb-list { display: flex; flex-direction: column; gap: 8px; }
+    .pks-pb-card {
+      background: rgba(22,16,41,0.5);
+      border: 1.5px solid var(--pks-border);
+      border-radius: 11px;
+      padding: 10px 13px;
+    }
+    .pks-pb-name {
+      font-family: 'Zen Maru Gothic', sans-serif;
+      font-size: 13px; font-weight: 700;
+      color: var(--pks-star-soft);
+      margin-bottom: 7px;
+    }
+    .pks-pb-row {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 12px; line-height: 1.8;
+    }
+    .pks-pb-ing { color: var(--pks-text-dim); }
+    .pks-pb-val { color: var(--pks-green); font-weight: 700; }
+
+    /* トグルスイッチ */
+    .pks-toggle-wrap {
+      width: 52px; height: 28px;
+      background: rgba(22,16,41,0.6);
+      border: 1.5px solid var(--pks-border);
+      border-radius: 14px;
+      cursor: pointer;
+      position: relative;
+      transition: background 0.25s, border-color 0.25s;
+      flex-shrink: 0;
+    }
+    .pks-toggle-wrap.on {
+      background: rgba(127,217,168,0.3);
+      border-color: var(--pks-green);
+    }
+    .pks-toggle {
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 20px; height: 20px;
+      background: var(--pks-text-dim);
+      border-radius: 50%;
+      transition: transform 0.25s, background 0.25s;
+    }
+    .pks-toggle-wrap.on .pks-toggle {
+      transform: translateX(24px);
+      background: var(--pks-green);
+    }
+
+    /* アコーディオン */
+    .pks-accordion-btn {
+      width: 100%; background: rgba(169,142,232,0.08);
+      border: 1px solid var(--pks-border); border-radius: 8px;
+      color: var(--pks-text-dim); font-size: 11.5px; font-weight: 700;
+      padding: 7px 12px; cursor: pointer; text-align: left;
+      margin-top: 8px; display: flex; justify-content: space-between; align-items: center;
+    }
+    .pks-accordion-btn:hover { border-color: var(--pks-purple); color: var(--pks-text); }
+    .pks-accordion-body { display: none; margin-top: 8px; }
+    .pks-accordion-body.open { display: block; }
+
+    /* ===== 保存・呼び出し ===== */
+    .pks-saved-bar { margin-bottom: 10px; }
+    .pks-save-row {
+      display: grid; grid-template-columns: 1fr auto; gap: 8px;
+      align-items: center; margin-top: 10px;
+    }
+    .pks-save-btn {
+      font-family: 'Zen Maru Gothic', sans-serif; font-size: 12.5px; font-weight: 800;
+      color: var(--pks-green); background: rgba(127,217,168,0.12);
+      border: 1.5px solid var(--pks-border-green); border-radius: 9px;
+      padding: 8px 14px; min-height: 38px; cursor: pointer; white-space: nowrap;
+      touch-action: manipulation;
+    }
+    .pks-save-msg { font-size: 11.5px; min-height: 16px; margin-top: 6px; line-height: 1.6; }
+    .pks-note { font-size: 11.5px; color: var(--pks-text-dim); line-height: 1.8; margin-bottom: 12px; }
+    .pks-saved-item {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      background: rgba(22,16,41,0.5); border: 1.5px solid var(--pks-border);
+      border-radius: 10px; padding: 8px 11px; margin-bottom: 6px;
+    }
+    .pks-saved-main { min-width: 0; }
+    .pks-saved-name { font-size: 12.5px; font-weight: 800; color: var(--pks-star-soft); word-break: break-all; }
+    .pks-saved-meta { font-size: 10.5px; color: var(--pks-text-dim); margin-top: 2px; }
+    .pks-saved-empty { font-size: 12px; color: var(--pks-text-dim); padding: 6px 2px 10px; }
+    .pks-danger-link {
+      display: block; margin: 10px auto 0; background: none; border: none;
+      color: var(--pks-red); font-size: 11px; text-decoration: underline; cursor: pointer;
+    }
+    .pks-favs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px 8px; }
+    .pks-fav { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--pks-text); margin: 0; padding: 4px 2px; }
+    .pks-fav input { width: 16px; height: 16px; accent-color: var(--pks-purple); }
+    #eventBuffInputs.off { opacity: 0.45; }
+    .pks-event-note { font-size: 11px; color: var(--pks-text-dim); line-height: 1.8; margin-top: 10px; }
+    .pks-divider { border: none; border-top: 1px solid var(--pks-border); margin: 14px 0; }
+    .pks-saved-actions { display: flex; gap: 6px; flex-shrink: 0; }
+    .pks-del-btn {
+      font-family: 'Zen Maru Gothic', sans-serif; font-size: 12px; font-weight: 800;
+      min-width: 64px; min-height: 40px; padding: 6px 12px; border-radius: 9px;
+      color: var(--pks-red); background: rgba(255,126,126,0.15);
+      border: 1.5px solid rgba(255,126,126,0.45);
+      cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: rgba(255,126,126,0.3);
+    }
+    .pks-del-btn.danger { background: rgba(255,126,126,0.4); color: #fff; }
+    .pks-del-btn.cancel { color: var(--pks-text); background: rgba(169,142,232,0.15); border-color: var(--pks-border); }
+    .pks-saved-item.confirming { border-color: rgba(255,126,126,0.5); }
+    .pks-delall-box { margin-top: 12px; text-align: center; }
+    .pks-delall-confirm { background: rgba(255,126,126,0.08); border: 1.5px solid rgba(255,126,126,0.4); border-radius: 10px; padding: 10px; }
+    .pks-delall-confirm p { font-size: 12px; color: var(--pks-text); margin-bottom: 8px; line-height: 1.6; }
+    .pks-delall-confirm .pks-saved-actions { justify-content: center; }
+  </style>
+</head>
+<body>
+<div class="pks-wrap">
+  <div class="pks-eyebrow">POKEMON SLEEP TOOLS</div>
+
+  <!-- ★ 目立つボタン化したナビ（ガイド / ブログ） --->
+  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:20px;">
+    <a href="guide.html"
+       style="padding:8px 16px;
+              background:#6a4cff;
+              color:#fff;
+              border-radius:8px;
+              font-family:'Zen Maru Gothic',sans-serif;
+              font-size:13px;
+              font-weight:700;
+              text-decoration:none;
+              box-shadow:0 2px 4px rgba(0,0,0,0.2);">
+      ガイド
+    </a>
+
+    <a href="https://www.tofumentalpapa.com/entry/pksl_homepage"
+       style="padding:8px 16px;
+              background:#00a86b;
+              color:#fff;
+              border-radius:8px;
+              font-family:'Zen Maru Gothic',sans-serif;
+              font-size:13px;
+              font-weight:700;
+              text-decoration:none;
+              box-shadow:0 2px 4px rgba(0,0,0,0.2);">
+      ブログ
+    </a>
+  </div>
+
+  <h1>食材料ポケモン厳選基準シミュレーター</h1>
+  <p class="pks-sub">食材料ポケモンの厳選基準を定量的に判断するシミュレーターです。</p>
+
+  <!-- ★ 下の重複ナビは削除済み -->
+</div>
+
+
+
+  <div class="pks-steps">
+    <div class="pks-step active" id="stepTab0">① 編成</div>
+    <div class="pks-step" id="stepTab1">② ポケモン</div>
+    <div class="pks-step" id="stepTab2">③ 料理</div>
+    <div class="pks-step" id="stepTab3">④ 結果</div>
+  </div>
+
+  <!-- ===== STEP 0: 編成設定 ===== -->
+  <div id="step0">
+    <div class="pks-panel">
+      <div class="pks-panel-title">🧩 チーム編成（合計5体）</div>
+      <div class="pks-comp-grid">
+        <div class="pks-comp-item">
+          <span class="pks-comp-emoji">🍒</span>
+          <div class="pks-comp-label">きのみ</div>
+          <div class="pks-counter">
+            <button class="pks-counter-btn" onclick="changeComp('berry',-0.5)">−</button>
+            <span class="pks-counter-val" id="compVal_berry">0</span>
+            <button class="pks-counter-btn" onclick="changeComp('berry',0.5)">＋</button>
+          </div>
+        </div>
+        <div class="pks-comp-item">
+          <span class="pks-comp-emoji">🍳</span>
+          <div class="pks-comp-label">食材</div>
+          <div class="pks-counter">
+            <button class="pks-counter-btn" onclick="changeComp('ing',-0.5)">−</button>
+            <span class="pks-counter-val" id="compVal_ing">0</span>
+            <button class="pks-counter-btn" onclick="changeComp('ing',0.5)">＋</button>
+          </div>
+        </div>
+        <div class="pks-comp-item">
+          <span class="pks-comp-emoji">⚡</span>
+          <div class="pks-comp-label">スキル</div>
+          <div class="pks-counter">
+            <button class="pks-counter-btn" onclick="changeComp('skill',-0.5)">−</button>
+            <span class="pks-counter-val" id="compVal_skill">0</span>
+            <button class="pks-counter-btn" onclick="changeComp('skill',0.5)">＋</button>
+          </div>
+        </div>
+
+
+      </div>
+      <div class="pks-comp-total ng" id="compTotal">合計 0 / 5 体</div>
+    </div>
+    <div class="pks-panel" style="margin-top:0">
+      <div class="pks-panel-title">🎫 いいキャンプチケット</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--pks-text);">使用する</div>
+          <div style="font-size:11px;color:var(--pks-text-dim);margin-top:2px;">お手伝いスピード×1.2倍（interval÷1.2）</div>
+        </div>
+        <div class="pks-toggle-wrap" onclick="toggleCamp()" id="campToggleWrap">
+          <div class="pks-toggle" id="campToggle"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pks-panel">
+      <div class="pks-panel-title">😴 睡眠中のタップ設定</div>
+      <p style="font-size:12px;color:var(--pks-text-dim);margin-bottom:10px;">
+        1日8.5時間睡眠と仮定。起床中（15.5時間）は毎分タップ前提のため所持数あふれは発生しません。
+      </p>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--pks-text);">睡眠中も毎分タップする</div>
+          <div style="font-size:11px;color:var(--pks-text-dim);margin-top:2px;">OFFの場合、所持数上限到達後はきのみ確率100%（食材ロス発生）</div>
+        </div>
+        <div class="pks-toggle-wrap on" onclick="toggleSleepTap()" id="sleepTapToggleWrap">
+          <div class="pks-toggle" id="sleepTapToggle"></div>
+        </div>
+      </div>
+    </div>
+    <div class="pks-panel">
+      <div class="pks-panel-title">🎉 イベントバフ</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--pks-text);">イベントバフを適用する</div>
+          <div style="font-size:11px;color:var(--pks-text-dim);margin-top:2px;">OFFの間は、入力した数値を残したまま計算に反映しません</div>
+        </div>
+        <div class="pks-toggle-wrap" onclick="toggleEventBuff()" id="eventBuffToggleWrap">
+          <div class="pks-toggle" id="eventBuffToggle"></div>
+        </div>
+      </div>
+      <div id="eventBuffInputs" class="off">
+        <div class="pks-row2">
+          <div class="field">
+            <label for="eventAdd">食材タイプの食材獲得数（＋個）</label>
+            <input type="number" id="eventAdd" min="0" step="1" value="1" inputmode="decimal">
+          </div>
+          <div class="field">
+            <label for="eventMult">スキルで獲得する食材数（×倍）</label>
+            <input type="number" id="eventMult" min="0" step="0.1" value="1.5" inputmode="decimal">
+          </div>
+        </div>
+      </div>
+      <p class="pks-event-note">
+        ・「＋個」は食材タイプのポケモンの、お手伝い1回あたりの食材獲得数に加算します<br>
+        ・「×倍」は<b style="color:var(--pks-star);">食材セレクトのみ</b>計算に考慮します（食材ゲットSなど、そのほかのスキルで獲得する食材は計算対象外です）<br>
+        ・数値はイベントごとに手入力してください
+      </p>
+    </div>
+    <button class="pks-btn-primary" id="btnToStep1" disabled style="margin-bottom:22px;">次へ：ポケモンを登録する →</button>
+<!-- 注意書き -->
+  <div style="
+    background: rgba(169,142,232,0.08);
+    border: 1px solid rgba(169,142,232,0.3);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    font-size: 12px;
+    color: var(--pks-text-dim);
+    line-height: 1.85;
+  ">
+    <div style="font-size:12.5px;font-weight:800;color:var(--pks-star-soft);margin-bottom:8px;">📋 計算前提・注意事項</div>
+    <div>
+      <b style="color:var(--pks-text);">【計算前提】</b><br>
+      ・ 元気は常に <b style="color:var(--pks-green);">81%以上</b> を維持している想定です<br>
+      ・ <b style="color:var(--pks-green);">毎分タップ</b>（ログイン頻度高）を前提としています<br>
+      ・ 食材の所持数はあふれていない前提です<br>
+      ・ 24時間・7日間フル稼働での計算です<br>
+    </div>
+    <div style="margin-top:8px;">
+      <b style="color:var(--pks-text);">【お手伝いスピードボーナスについて】</b><br>
+      ・ <b>おてスピM(+14%)・おてスピS(+7%)</b> は持つポケモン<b>本人のみ</b>に適用<br>
+      ・ <b>おてぼ(+5%)</b> はチームに<b>編成されている間</b>、全員のスピードを上昇<br>
+      ・ 各ポケモンへの適用ボーナス = 自分のおてスピM/S + チームのおてぼ合計<br>
+      ・ この合算が <b style="color:var(--pks-star);">35%を超えたら35%</b> に丸めます<br>
+      ・ 例：おてぼ3体編成中(+15%) + 自分がおてスピM+S(+21%) = 36% → <b>35%</b><br>
+      ・ 食材ポケモンは交代運用のため、おてぼは枠数÷登録体数で按分計算します<br>
+    </div>
+    <div style="margin-top:8px;">
+      <b style="color:var(--pks-text);">【その他】</b><br>
+      ・ 食材確率はポケモンの基礎値×(1+食材確率M×36%+S×18%) で計算<br>
+      ・ いいキャンプチケット使用時はお手伝いスピード×1.2倍<br>
+      ・ 週頭在庫（前週の持ち越し食材）は料理登録画面で入力できます<br>
+      ・ 計算結果は目安です。実際のゲームと若干異なる場合があります
+    </div>
+    <div style="margin-top:8px;">
+      <b style="color:var(--pks-text);">【所持数あふれについて】</b><br>
+      ・ 1日＝起床15.5時間（毎分タップ・あふれなし）＋睡眠8.5時間<br>
+      ・ 睡眠中「毎分タップ」OFFの場合、所持数上限到達後は<br>
+      　食材を取れず<b style="color:var(--pks-star);">きのみ確率100%</b>になります（食材ロス）<br>
+      ・ 最大所持数アップS(+6)・M(+12)・L(+18) サブスキルに対応<br>
+      ・ 最大所持数データが未登録のポケモンはあふれ計算をスキップします
+    </div>
+    <div style="margin-top:8px;">
+      <b style="color:var(--pks-text);">【食材セレクトについて】</b><br>
+      ・ 食材セレクトポケモンのスキルレベルは<b style="color:var(--pks-star);">最大レベル前提</b>で試算しています<br>
+      ・ 睡眠中タップなしの場合、スキル発動は<br>
+      　きのみ・食材タイプ：<b>1日1回まで</b>、スキルタイプ：<b>1日2回まで</b>で計算<br>
+    </div>
+    <div style="margin-top:8px;">
+      <b style="color:var(--pks-text);">【イベントバフについて】</b><br>
+      ・ 食材タイプのポケモンは、お手伝い1回あたりの食材獲得数に入力した個数を加算して計算します<br>
+      ・ スキルで獲得する食材数の倍率は、<b style="color:var(--pks-star);">食材セレクトのみ</b>計算に考慮します（そのほかのスキルは計算対象外）<br>
+      ・ トグルがOFFのときは通常の計算になります<br>
+    </div>
+    <div style="margin-top:8px;">
+      <b style="color:var(--pks-text);">【ポケモンの保存について】</b><br>
+      ・ 登録したポケモンは「保存」で<b>この端末のブラウザ</b>に記録され、次回以降は呼び出して使えます<br>
+      ・ ブラウザのデータ削除や端末の変更で消えるため、「書き出し」でのバックアップをおすすめします<br>
+    </div>
+  </div>
+</div>
+
+  <!-- ===== STEP 1: ポケモン登録 ===== -->
+  <div id="step1" class="pks-hidden">
+    <div id="pokemonSections"></div>
+
+    <button class="pks-btn-secondary" id="btnBack0">← 編成を修正</button>
+    <button class="pks-btn-primary" id="btnToStep2">次へ：料理を登録する →</button>
+
+    <!-- 保存ポケモンの管理（書き出し・読み込み） -->
+    <div class="pks-panel" id="savedManagerPanel">
+      <div class="pks-panel-title">📚 保存したポケモン</div>
+      <p class="pks-note">
+        各カードの「💾 保存」で登録したポケモンの一覧です。データはこの端末のブラウザ内に保存されます。
+        ブラウザのデータ削除や端末の変更で消えるため、「書き出し」でバックアップしてください。
+      </p>
+      <div id="savedList"></div>
+
+      <hr class="pks-divider">
+
+      <div class="pks-panel-title" style="font-size:12px;margin-bottom:8px;">⬇ 書き出し（バックアップ）</div>
+      <button class="pks-btn-secondary" type="button" onclick="exportDownload()" style="margin-top:0">ファイルで書き出す（.json）</button>
+      <button class="pks-btn-secondary" type="button" onclick="exportCopy()">JSONをコピーする</button>
+      <textarea id="exportText" class="pks-hidden" rows="5" readonly style="margin-top:8px;"></textarea>
+
+      <hr class="pks-divider">
+
+      <div class="pks-panel-title" style="font-size:12px;margin-bottom:8px;">⬆ 読み込み（復元・他の端末から移行）</div>
+      <div class="field">
+        <label for="importFile">JSONファイルを選ぶ</label>
+        <input type="file" id="importFile" accept=".json,application/json" onchange="importFromFile(this)"
+               style="width:100%;font-size:12px;color:var(--pks-text-dim);">
+      </div>
+      <div class="field">
+        <label for="importText">またはJSONを貼り付ける</label>
+        <textarea id="importText" rows="4" placeholder='{"app":"pokesleep-ingredient-simulator", ...}'></textarea>
+      </div>
+      <button class="pks-btn-secondary" type="button" onclick="importFromTextarea()" style="margin-top:0">貼り付けた内容を読み込む</button>
+      <p class="pks-note" style="margin-top:8px;margin-bottom:0;">
+        読み込みは「追加」です。すでに保存済みのデータは消えず、同じ内容のものはスキップされます。
+      </p>
+
+      <div id="savedMsg" class="pks-save-msg"></div>
+      <div id="savedDeleteAllBox"></div>
+    </div>
+  </div>
+
+  <!-- ===== STEP 2: 料理登録 ===== -->
+  <div id="step2" class="pks-hidden">
+    <div class="pks-panel">
+      <div class="pks-panel-title">🍽️ 21食分の料理を登録</div>
+      <p style="font-size:12px;color:var(--pks-text-dim);margin-bottom:12px;">
+        ジャンルと料理名を選び、食数を入力してください。
+      </p>
+      <div id="recipeList"></div>
+      <button class="pks-btn-add" id="btnAddRecipe">＋ 料理を追加</button>
+      <div class="pks-total-line ng" id="recipeTotal">合計：0 食</div>
+    </div>
+    <div class="pks-panel">
+      <div class="pks-panel-title">📦 週頭の食材在庫（任意）</div>
+      <p style="font-size:12px;color:var(--pks-text-dim);margin-bottom:12px;">
+        前週から持ち越した食材があれば入力してください。0のままでもOKです。
+      </p>
+      <div id="stockList"></div>
+      <button class="pks-btn-add" id="btnAddStock">＋ 在庫を追加</button>
+    </div>
+    <div class="pks-panel" id="energyPanel">
+      <div class="pks-panel-title">⚡ エナジー設定（最大化の提案用）</div>
+      <div id="energyLoadFail" class="pks-hidden pks-note">エナジーデータ（energy_data.json）を読み込めなかったため、エナジーの提案は表示されません。</div>
+      <div id="energyBody">
+        <p class="pks-note">結果画面に「エナジー最大化の提案」を表示するための設定です。分からない項目は初期値のままで構いません。</p>
+        <div class="pks-row2">
+          <div class="field">
+            <label for="enField">フィールドボーナス（％）</label>
+            <input type="number" id="enField" min="0" step="1" value="0" inputmode="decimal">
+          </div>
+          <div class="field">
+            <label for="enPot">なべ容量（個）</label>
+            <input type="number" id="enPot" min="0" step="1" value="15" inputmode="numeric">
+          </div>
+        </div>
+        <div class="pks-row2">
+          <div class="field">
+            <label for="enRecipeLv">レシピレベル（全料理共通・1〜55）</label>
+            <input type="number" id="enRecipeLv" min="1" max="55" step="1" value="30" inputmode="numeric">
+          </div>
+          <div class="field">
+            <label for="enGsUp">大成功率アップ（＋％）</label>
+            <input type="number" id="enGsUp" min="0" step="1" value="0" inputmode="decimal">
+          </div>
+        </div>
+        <div class="field">
+          <label for="enEvent">料理エナジーのイベントボーナス（倍）</label>
+          <input type="number" id="enEvent" min="0" step="0.1" value="1" inputmode="decimal">
+        </div>
+        <div class="field">
+          <label>好物のきのみ（該当するタイプにチェック）</label>
+          <div id="enFavs" class="pks-favs"></div>
+        </div>
+      </div>
+    </div>
+    <button class="pks-btn-secondary" id="btnBack1">← ポケモンを修正</button>
+    <button class="pks-btn-primary" id="btnToStep3">計算する →</button>
+</div>
+
+  <!-- ===== STEP 3: 結果 ===== -->
+  <div id="step3" class="pks-hidden">
+    <div class="pks-panel">
+      <div id="resultContent"></div>
+    </div>
+    <button class="pks-btn-secondary" id="btnBack2">← 料理を修正</button>
+    <button class="pks-btn-secondary" id="btnRestart">最初からやり直す</button>
+</div>
+
+  <p class="pks-footnote">豆腐メンタルパパのポケモンスリープ攻略ツール</p>
+</div>
+
+<script>
+/* ===== レシピデータ ===== */
+const RECIPE_DATA = {
+  "genres": ["カレー","サラダ","デザート"],
+  "recipes": {
+    "カレー": {
+      "とくせんリンゴカレー": {"とくせんリンゴ":7},
+      "あぶりテールカレー": {"おいしいしっぽ":8,"げきからハーブ":25},
+      "サンパワートマトカレー": {"あんみんトマト":10,"げきからハーブ":5},
+      "ぜったいねむりバターカレー": {"ほっこりポテト":18,"あんみんトマト":15,"リラックスカカオ":12,"モーモーミルク":10},
+      "からくちネギもりカレー": {"ふといナガネギ":14,"あったかジンジャー":10,"げきからハーブ":8},
+      "キノコのほうしカレー": {"あじわいキノコ":14,"ほっこりポテト":9},
+      "おやこあいカレー": {"あまいミツ":12,"とくせんリンゴ":11,"とくせんエッグ":8,"ほっこりポテト":4},
+      "満腹チーズバーグカレー": {"モーモーミルク":8,"マメミート":8},
+      "ほっこりホワイトシチュー": {"モーモーミルク":10,"ほっこりポテト":8,"あじわいキノコ":4},
+      "たんじゅんホワイトシチュー": {"モーモーミルク":7},
+      "マメバーグカレー": {"マメミート":7},
+      "ベイビィハニーカレー": {"あまいミツ":7},
+      "ニンジャカレー": {"ワカクサ大豆":24,"マメミート":9,"ふといナガネギ":12,"あじわいキノコ":5},
+      "ワカクサカレーパン": {"ワカクサ大豆":8,"ピュアなオイル":15,"げきからハーブ":20,"あったかジンジャー":20},
+      "ひでりカツレツカレー": {"マメミート":10,"ピュアなオイル":5},
+      "とけるオムカレー": {"とくせんエッグ":10,"あんみんトマト":6},
+      "ビルドアップマメカレー": {"ワカクサ大豆":12,"マメミート":6,"げきからハーブ":4,"とくせんエッグ":4},
+      "じゅうなんコーンシチュー": {"ワカクサコーン":14,"モーモーミルク":8,"ほっこりポテト":8},
+      "れんごくコーンキーマカレー": {"げきからハーブ":27,"マメミート":24,"ワカクサコーン":14,"あったかジンジャー":12},
+      "ピヨピヨパンチ辛口カレー": {"めざましコーヒー":11,"げきからハーブ":11,"あまいミツ":11},
+      "めざめるパワーシチュー": {"ワカクサ大豆":28,"あんみんトマト":25,"あじわいキノコ":23,"めざましコーヒー":16},
+      "いあいぎりすき焼きカレー": {"ふといナガネギ":27,"マメミート":26,"あまいミツ":26,"とくせんエッグ":22},
+      "なりきりバケッチャシチュー": {"ずっしりカボチャ":10,"マメミート":16,"ほっこりポテト":18,"あじわいキノコ":25},
+      "とびはねるカレーうどん": {"げきからハーブ":22,"マメミート":20,"あったかジンジャー":39,"あじわいキノコ":31},
+      "しんりょくアボカドグラタン": {"つやつやアボカド":22,"ほっこりポテト":20,"モーモーミルク":41,"ピュアなオイル":32}
+    },
+    "サラダ": {
+      "とくせんリンゴサラダ": {"とくせんリンゴ":8},
+      "マメハムサラダ": {"マメミート":8},
+      "あんみんトマトサラダ": {"あんみんトマト":8},
+      "ゆきかきシーザーサラダ": {"モーモーミルク":10,"マメミート":6},
+      "ねっぷうとうふサラダ": {"ワカクサ大豆":10,"げきからハーブ":6},
+      "うるおいとうふサラダ": {"ワカクサ大豆":15,"あんみんトマト":9},
+      "みだれづきコーンサラダ": {"ワカクサコーン":9,"ピュアなオイル":8},
+      "メロメロりんごのチーズサラダ": {"とくせんリンゴ":15,"モーモーミルク":5,"ピュアなオイル":3},
+      "めんえきネギサラダ": {"ふといナガネギ":10,"あったかジンジャー":5},
+      "モーモーカプレーゼ": {"モーモーミルク":12,"ピュアなオイル":5,"あんみんトマト":6},
+      "ばかぢからワイルドサラダ": {"マメミート":9,"ほっこりポテト":3,"とくせんエッグ":5,"あったかジンジャー":6},
+      "ムラっけチョコミートサラダ": {"リラックスカカオ":14,"マメミート":9},
+      "くいしんぼうポテトサラダ": {"ほっこりポテト":14,"とくせんエッグ":9,"マメミート":7,"とくせんリンゴ":6},
+      "オーバーヒートサラダ": {"げきからハーブ":17,"あんみんトマト":8,"あったかジンジャー":10},
+      "キノコのほうしサラダ": {"あじわいキノコ":17,"あんみんトマト":8,"ピュアなオイル":8},
+      "ヤドンテールのペッパーサラダ": {"おいしいしっぽ":10,"げきからハーブ":10,"ピュアなオイル":15},
+      "めいそうスイートサラダ": {"とくせんリンゴ":21,"あまいミツ":16,"ワカクサコーン":12},
+      "ニンジャサラダ": {"ワカクサ大豆":19,"ふといナガネギ":15,"あったかジンジャー":11,"あじわいキノコ":12},
+      "ワカクササラダ": {"ほっこりポテト":9,"ピュアなオイル":22,"あんみんトマト":14,"ワカクサコーン":17},
+      "クロスチョップドサラダ": {"マメミート":15,"とくせんエッグ":20,"あんみんトマト":10,"ワカクサコーン":11},
+      "まけんきコーヒーサラダ": {"めざましコーヒー":28,"マメミート":28,"ピュアなオイル":22,"ほっこりポテト":22},
+      "ごろごろねっとうサラダ": {"ほっこりポテト":30,"あじわいキノコ":27,"ワカクサコーン":18,"ずっしりカボチャ":20},
+      "じならしワカモレチップス": {"ワカクサ大豆":22,"げきからハーブ":30,"ワカクサコーン":25,"つやつやアボカド":28},
+      "りんごさんヨーグルトサラダ": {"モーモーミルク":18,"とくせんリンゴ":28,"とくせんエッグ":35,"あんみんトマト":23},
+      "はなふぶきミモザサラダ": {"マメミート":12,"ほっこりポテト":15,"ピュアなオイル":17,"とくせんエッグ":25}
+    },
+    "デザート": {
+      "みつあつめチョコワッフル": {"あまいミツ":38,"ピュアなオイル":28,"ワカクサコーン":28,"リラックスカカオ":21},
+      "ドキドキこわいかおパンケーキ": {"あまいミツ":32,"あんみんトマト":29,"とくせんエッグ":24,"ずっしりカボチャ":18},
+      "ドオーのエクレア": {"リラックスカカオ":30,"モーモーミルク":26,"めざましコーヒー":24,"あまいミツ":22},
+      "スパークスパイスコーラ": {"とくせんリンゴ":35,"ふといナガネギ":20,"あったかジンジャー":20,"めざましコーヒー":12},
+      "フラワーギフトマカロン": {"とくせんエッグ":25,"リラックスカカオ":25,"あまいミツ":17,"モーモーミルク":10},
+      "おちゃかいコーンスコーン": {"とくせんリンゴ":20,"あったかジンジャー":20,"ワカクサコーン":18,"モーモーミルク":9},
+      "グラスミキサースムージー": {"つやつやアボカド":18,"あんみんトマト":16,"モーモーミルク":14},
+      "プリンのプリンアラモード": {"あまいミツ":20,"とくせんエッグ":15,"とくせんリンゴ":10,"モーモーミルク":10},
+      "かたやぶりコーンティラミス": {"めざましコーヒー":14,"ワカクサコーン":14,"モーモーミルク":12},
+      "はやおきコーヒーゼリー": {"めざましコーヒー":16,"あまいミツ":12,"モーモーミルク":14},
+      "だいばくはつポップコーン": {"ワカクサコーン":15,"ピュアなオイル":14,"モーモーミルク":7},
+      "ちからもちソイドーナッツ": {"ワカクサ大豆":16,"ピュアなオイル":12,"リラックスカカオ":7},
+      "ネロリのデトックスティー": {"とくせんリンゴ":15,"あったかジンジャー":11,"あじわいキノコ":9},
+      "ふくつのジンジャークッキー": {"あまいミツ":14,"あったかジンジャー":12,"リラックスカカオ":5,"とくせんエッグ":4},
+      "あくまのキッスフルーツオレ": {"とくせんリンゴ":11,"モーモーミルク":9,"リラックスカカオ":8,"あまいミツ":7},
+      "あまいかおりチョコケーキ": {"あまいミツ":9,"リラックスカカオ":8,"モーモーミルク":7},
+      "はなびらのまいチョコタルト": {"とくせんリンゴ":11,"リラックスカカオ":11},
+      "はりきりプロテインスムージー": {"ワカクサ大豆":15,"リラックスカカオ":8},
+      "おおきいマラサダ": {"ピュアなオイル":10,"モーモーミルク":7,"あまいミツ":6},
+      "マイペースやさいジュース": {"あんみんトマト":9,"とくせんリンゴ":7},
+      "かるわざソイケーキ": {"とくせんエッグ":8,"ワカクサ大豆":7},
+      "ひのこのジンジャーティー": {"あったかジンジャー":9,"とくせんリンゴ":7},
+      "じゅくせいスイートポテト": {"ほっこりポテト":9,"モーモーミルク":5},
+      "ねがいごとアップルパイ": {"とくせんリンゴ":12,"モーモーミルク":4},
+      "クラフトサイコソーダ": {"あまいミツ":9}
+    }
+  }
+};
+
+/* ===== 食材名正規化 ===== */
+const ING_NORM = {
+  "あまいみつ":"あまいミツ","あまいミツ":"あまいミツ",
+  "とくせんりんご":"とくせんリンゴ","とくせんリンゴ":"とくせんリンゴ",
+  "ふといながねぎ":"ふといナガネギ","ふといナガネギ":"ふといナガネギ",
+  "おいしいしっぽ":"おいしいしっぽ","おいしいシッポ":"おいしいしっぽ"
+};
+function normIng(n) { return ING_NORM[n] ?? n; }
+
+/* ===== 定数 ===== */
+const SUB_SKILLS  = ["その他","きのみの数S","おてスピM","おてスピS","おてぼ","食材確率M","食材確率S","スキル確率M","スキル確率S","最大所持数アップS","最大所持数アップM","最大所持数アップL"];
+const PATTERNS    = ["aaa","aab","aac","aba","abb","abc"];
+const NATURES_UP  = [["other","その他（補正なし）"],["speedUp","おてスピ↑"],["foodUp","食材確率↑"],["skillUp","スキル確率↑"]];
+const NATURES_DOWN= [["other","その他（補正なし）"],["speedDown","おてスピ↓"],["foodDown","食材確率↓"],["skillDown","スキル確率↓"]];
+const SUB_IDS     = ["sub10","sub25","sub50","sub70","sub80"];
+const SUB_LABELS  = ["Lv10","Lv25","Lv50","Lv70","Lv80"];
+const SLOT_CONFIG = [
+  { key:"berry",  label:"きのみ",       emoji:"🍒", cls:"berry",  category:"きのみ" },
+  { key:"ing",    label:"食材",         emoji:"🍳", cls:"ing",    category:"食材"   },
+  { key:"skill",  label:"スキル",       emoji:"⚡", cls:"skill",  category:"スキル" }
+];
+
+const WEEK_SECONDS   = 7 * 86400;
+const LEVEL_TIME_COEF= 0.002;
+const BASE_DIVISOR   = 2.222;
+
+/* ===== 状態 ===== */
+let pokemonDB  = [];
+let recipeRows = [];
+let uid = 0;
+
+// 編成カウント
+const comp = { berry:0, ing:0, skill:0 };
+
+// いいキャンプチケット
+let campTicket = false;
+let sleepTap = true; // デフォルトON（毎分タップ＝あふれなし）
+
+function toggleCamp() {
+  campTicket = !campTicket;
+  const wrap = document.getElementById("campToggle").parentElement;
+  wrap.classList.toggle("on", campTicket);
+}
+
+function toggleSleepTap() {
+  sleepTap = !sleepTap;
+  const wrap = document.getElementById("sleepTapToggle").parentElement;
+  wrap.classList.toggle("on", sleepTap);
+}
+
+// イベントバフ（手入力の数値＋適用トグル）
+let eventBuffOn = false;
+function toggleEventBuff() {
+  eventBuffOn = !eventBuffOn;
+  document.getElementById("eventBuffToggleWrap").classList.toggle("on", eventBuffOn);
+  document.getElementById("eventBuffInputs").classList.toggle("off", !eventBuffOn);
+}
+// add: 食材タイプの食材獲得数に加算する個数 / mult: 食材セレクトで獲得する食材数にかける倍率
+function getEventBuff() {
+  if (!eventBuffOn) return { on: false, add: 0, mult: 1 };
+  const rawAdd  = document.getElementById("eventAdd")?.value;
+  const rawMult = document.getElementById("eventMult")?.value;
+  let add = Number(rawAdd);
+  if (rawAdd === "" || rawAdd == null || !Number.isFinite(add) || add < 0) add = 0;
+  let mult = Number(rawMult);
+  if (rawMult === "" || rawMult == null || !Number.isFinite(mult) || mult <= 0) mult = 1;
+  return { on: true, add, mult };
+}
+
+// 登録済みポケモンスロット: [{slotType, slotLabel, prefix}]
+let pokemonSlots = [];
+
+/* ===== DB読み込み ===== */
+const POKEMON_JSON_URL = "https://simulator.tofumentalpapa.com/pokemon_data.json";
+
+async function loadDB() {
+  try {
+    pokemonDB = await (await fetch(POKEMON_JSON_URL)).json();
+    // maxInventoryが含まれているか確認
+    const hasMaxInv = pokemonDB.length > 0 && pokemonDB[0].maxInventory !== undefined;
+    if (!hasMaxInv) {
+      console.warn("⚠️ pokemon_data.jsonにmaxInventoryが含まれていません。GitHubに最新のpokemon_data.jsonをアップロードしてください。");
+    }
+  }
+  catch(e) { console.warn("pokemon_data.json読み込みエラー:", e); pokemonDB = []; }
+  try { ENERGY = await (await fetch(ENERGY_JSON_URL)).json(); }
+  catch(e) { console.warn("energy_data.json読み込みエラー:", e); ENERGY = null; }
+  initEvents();
+}
+
+function initEvents() {
+  // 保存済みポケモンを読み込み
+  loadSavedFromStorage();
+  renderSavedManager();
+  renderEnergySettings();
+
+  document.getElementById("btnToStep1").addEventListener("click", () => {
+    const saved = savePokemonSettings();
+    // 食材ポケモンの登録体数を保持（編成変更で増減する可能性があるため）
+    const savedIngCount = saved.filter(s => s.slotType === "ing").length;
+    buildPokemonSlots(savedIngCount);
+    restorePokemonSettings(saved);
+    goStep(1);
+  });
+  document.getElementById("btnBack0").addEventListener("click", () => goStep(0));
+  document.getElementById("btnToStep2").addEventListener("click", () => goStep(2));
+  document.getElementById("btnBack1").addEventListener("click", () => goStep(1));
+  document.getElementById("btnToStep3").addEventListener("click", () => goStep(3));
+  document.getElementById("btnBack2").addEventListener("click", () => goStep(2));
+  document.getElementById("btnRestart").addEventListener("click", () => {
+    comp.berry = comp.ing = comp.skill = 0;
+    updateCompUI();
+    recipeRows = [];
+    document.getElementById("recipeList").innerHTML = "";
+    updateRecipeTotal();
+    goStep(0);
+  });
+  document.getElementById("btnAddRecipe").addEventListener("click", addRecipeRow);
+  document.getElementById("btnAddStock").addEventListener("click", addStockRow);
+
+  // 初期料理行
+  addRecipeRow();
+}
+
+/* ===== ステップ切替 ===== */
+function goStep(n) {
+  ["step0","step1","step2","step3"].forEach((id,i) => {
+    document.getElementById(id).classList.toggle("pks-hidden", i !== n);
+  });
+  ["stepTab0","stepTab1","stepTab2","stepTab3"].forEach((id,i) => {
+    const el = document.getElementById(id);
+    el.className = "pks-step" + (i < n ? " done" : i === n ? " active" : "");
+  });
+  if (n === 3) calculate();
+}
+
+/* ===== 編成カウンター ===== */
+function changeComp(key, delta) {
+  // 浮動小数点誤差を避けるため×10して整数計算
+  const cur10  = Math.round(comp[key] * 10);
+  const delta10 = Math.round(delta * 10);
+  const next10 = cur10 + delta10;
+  if (next10 < 0) return;
+
+  const total10 = Math.round((comp.berry + comp.ing + comp.skill) * 10);
+  const newTotal10 = total10 - cur10 + next10;
+  if (newTotal10 > 50) return; // 5.0×10=50
+
+  comp[key] = next10 / 10;
+  updateCompUI();
+}
+
+function updateCompUI() {
+  const total = comp.berry + comp.ing + comp.skill;
+  SLOT_CONFIG.forEach(s => {
+    const el = document.getElementById(`compVal_${s.key}`);
+    if (el) {
+      // 0.5刻みで整数なら整数表示、小数なら小数表示
+      const v = comp[s.key];
+      el.textContent = (v % 1 === 0) ? v.toFixed(0) : v.toFixed(1);
+    }
+  });
+  const totalEl = document.getElementById("compTotal");
+  const totalDisp = (total % 1 === 0) ? total.toFixed(0) : total.toFixed(1);
+  totalEl.textContent = `合計 ${totalDisp} / 5 体`;
+  const total10 = Math.round(total * 10);
+  totalEl.className = "pks-comp-total " + (total10 === 50 ? "ok" : "ng");
+  document.getElementById("btnToStep1").disabled = (total10 !== 50);
+}
+
+/* ===== ポケモンスロット生成 ===== */
+let ingPanel = null; // 食材パネルへの参照
+
+function buildPokemonSlots(ingInitCount) {
+  pokemonSlots = [];
+  ingPanel = null;
+  const section = document.getElementById("pokemonSections");
+  section.innerHTML = "";
+
+  SLOT_CONFIG.forEach(cfg => {
+    const count = comp[cfg.key];
+    if (count === 0) return;
+
+    const panel = document.createElement("div");
+    panel.className = "pks-panel";
+
+    if (cfg.key === "ing" || cfg.key === "selIng") {
+      // 食材/食材セレクトパネル：追加ボタンあり
+      if (cfg.key === "ing") ingPanel = panel;
+      const panelId = "ingPanelInner"; // 食材・食材セレクト共通パネル
+      const titleBar = document.createElement("div");
+      titleBar.style.cssText = "display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;";
+      const addBtns = `<button class="pks-btn-add" style="width:auto;margin:0;padding:6px 14px;font-size:12px;" onclick="addIngPokemonCard(null,'${cfg.key}')">＋ 追加</button>`;
+      titleBar.innerHTML = `
+        <span class="pks-panel-title" style="margin-bottom:0" id="${cfg.key}PanelTitle">${cfg.emoji} ${cfg.label}ポケモン（枠${count}）</span>
+        ${addBtns}
+      `;
+      panel.appendChild(titleBar);
+      panel.setAttribute("id", panelId);
+
+      const initCount = cfg.key === "ing"
+        ? ((ingInitCount && ingInitCount > 0) ? ingInitCount : 4)
+        : Math.max(Math.ceil(count), 2);
+      for (let i = 0; i < initCount; i++) {
+        addIngPokemonCard(panel, cfg.key);
+      }
+    } else {
+      // 固定枠（きのみ・スキル・ヒーラー）
+      const slotCount = comp[cfg.key]; // 例: 1.5
+      const fullCount = Math.floor(slotCount); // 整数部: 1
+      const halfSlot  = Math.round((slotCount - fullCount) * 10) / 10; // 小数部: 0.5
+      const totalCards = fullCount + (halfSlot > 0 ? 1 : 0);
+      const halfLabel  = halfSlot > 0 ? `（うち1体は${halfSlot}枠稼働）` : "";
+      panel.innerHTML = `<div class="pks-panel-title">${cfg.emoji} ${cfg.label}ポケモン（${slotCount}枠${halfLabel}）</div>`;
+      for (let i = 0; i < totalCards; i++) {
+        const id = uid++;
+        const prefix = `slot_${id}`;
+        // 小数枠の最後の1体は稼働スケール=halfSlot
+        const scale = (halfSlot > 0 && i === totalCards - 1) ? halfSlot : 1.0;
+        pokemonSlots.push({ slotType: cfg.key, prefix, cls: cfg.cls, scale });
+
+        const halfNote = scale < 1 ? ` <span style="font-size:10px;color:var(--pks-text-dim);">(${scale*100}%稼働)</span>` : "";
+        const card = document.createElement("div");
+        card.className = "pks-pokemon-card";
+        card.innerHTML = `
+          <div class="pks-card-header">
+            <span class="pks-card-label ${cfg.cls}">${cfg.emoji} ${cfg.label} ${i+1}${halfNote}</span>
+          </div>
+          ${pokemonFormHTML(prefix, cfg.category)}
+        `;
+        panel.appendChild(card);
+      }
+    }
+    section.appendChild(panel);
+  });
+}
+
+function addIngPokemonCard(panel, slotKey) {
+  const key = slotKey || "ing";
+  const panelId = key === "ing" ? "ingPanelInner" : "selIngPanelInner";
+  const target = panel || document.getElementById(panelId);
+  if (!target) return;
+
+  const id = uid++;
+  const prefix = `slot_${id}`;
+  const clsName = key === "ing" ? "ing" : "seling";
+  pokemonSlots.push({ slotType: key, prefix, cls: clsName, cardId: id });
+
+  const cfg = SLOT_CONFIG.find(c => c.key === key);
+  const slots = pokemonSlots.filter(s => s.slotType === key);
+  const num = slots.length;
+
+  const card = document.createElement("div");
+  card.className = "pks-pokemon-card";
+  card.id = `ingCard_${id}`;
+  card.innerHTML = `
+    <div class="pks-card-header">
+      <span class="pks-card-label ${clsName}" id="ingCardLabel_${id}">${cfg.emoji} ${cfg.label} ${num}</span>
+      <button class="pks-remove-btn" onclick="removeIngPokemonCard(${id},'${key}')">削除</button>
+    </div>
+    ${pokemonFormHTML(prefix, cfg.category)}
+  `;
+  target.appendChild(card);
+  updateIngPanelTitle();
+}
+
+
+function removeIngPokemonCard(cardId, slotKey) {
+  const key = slotKey || "ing";
+  const slots = pokemonSlots.filter(s => s.slotType === key);
+  const minCount = key === "ing" ? comp.ing : Math.ceil(comp.selIng);
+  if (slots.length <= minCount) return;
+
+  pokemonSlots = pokemonSlots.filter(s => !(s.slotType === key && s.cardId === cardId));
+  document.getElementById(`ingCard_${cardId}`)?.remove();
+  renumberIngCards();
+  updateIngPanelTitle();
+}
+
+function renumberIngCards() {
+  ["ing", "selIng"].forEach(key => {
+    const cfg = key === "selIng" ? SELING_CFG : SLOT_CONFIG.find(c => c.key === key);
+    if (!cfg) return;
+    pokemonSlots.filter(s => s.slotType === key).forEach((s, i) => {
+      const el = document.getElementById(`ingCardLabel_${s.cardId}`);
+      if (el) el.textContent = `${cfg.emoji} ${cfg.label} ${i+1}`;
+    });
+  });
+}
+
+function updateIngPanelTitle() {
+  const ingCount = pokemonSlots.filter(s => s.slotType === "ing").length;
+  const selIngCount = pokemonSlots.filter(s => s.slotType === "selIng").length;
+  const el = document.getElementById("ingPanelTitle");
+  if (el) el.textContent = `🍳 食材ポケモン（枠${comp.ing}・食材${ingCount}体・セレクト${selIngCount}体）`;
+}
+
+/* ===== ポケモンフォームHTML ===== */
+function optsPokemon(category) {
+  if (!pokemonDB.length) return `<option value="">（データなし）</option>`;
+  let filtered;
+  if (category === "selIng") {
+    // 食材セレクト枠: skillIngredientsを持つポケモンのみ
+    filtered = pokemonDB.filter(p => p.skillIngredients && p.skillIngredients.length > 0);
+  } else if (category) {
+    filtered = pokemonDB.filter(p => p.category === category);
+  } else {
+    filtered = pokemonDB;
+  }
+  const types = [...new Set(filtered.map(p => p.type))].sort();
+  return types.map(type => {
+    const group = filtered.filter(p => p.type === type);
+    return `<optgroup label="${type}">${group.map(p => `<option value="${p.name}">${p.name}</option>`).join("")}</optgroup>`;
+  }).join("");
+}
+function optsSub() {
+  return SUB_SKILLS.map(s => `<option value="${s}">${s}</option>`).join("");
+}
+function optsNature(list) {
+  return list.map(([v,l]) => `<option value="${v}">${l}</option>`).join("");
+}
+function optsPattern() {
+  return PATTERNS.map(p => `<option value="${p}">${p}</option>`).join("");
+}
+
+function pokemonFormHTML(pre, category) {
+  return `
+    <div class="pks-saved-bar">
+      <div class="pks-sw">
+        <select id="${pre}_saved" data-saved-cat="${category || ""}" onchange="onSavedSelect('${pre}')">${optsSaved(category)}</select>
+      </div>
+    </div>
+    <div class="field">
+      <label>ポケモン</label>
+      <div class="pks-sw"><select id="${pre}_p">${optsPokemon(category)}</select></div>
+    </div>
+    <div class="pks-row2">
+      <div class="field">
+        <label>レベル</label>
+        <input type="number" id="${pre}_lv" min="1" max="60" value="50">
+      </div>
+      <div class="field">
+        <label>食材配列</label>
+        <div class="pks-sw"><select id="${pre}_pat">${optsPattern()}</select></div>
+      </div>
+    </div>
+    <button class="pks-accordion-btn" type="button" onclick="toggleAccordion('${pre}_detail')">
+      <span>性格・サブスキルを設定</span><span id="${pre}_detail_arrow">▼</span>
+    </button>
+    <div class="pks-accordion-body" id="${pre}_detail">
+      <div class="pks-row2">
+        <div class="field">
+          <label>性格↑</label>
+          <div class="pks-sw"><select id="${pre}_nu">${optsNature(NATURES_UP)}</select></div>
+        </div>
+        <div class="field">
+          <label>性格↓</label>
+          <div class="pks-sw"><select id="${pre}_nd">${optsNature(NATURES_DOWN)}</select></div>
+        </div>
+      </div>
+      <div class="field">
+        <label>サブスキル（${SUB_LABELS.join(" / ")}）</label>
+        <div class="pks-subs">
+          ${SUB_IDS.map(sid => `<div class="pks-sw"><select id="${pre}_${sid}">${optsSub()}</select></div>`).join("")}
+        </div>
+      </div>
+    </div>
+    <div class="pks-save-row">
+      <input type="text" id="${pre}_label" maxlength="40" placeholder="保存名（任意）">
+      <button class="pks-save-btn" type="button" onclick="saveCurrentPokemon('${pre}')">💾 保存</button>
+    </div>
+    <div class="pks-save-msg" id="${pre}_msg"></div>
+  `;
+}
+
+function toggleAccordion(id) {
+  const body = document.getElementById(id);
+  const arrow = document.getElementById(id + '_arrow');
+  if (!body) return;
+  const isOpen = body.classList.toggle('open');
+  if (arrow) arrow.textContent = isOpen ? '▲' : '▼';
+}
+
+/* ===== 保存ポケモン（localStorage）・書き出し・読み込み ===== */
+const SAVED_KEY = "pks_ing_sim_saved_pokemon_v1";
+const SAVED_MAX = 200;
+let savedPokemon = []; // [{id,label,p,lv,pat,nu,nd,subs}]
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function newSavedId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+// 保存・読み込み時の値検証（不正なJSONが混ざっても壊れないようにする）
+function sanitizeSaved(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  const p = String(raw.p ?? "").trim().slice(0, 60);
+  if (!p) return null;
+  let lv = Math.round(Number(raw.lv));
+  if (!Number.isFinite(lv)) lv = 50;
+  lv = Math.min(100, Math.max(1, lv));
+  const pat = PATTERNS.includes(raw.pat) ? raw.pat : "aab";
+  const nu = NATURES_UP.some(([v]) => v === raw.nu) ? raw.nu : "other";
+  const nd = NATURES_DOWN.some(([v]) => v === raw.nd) ? raw.nd : "other";
+  const subsIn = Array.isArray(raw.subs) ? raw.subs : [];
+  const subs = SUB_IDS.map((_, i) => SUB_SKILLS.includes(subsIn[i]) ? subsIn[i] : "その他");
+  const label = String(raw.label ?? "").trim().slice(0, 40) || `${p} Lv${lv}`;
+  const id = (typeof raw.id === "string" && /^[a-z0-9]{4,24}$/i.test(raw.id)) ? raw.id : newSavedId();
+  return { id, label, p, lv, pat, nu, nd, subs };
+}
+
+function sameContent(a, b) {
+  return a.p === b.p && a.lv === b.lv && a.pat === b.pat && a.nu === b.nu && a.nd === b.nd
+      && a.subs.join("|") === b.subs.join("|");
+}
+
+function uniqueLabel(base) {
+  let label = base, n = 2;
+  while (savedPokemon.some(s => s.label === label)) label = `${base} (${n++})`;
+  return label;
+}
+
+function loadSavedFromStorage() {
+  try {
+    const raw = localStorage.getItem(SAVED_KEY);
+    if (!raw) { savedPokemon = []; return true; }
+    const arr = JSON.parse(raw);
+    savedPokemon = (Array.isArray(arr) ? arr : []).map(sanitizeSaved).filter(Boolean).slice(0, SAVED_MAX);
+    return true;
+  } catch (e) {
+    console.warn("保存データの読み込みに失敗:", e);
+    savedPokemon = [];
+    return false;
+  }
+}
+
+function persistSaved() {
+  try {
+    localStorage.setItem(SAVED_KEY, JSON.stringify(savedPokemon));
+    return true;
+  } catch (e) {
+    console.warn("保存データの書き込みに失敗:", e);
+    return false;
+  }
+}
+
+const msgTimers = {};
+function showMsg(id, text, ok = true, ms = 4000) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = text;
+  el.style.color = ok ? "var(--pks-green)" : "var(--pks-red)";
+  clearTimeout(msgTimers[id]);
+  msgTimers[id] = setTimeout(() => { el.textContent = ""; }, ms);
+}
+
+// 枠のカテゴリ（きのみ/食材/スキル）に合うポケモンだけを呼び出し候補にする
+function savedForCategory(category) {
+  if (!category) return savedPokemon;
+  return savedPokemon.filter(s => {
+    const p = pokemonDB.find(x => x.name === s.p);
+    return p && p.category === category;
+  });
+}
+
+function optsSaved(category) {
+  const list = savedForCategory(category);
+  const head = `<option value="">📂 保存済みから呼び出す${list.length ? `（${list.length}件）` : "（なし）"}</option>`;
+  return head + list.map(s => {
+    const extra = s.label.includes(s.p) ? "" : `｜${s.p} Lv${s.lv}`;
+    return `<option value="${esc(s.id)}">${esc(s.label + extra)}</option>`;
+  }).join("");
+}
+
+function refreshAllSavedSelects() {
+  document.querySelectorAll("select[data-saved-cat]").forEach(el => {
+    el.innerHTML = optsSaved(el.dataset.savedCat || "");
+  });
+}
+
+// 保存データをフォームへ反映
+function applyPokemonData(pre, data) {
+  const pEl = document.getElementById(`${pre}_p`);
+  if (!pEl) return false;
+  if (![...pEl.options].some(o => o.value === data.p)) return false;
+  pEl.value = data.p;
+  const set = (suffix, val) => {
+    const el = document.getElementById(`${pre}_${suffix}`);
+    if (el) el.value = val;
+  };
+  set("lv", data.lv);
+  set("pat", data.pat);
+  set("nu", data.nu);
+  set("nd", data.nd);
+  SUB_IDS.forEach((sid, i) => set(sid, data.subs[i]));
+  const hasDetail = data.nu !== "other" || data.nd !== "other" || data.subs.some(s => s !== "その他");
+  if (hasDetail) {
+    document.getElementById(`${pre}_detail`)?.classList.add("open");
+    const arrow = document.getElementById(`${pre}_detail_arrow`);
+    if (arrow) arrow.textContent = "▲";
+  }
+  return true;
+}
+
+function onSavedSelect(pre) {
+  const sel = document.getElementById(`${pre}_saved`);
+  if (!sel) return;
+  const id = sel.value;
+  if (!id) return;
+  sel.value = "";
+  const data = savedPokemon.find(s => s.id === id);
+  if (!data) { showMsg(`${pre}_msg`, "保存データが見つかりません", false); return; }
+  if (applyPokemonData(pre, data)) {
+    const lab = document.getElementById(`${pre}_label`);
+    if (lab) lab.value = data.label;
+    showMsg(`${pre}_msg`, `「${data.label}」を呼び出しました`);
+  } else {
+    showMsg(`${pre}_msg`, "このポケモンはこの枠では選べません", false);
+  }
+}
+
+function saveCurrentPokemon(pre) {
+  const g = s => document.getElementById(`${pre}_${s}`)?.value;
+  const p = g("p");
+  if (!p) { showMsg(`${pre}_msg`, "ポケモンを選んでください", false); return; }
+  let lv = Math.round(Number(g("lv"))) || 50;
+  lv = Math.min(100, Math.max(1, lv));
+  const entry = {
+    p, lv,
+    pat: g("pat") || "aab",
+    nu: g("nu") || "other",
+    nd: g("nd") || "other",
+    subs: SUB_IDS.map(sid => g(sid) || "その他")
+  };
+
+  const typed = (g("label") || "").trim().slice(0, 40);
+  let label = typed;
+  let idx = -1;
+  if (typed) {
+    idx = savedPokemon.findIndex(s => s.label === typed); // 同名なら上書き
+  } else {
+    label = uniqueLabel(`${p} Lv${lv}`);                  // 名前なしなら自動で連番
+  }
+
+  let overwrote = false;
+  if (idx >= 0) {
+    savedPokemon[idx] = { ...entry, id: savedPokemon[idx].id, label };
+    overwrote = true;
+  } else {
+    if (savedPokemon.length >= SAVED_MAX) {
+      showMsg(`${pre}_msg`, `保存できるのは${SAVED_MAX}件までです。不要なものを削除してください`, false);
+      return;
+    }
+    savedPokemon.push({ ...entry, id: newSavedId(), label });
+  }
+
+  const labEl = document.getElementById(`${pre}_label`);
+  if (labEl) labEl.value = label;
+
+  const ok = persistSaved();
+  refreshAllSavedSelects();
+  renderSavedManager();
+  if (ok) {
+    showMsg(`${pre}_msg`, overwrote ? `「${label}」を上書き保存しました` : `「${label}」を保存しました`);
+  } else {
+    showMsg(`${pre}_msg`, "この端末には保存できませんでした（ブラウザの設定を確認してください）。「書き出し」でバックアップしてください", false, 8000);
+  }
+}
+
+// 削除確認はconfirm()を使わず画面内で行う（アプリ内ブラウザやiframeでconfirm()が無効でも動くように）
+let pendingDeleteId = null;
+let pendingDeleteAll = false;
+
+function renderSavedManager() {
+  const box = document.getElementById("savedList");
+  if (!box) return;
+  if (!savedPokemon.length) {
+    pendingDeleteId = null;
+    pendingDeleteAll = false;
+    box.innerHTML = `<div class="pks-saved-empty">まだ保存されたポケモンはありません。各カードの「💾 保存」で登録できます。</div>`;
+  } else {
+    box.innerHTML = savedPokemon.map(s => {
+      const meta = `${esc(s.p)} / Lv${s.lv} / ${esc(s.pat)}`;
+      if (s.id === pendingDeleteId) {
+        return `
+          <div class="pks-saved-item confirming">
+            <div class="pks-saved-main">
+              <div class="pks-saved-name">${esc(s.label)}</div>
+              <div class="pks-saved-meta" style="color:var(--pks-red);">削除しますか？</div>
+            </div>
+            <div class="pks-saved-actions">
+              <button class="pks-del-btn danger" type="button" onclick="confirmDeleteSaved('${esc(s.id)}')">削除する</button>
+              <button class="pks-del-btn cancel" type="button" onclick="cancelDeleteSaved()">やめる</button>
+            </div>
+          </div>`;
+      }
+      return `
+        <div class="pks-saved-item">
+          <div class="pks-saved-main">
+            <div class="pks-saved-name">${esc(s.label)}</div>
+            <div class="pks-saved-meta">${meta}</div>
+          </div>
+          <button class="pks-del-btn" type="button" onclick="askDeleteSaved('${esc(s.id)}')">削除</button>
+        </div>`;
+    }).join("");
+  }
+  renderDeleteAllBox();
+}
+
+function renderDeleteAllBox() {
+  const el = document.getElementById("savedDeleteAllBox");
+  if (!el) return;
+  if (!savedPokemon.length) { el.innerHTML = ""; return; }
+  if (pendingDeleteAll) {
+    el.innerHTML = `
+      <div class="pks-delall-confirm">
+        <p>保存済みの${savedPokemon.length}件をすべて削除します。元に戻せません。よろしいですか？</p>
+        <div class="pks-saved-actions">
+          <button class="pks-del-btn danger" type="button" onclick="confirmDeleteAllSaved()">すべて削除する</button>
+          <button class="pks-del-btn cancel" type="button" onclick="cancelDeleteAllSaved()">やめる</button>
+        </div>
+      </div>`;
+  } else {
+    el.innerHTML = `<div class="pks-delall-box"><button class="pks-danger-link" type="button" onclick="askDeleteAllSaved()">保存データをすべて削除</button></div>`;
+  }
+}
+
+function askDeleteSaved(id) {
+  pendingDeleteId = id;
+  pendingDeleteAll = false;
+  renderSavedManager();
+}
+function cancelDeleteSaved() {
+  pendingDeleteId = null;
+  renderSavedManager();
+}
+function confirmDeleteSaved(id) {
+  const target = savedPokemon.find(s => s.id === id);
+  pendingDeleteId = null;
+  if (!target) { renderSavedManager(); return; }
+  savedPokemon = savedPokemon.filter(s => s.id !== id);
+  const ok = persistSaved();
+  refreshAllSavedSelects();
+  renderSavedManager();
+  showMsg("savedMsg", ok ? `「${target.label}」を削除しました` : "削除しましたが、この端末への保存に失敗しました", ok);
+}
+
+function askDeleteAllSaved() {
+  pendingDeleteAll = true;
+  pendingDeleteId = null;
+  renderSavedManager();
+}
+function cancelDeleteAllSaved() {
+  pendingDeleteAll = false;
+  renderSavedManager();
+}
+function confirmDeleteAllSaved() {
+  pendingDeleteAll = false;
+  pendingDeleteId = null;
+  savedPokemon = [];
+  const ok = persistSaved();
+  refreshAllSavedSelects();
+  renderSavedManager();
+  showMsg("savedMsg", ok ? "すべて削除しました" : "削除しましたが、この端末への保存に失敗しました", ok);
+}
+
+/* --- 書き出し --- */
+function buildExportJSON() {
+  return JSON.stringify({
+    app: "pokesleep-ingredient-simulator",
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    pokemon: savedPokemon
+  }, null, 2);
+}
+
+function exportDownload() {
+  if (!savedPokemon.length) { showMsg("savedMsg", "書き出すデータがありません", false); return; }
+  try {
+    const blob = new Blob([buildExportJSON()], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const ymd = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+    a.href = url;
+    a.download = `pokesleep_saved_pokemon_${ymd}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showMsg("savedMsg", "ファイルを書き出しました。保存されない場合は「JSONをコピーする」をお試しください", true, 7000);
+  } catch (e) {
+    console.warn(e);
+    showMsg("savedMsg", "ファイルの書き出しに失敗しました。「JSONをコピーする」をお試しください", false, 7000);
+  }
+}
+
+async function exportCopy() {
+  if (!savedPokemon.length) { showMsg("savedMsg", "コピーするデータがありません", false); return; }
+  const json = buildExportJSON();
+  const ta = document.getElementById("exportText");
+  try {
+    await navigator.clipboard.writeText(json);
+    showMsg("savedMsg", "JSONをコピーしました。メモ帳などに貼り付けて保管してください", true, 7000);
+  } catch (e) {
+    // クリップボードが使えない環境用：テキストを表示して手動コピー
+    if (ta) {
+      ta.value = json;
+      ta.classList.remove("pks-hidden");
+      ta.focus();
+      ta.select();
+    }
+    showMsg("savedMsg", "自動コピーできませんでした。下のテキストを全選択してコピーしてください", false, 9000);
+  }
+}
+
+/* --- 読み込み --- */
+function importFromText(text) {
+  let data;
+  try { data = JSON.parse(text); }
+  catch (e) { showMsg("savedMsg", "JSONとして読み込めませんでした。内容をご確認ください", false, 7000); return false; }
+
+  const arr = Array.isArray(data) ? data : (data && Array.isArray(data.pokemon) ? data.pokemon : null);
+  if (!arr) { showMsg("savedMsg", "対応していない形式のデータです", false, 7000); return false; }
+
+  let added = 0, dup = 0, invalid = 0, unknown = 0, over = 0;
+  for (const raw of arr) {
+    const s = sanitizeSaved(raw);
+    if (!s) { invalid++; continue; }
+    if (pokemonDB.length && !pokemonDB.some(p => p.name === s.p)) { unknown++; continue; }
+    if (savedPokemon.some(x => sameContent(x, s))) { dup++; continue; }
+    if (savedPokemon.length >= SAVED_MAX) { over++; continue; }
+    s.id = newSavedId();
+    s.label = uniqueLabel(s.label);
+    savedPokemon.push(s);
+    added++;
+  }
+
+  const ok = persistSaved();
+  refreshAllSavedSelects();
+  renderSavedManager();
+
+  const parts = [`${added}件を追加`];
+  if (dup)     parts.push(`同じ内容${dup}件はスキップ`);
+  if (unknown) parts.push(`データにないポケモン${unknown}件はスキップ`);
+  if (invalid) parts.push(`不正なデータ${invalid}件はスキップ`);
+  if (over)    parts.push(`上限超過${over}件はスキップ`);
+  if (!ok)     parts.push("※この端末には保存できませんでした");
+  showMsg("savedMsg", parts.join("／"), ok && added > 0, 9000);
+  return true;
+}
+
+function importFromFile(input) {
+  const f = input.files && input.files[0];
+  if (!f) return;
+  if (f.size > 1024 * 1024) {
+    showMsg("savedMsg", "ファイルが大きすぎます（1MBまで）", false);
+    input.value = "";
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => { importFromText(String(reader.result)); input.value = ""; };
+  reader.onerror = () => { showMsg("savedMsg", "ファイルを読み込めませんでした", false); input.value = ""; };
+  reader.readAsText(f);
+}
+
+function importFromTextarea() {
+  const ta = document.getElementById("importText");
+  const text = (ta?.value || "").trim();
+  if (!text) { showMsg("savedMsg", "JSONを貼り付けてください", false); return; }
+  if (importFromText(text) && ta) ta.value = "";
+}
+
+/* ===== 在庫行 ===== */
+let stockRows = [];
+
+// 全食材名リスト（レシピから自動収集）
+function getAllIngredientNames() {
+  const names = new Set();
+  for (const genre of Object.values(RECIPE_DATA.recipes)) {
+    for (const recipe of Object.values(genre)) {
+      for (const k of Object.keys(recipe)) names.add(k);
+    }
+  }
+  return [...names].sort();
+}
+
+function buildIngOpts(sel) {
+  return getAllIngredientNames()
+    .map(n => `<option value="${n}"${n===sel?" selected":""}>${n}</option>`)
+    .join("");
+}
+
+function addStockRow() {
+  const id = uid++;
+  stockRows.push(id);
+  const row = document.createElement("div");
+  row.className = "pks-recipe-row";
+  row.id = `sr_${id}`;
+  row.innerHTML = `
+    <div class="field" style="margin:0;grid-column:span 2">
+      <label style="font-size:10px">食材名</label>
+      <div class="pks-sw">
+        <select id="si_${id}">${buildIngOpts("")}</select>
+      </div>
+    </div>
+    <div class="field" style="margin:0">
+      <label style="font-size:10px">個数</label>
+      <input type="number" id="sq_${id}" min="0" value="0" style="padding:8px 8px">
+    </div>
+    <button class="pks-recipe-remove" onclick="removeStockRow(${id})">✕</button>
+  `;
+  document.getElementById("stockList").appendChild(row);
+}
+
+function removeStockRow(id) {
+  stockRows = stockRows.filter(x => x !== id);
+  document.getElementById(`sr_${id}`)?.remove();
+}
+
+function getStockMap() {
+  const stock = {};
+  for (const id of stockRows) {
+    const name = document.getElementById(`si_${id}`)?.value;
+    const qty  = Number(document.getElementById(`sq_${id}`)?.value || 0);
+    if (name && qty > 0) {
+      const k = normIng(name);
+      stock[k] = (stock[k] ?? 0) + qty;
+    }
+  }
+  return stock;
+}
+
+/* ===== 料理行 ===== */
+function buildGenreOpts(sel) {
+  return RECIPE_DATA.genres.map(g => `<option value="${g}"${g===sel?" selected":""}>${g}</option>`).join("");
+}
+function buildRecipeOpts(genre) {
+  return Object.keys(RECIPE_DATA.recipes[genre]??{}).map(n => `<option value="${n}">${n}</option>`).join("");
+}
+
+function addRecipeRow() {
+  const id = uid++;
+  recipeRows.push(id);
+  const g0 = RECIPE_DATA.genres[0];
+  const row = document.createElement("div");
+  row.className = "pks-recipe-row";
+  row.id = `rr_${id}`;
+  row.innerHTML = `
+    <div class="field" style="margin:0">
+      <label style="font-size:10px">ジャンル</label>
+      <div class="pks-sw">
+        <select id="rg_${id}" onchange="onGenreChange(${id})">${buildGenreOpts(g0)}</select>
+      </div>
+    </div>
+    <div class="field" style="margin:0">
+      <label style="font-size:10px">料理名</label>
+      <div class="pks-sw">
+        <select id="rn_${id}" onchange="updateRecipeTotal()">${buildRecipeOpts(g0)}</select>
+      </div>
+    </div>
+    <div class="field" style="margin:0">
+      <label style="font-size:10px">食数</label>
+      <input type="number" id="rc_${id}" min="1" max="21" value="1" onchange="updateRecipeTotal()">
+    </div>
+    <button class="pks-recipe-remove" onclick="removeRecipeRow(${id})">✕</button>
+  `;
+  document.getElementById("recipeList").appendChild(row);
+  updateRecipeTotal();
+}
+
+function onGenreChange(id) {
+  const g = document.getElementById(`rg_${id}`)?.value;
+  const sel = document.getElementById(`rn_${id}`);
+  if (sel && g) sel.innerHTML = buildRecipeOpts(g);
+  updateRecipeTotal();
+}
+
+function removeRecipeRow(id) {
+  recipeRows = recipeRows.filter(x => x !== id);
+  document.getElementById(`rr_${id}`)?.remove();
+  updateRecipeTotal();
+}
+
+function updateRecipeTotal() {
+  const total = recipeRows.reduce((s,id) => s+(Number(document.getElementById(`rc_${id}`)?.value)||0), 0);
+  const el = document.getElementById("recipeTotal");
+  el.textContent = `合計：${total} 食`;
+  el.className = "pks-total-line " + (total===21?"ok":"ng");
+}
+
+/* ===== 計算 ===== */
+function getEntry(pre) {
+  const name = document.getElementById(`${pre}_p`)?.value;
+  if (!name) return null;
+  const pokemon = pokemonDB.find(p => p.name === name);
+  if (!pokemon) return null;
+  return {
+    pokemon,
+    level:     Number(document.getElementById(`${pre}_lv`)?.value||50),
+    pattern:   document.getElementById(`${pre}_pat`)?.value||"aab",
+    natureUp:  document.getElementById(`${pre}_nu`)?.value||"other",
+    natureDown:document.getElementById(`${pre}_nd`)?.value||"other",
+    subs: SUB_IDS.map(sid => document.getElementById(`${pre}_${sid}`)?.value||"その他")
+  };
+}
+
+function calcWeekly(entry, teamOtebonus = 0) {
+  // teamOtebonus: チームに編成中のおてぼ持ちポケモン数×5%の合計
+  if (!entry) return {};
+  const {pokemon, level, pattern, natureUp, natureDown, subs} = entry;
+  const ev = getEventBuff(); // イベントバフ（OFFなら add=0, mult=1）
+
+  // ── サブスキル解放レベルでフィルタリング ──
+  // Lv10:1枠目, Lv25:2枠目, Lv50:3枠目, Lv70:4枠目, Lv80:5枠目
+  const SUB_UNLOCK = [10, 25, 50, 70, 80];
+  const activeSubs = subs.filter((_, i) => level >= SUB_UNLOCK[i]);
+
+  // ── おてつだい時間補正 ──
+  const speedM = activeSubs.filter(s => s === "おてスピM").length;
+  const speedS = activeSubs.filter(s => s === "おてスピS").length;
+
+  let tf = 1.0;
+  if (natureUp   === "speedUp")   tf *= 0.9;
+  if (natureDown === "speedDown") tf *= 1.075;
+
+  // お手伝いスピードボーナス:
+  // 自分のおてスピM×14% + おてスピS×7% + チームおてぼ合計
+  // を合算して上限35%、interval短縮に適用
+  const personalBonus = speedM * 0.14 + speedS * 0.07;
+  const totalBonus = Math.min(personalBonus + teamOtebonus, 0.35);
+  tf *= (1 - totalBonus);
+
+  // 実効おてつだい時間
+  const levelCoef = 1 - (level - 1) * LEVEL_TIME_COEF;
+  // いいキャンプチケット: スピード×1.2 = interval÷1.2
+  const campCoef = campTicket ? (1 / 1.2) : 1.0;
+  const interval  = (pokemon.helpTime * levelCoef * tf * campCoef) / BASE_DIVISOR;
+  const hpw       = WEEK_SECONDS / interval; // 週間行動回数
+
+  // ── 食材発見率 ──
+  // 正しい計算式: 基礎fr × (1 + 0.36×M + 0.18×S) × 性格補正
+  // ※サブスキル同士は加算、基礎frとは乗算（Wiki検証済み）
+  const foodM = activeSubs.filter(s => s === "食材確率M").length;
+  const foodS = activeSubs.filter(s => s === "食材確率S").length;
+  let fr = (pokemon.ingredientFindRate ?? 0) / 100;
+  fr *= (1 + 0.36 * foodM + 0.18 * foodS);
+  // 性格補正（乗算）
+  if (natureUp   === "foodUp")   fr *= 1.2;
+  if (natureDown === "foodDown") fr *= 0.8;
+  fr = Math.max(0, Math.min(1, fr));
+
+  // ── スキル確率 ──
+  // 基礎skillRate × (1 + 0.36×スキル確率M + 0.18×スキル確率S) × 性格補正
+  const skillM = activeSubs.filter(s => s === "スキル確率M").length;
+  const skillS = activeSubs.filter(s => s === "スキル確率S").length;
+  let skillRate = (pokemon.skillRate ?? 0) / 100;
+  skillRate *= (1 + 0.36 * skillM + 0.18 * skillS);
+  if (natureUp   === "skillUp")   skillRate *= 1.1;
+  if (natureDown === "skillDown") skillRate *= 0.9;
+  skillRate = Math.max(0, skillRate);
+
+  // ── 食材スロット ──
+  const slots = level < 30 ? [1] : level < 60 ? [1, 2] : [1, 2, 3];
+  const sp = 1 / slots.length; // スロット配分係数
+
+  // 1回のお手伝いあたりの平均食材個数（全スロット合計）
+  let avgIngPerHelp = 0;
+  const slotIngMap = {}; // slot -> {ing, cnt}
+  for (const slot of slots) {
+    let ing = null, cnt = 0;
+    if (slot === 1) {
+      ing = pokemon.ingredientA;
+      cnt = pokemon["1a"] ?? 0;
+    } else if (slot === 2) {
+      const t = pattern[1];
+      ing = t === "a" ? pokemon.ingredientA : pokemon.ingredientB;
+      cnt = t === "a" ? (pokemon["2a"] ?? 0) : (pokemon["2b"] ?? 0);
+    } else {
+      const t = pattern[2];
+      if      (t === "a") { ing = pokemon.ingredientA; cnt = pokemon["3a"] ?? 0; }
+      else if (t === "b") { ing = pokemon.ingredientB; cnt = pokemon["3b"] ?? 0; }
+      else                { ing = pokemon.ingredientC; cnt = pokemon["3c"] ?? 0; }
+    }
+    // イベントバフ: 食材タイプは食材獲得数に加算（所持数あふれ計算にも反映される）
+    if (ing && cnt > 0 && pokemon.category === "食材") cnt += ev.add;
+    slotIngMap[slot] = { ing, cnt };
+    if (ing && cnt > 0) avgIngPerHelp += cnt * sp;
+  }
+
+  // ── 最大所持数（基礎値 + サブスキル加算） ──
+  const invS = activeSubs.filter(s => s === "最大所持数アップS").length;
+  const invM = activeSubs.filter(s => s === "最大所持数アップM").length;
+  const invL = activeSubs.filter(s => s === "最大所持数アップL").length;
+  const invBonus = invS * 6 + invM * 12 + invL * 18;
+  const maxInventory = (pokemon.maxInventory != null)
+    ? pokemon.maxInventory + invBonus
+    : null;
+
+  // きのみ1回あたりの個数
+  // きのみタイプ=2個/回、食材・スキルタイプ=1個/回、きのみの数Sで+1
+  const berryNumS = activeSubs.filter(s => s === "きのみの数S").length;
+  const berryPerHelp = (pokemon.category === "きのみ" ? 2 : 1) + berryNumS;
+
+  // ── 所持数あふれ計算 ──
+  // 【正しい計算式（ユキさん方式）】
+  // avgPerHelp = きのみ個数×(1-fr) + 食材平均個数×fr
+  // helpsUntilFull = maxInventory ÷ avgPerHelp  → 満タンまでのお手伝い回数
+  //
+  // 起床中（15.5h）：毎分タップ前提 → 常にあふれなし
+  //   食材獲得 = awakeHelps × fr × 食材個数/回
+  //
+  // 睡眠中（8.5h）：
+  //   sleepTap=ON  → あふれなし（通常計算）
+  //   sleepTap=OFF → helpsUntilFull回まで食材獲得、それ以降はきのみのみ
+  //   睡眠中食材獲得 = min(sleepHelps, helpsUntilFull) × fr × 食材個数/回
+
+  const AWAKE_SECONDS = 15.5 * 3600;
+  const SLEEP_SECONDS = 8.5 * 3600;
+
+  // 1回あたりの平均蓄積個数（きのみ+食材合算）
+  const avgPerHelp = (1 - fr) * berryPerHelp + fr * avgIngPerHelp;
+
+  // ── 食材セレクトスキル計算 ──
+  // スキル発動回数 = hpw × skillRate% / 100
+  // 睡眠中タップなしの場合:
+  //   きのみ・食材タイプ = 1日最大1回（7日で最大7回）
+  //   スキルタイプ      = 1日最大2回（7日で最大14回）
+  const skillIngResult = {};
+  if (pokemon.skillIngredients && pokemon.skillIngredients.length > 0
+      && pokemon.skillIngCount > 0 && pokemon.skillRate > 0) {
+
+    // ── スキル発動回数計算 ──
+    const AWAKE_SECS = 15.5 * 3600;
+    const SLEEP_SECS = 8.5 * 3600;
+    let skillTriggers;
+    let skillTriggersAwake7 = 0;  // 起床中週間発動回数（表示用）
+    let skillTriggersSleep7 = 0;  // 睡眠中週間発動回数（表示用）
+
+    if (sleepTap) {
+      // 毎分タップあり: 24時間上限なし
+      skillTriggers = hpw * skillRate;
+      skillTriggersAwake7 = skillTriggers;
+    } else {
+      // 起床中（15.5h）: 上限なし
+      const awakeHelpsPerWeek = AWAKE_SECS / interval * 7;
+      skillTriggersAwake7 = awakeHelpsPerWeek * skillRate;
+
+      // 睡眠中（8.5h）: 所持数があふれるまでのお手伝い回数 × skillRate
+      // → 上限（スキルタイプ2回/日、きのみ・食材1回/日）と比較して小さい方を使用
+      const sleepHelpsPerNight = SLEEP_SECS / interval;
+      let sleepHelpsEffective = sleepHelpsPerNight;
+      if (maxInventory != null && maxInventory > 0 && avgPerHelp > 0) {
+        const helpsUntilFull = maxInventory / avgPerHelp;
+        sleepHelpsEffective = Math.min(sleepHelpsPerNight, helpsUntilFull);
+      }
+      const sleepMaxPerNight = (pokemon.category === "スキル") ? 2 : 1;
+      const sleepTriggersCalc = sleepHelpsEffective * skillRate; // 期待値
+      const sleepTriggersCapped = Math.min(sleepTriggersCalc, sleepMaxPerNight); // 上限適用
+      skillTriggersSleep7 = sleepTriggersCapped * 7;
+
+      skillTriggers = skillTriggersAwake7 + skillTriggersSleep7;
+    }
+
+    // イベントバフ: 食材セレクトで獲得する食材数に倍率をかける
+    const ingPerTrigger = (pokemon.skillIngCount * ev.mult) / pokemon.skillIngredients.length;
+    for (const ingName of pokemon.skillIngredients) {
+      const k = normIng(ingName);
+      skillIngResult[k] = (skillIngResult[k] ?? 0) + skillTriggers * ingPerTrigger;
+    }
+  }
+
+  const result = {};
+  for (const slot of slots) {
+    const { ing, cnt } = slotIngMap[slot];
+    if (!ing || cnt <= 0) continue;
+    const k = normIng(ing);
+
+    if (!sleepTap && maxInventory != null && maxInventory > 0 && avgPerHelp > 0) {
+      // あふれ考慮モード
+      const awakeHelps     = AWAKE_SECONDS / interval;  // 起床中お手伝い回数/日
+      const sleepHelps     = SLEEP_SECONDS / interval;  // 睡眠中お手伝い回数/日
+      const helpsUntilFull = maxInventory / avgPerHelp; // 満タンまでの回数
+
+      // 睡眠中に有効なお手伝い回数（満タンになったら以降は食材取れない）
+      const effectiveSleepHelps = Math.min(sleepHelps, helpsUntilFull);
+
+      // 1日の食材獲得量
+      const dailyIng = (awakeHelps + effectiveSleepHelps) * fr * cnt * sp;
+
+      // 週間獲得量
+      result[k] = (result[k] ?? 0) + dailyIng * 7;
+    } else {
+      // あふれなしモード（通常計算）
+      result[k] = (result[k] ?? 0) + hpw * fr * cnt * sp;
+    }
+  }
+  // スキル食材をresultにマージ
+  for (const [k, v] of Object.entries(skillIngResult)) {
+    result[k] = (result[k] ?? 0) + v;
+  }
+  return result;
+}
+
+/* ===== ポケモン設定 保存・復元 ===== */
+function savePokemonSettings() {
+  const saved = [];
+  for (const slot of pokemonSlots) {
+    const pre = slot.prefix;
+    const entry = {
+      slotType: slot.slotType,
+      cardId: slot.cardId,
+      p:    document.getElementById(`${pre}_p`)?.value    ?? "",
+      lv:   document.getElementById(`${pre}_lv`)?.value   ?? "50",
+      pat:  document.getElementById(`${pre}_pat`)?.value  ?? "aab",
+      nu:   document.getElementById(`${pre}_nu`)?.value   ?? "other",
+      nd:   document.getElementById(`${pre}_nd`)?.value   ?? "other",
+      subs: SUB_IDS.map(sid => document.getElementById(`${pre}_${sid}`)?.value ?? "その他")
+    };
+    saved.push(entry);
+  }
+  return saved;
+}
+
+function restorePokemonSettings(saved) {
+  if (!saved || saved.length === 0) return;
+  // slotTypeが一致するスロットに順番に復元
+  const byType = {};
+  for (const s of saved) {
+    if (!byType[s.slotType]) byType[s.slotType] = [];
+    byType[s.slotType].push(s);
+  }
+  const typeCounters = {};
+  for (const slot of pokemonSlots) {
+    const t = slot.slotType;
+    if (!typeCounters[t]) typeCounters[t] = 0;
+    const idx = typeCounters[t]++;
+    const data = byType[t]?.[idx];
+    if (!data) continue;
+    const pre = slot.prefix;
+    const pEl = document.getElementById(`${pre}_p`);
+    if (pEl && data.p) pEl.value = data.p;
+    const lvEl = document.getElementById(`${pre}_lv`);
+    if (lvEl) lvEl.value = data.lv;
+    const patEl = document.getElementById(`${pre}_pat`);
+    if (patEl) patEl.value = data.pat;
+    const nuEl = document.getElementById(`${pre}_nu`);
+    if (nuEl) nuEl.value = data.nu;
+    const ndEl = document.getElementById(`${pre}_nd`);
+    if (ndEl) ndEl.value = data.nd;
+    SUB_IDS.forEach((sid, i) => {
+      const el = document.getElementById(`${pre}_${sid}`);
+      if (el && data.subs[i]) el.value = data.subs[i];
+    });
+    // アコーディオンを開く（設定があれば）
+    const hasDetail = data.nu !== "other" || data.nd !== "other" || data.subs.some(s => s !== "その他");
+    if (hasDetail) {
+      const body = document.getElementById(`${pre}_detail`);
+      const arrow = document.getElementById(`${pre}_detail_arrow`);
+      if (body) { body.classList.add("open"); }
+      if (arrow) arrow.textContent = "▲";
+    }
+  }
+}
+
+// スキル発動回数情報を計算（表示用）
+function calcSkillTriggersInfo(entry, teamOtebonus) {
+  if (!entry) return null;
+  const {pokemon, level, subs, natureUp, natureDown} = entry;
+  if (!pokemon.skillIngredients || pokemon.skillIngredients.length === 0) return null;
+
+  const SUB_UNLOCK = [10, 25, 50, 70, 80];
+  const activeSubs = subs.filter((_, i) => level >= SUB_UNLOCK[i]);
+  const skillM = activeSubs.filter(s => s === "スキル確率M").length;
+  const skillS = activeSubs.filter(s => s === "スキル確率S").length;
+  let skillRate = (pokemon.skillRate ?? 0) / 100;
+  skillRate *= (1 + 0.36 * skillM + 0.18 * skillS);
+  if (natureUp === "skillUp")   skillRate *= 1.1;
+  if (natureDown === "skillDown") skillRate *= 0.9;
+  skillRate = Math.max(0, skillRate);
+
+  const LEVEL_TIME_COEF = 0.002;
+  const BASE_DIVISOR = 2.222;
+  const WEEK_SECONDS = 7 * 86400;
+  const levelCoef = 1 - (level - 1) * LEVEL_TIME_COEF;
+
+  // おてスピ補正
+  // calcWeekly と同じ方式：自分のおてスピM/S + チームおてぼ合計を加算し、上限35%
+  const speedM = activeSubs.filter(s => s === "おてスピM").length;
+  const speedS = activeSubs.filter(s => s === "おてスピS").length;
+  let tf = 1.0;
+  if (natureUp === "speedUp") tf *= 0.9;
+  if (natureDown === "speedDown") tf *= 1.075;
+  const personalBonus = speedM * 0.14 + speedS * 0.07;
+  const totalBonus = Math.min(personalBonus + teamOtebonus, 0.35);
+  tf *= (1 - totalBonus);
+  const campCoef = campTicket ? (1 / 1.2) : 1.0;
+  const interval = (pokemon.helpTime * levelCoef * tf * campCoef) / BASE_DIVISOR;
+  const hpw = WEEK_SECONDS / interval;
+
+  const AWAKE_SECS = 15.5 * 3600;
+  const SLEEP_SECS = 8.5 * 3600;
+
+  if (sleepTap) {
+    const total = hpw * skillRate;
+    return { total, awake: total, sleep: null };
+  } else {
+    const awakeHelpsPerWeek = AWAKE_SECS / interval * 7;
+    const awake = awakeHelpsPerWeek * skillRate;
+
+    // 所持数あふれ考慮
+    const fr = (pokemon.ingredientFindRate ?? 0) / 100;
+    const berryPerHelp = (pokemon.category === "きのみ" ? 2 : 1);
+    const slots = level < 30 ? [1] : level < 60 ? [1,2] : [1,2,3];
+    const evAdd = getEventBuff().add;
+    let avgIng = 0;
+    for (const slot of slots) {
+      let cnt = 0;
+      if (slot === 1) cnt = pokemon["1a"] ?? 0;
+      else if (slot === 2) cnt = pokemon["2a"] ?? 0;
+      else cnt = pokemon["3a"] ?? 0;
+      if (cnt > 0 && pokemon.category === "食材") cnt += evAdd; // イベントバフ
+      avgIng += cnt / slots.length;
+    }
+    const avgPerHelp = (1 - fr) * berryPerHelp + fr * avgIng;
+    const maxInv = pokemon.maxInventory != null ? pokemon.maxInventory : null;
+
+    const sleepHelpsPerNight = SLEEP_SECS / interval;
+    let sleepHelpsEff = sleepHelpsPerNight;
+    if (maxInv && avgPerHelp > 0) {
+      sleepHelpsEff = Math.min(sleepHelpsPerNight, maxInv / avgPerHelp);
+    }
+    const sleepMax = (pokemon.category === "スキル") ? 2 : 1;
+    const sleepCalc = sleepHelpsEff * skillRate;
+    const sleepCapped = Math.min(sleepCalc, sleepMax);
+    const sleep = sleepCapped * 7;
+    return { total: awake + sleep, awake, sleep, sleepMax };
+  }
+}
+
+function mergeIng(a,b) {
+  const r={...a};
+  for (const [k,v] of Object.entries(b)) r[k]=(r[k]??0)+v;
+  return r;
+}
+
+// 1日フル稼働・げんき常時MAX前提の純粋な食材獲得量
+function calcDaily(entry, teamOtebonus = 0) {
+  if (!entry) return {};
+  const result = calcWeekly(entry, teamOtebonus);
+  const daily = {};
+  for (const [k,v] of Object.entries(result)) daily[k] = v / 7;
+  return daily;
+}
+
+function calcIngPokemonSchedule(ingEntries, ingSlotCount, dailyNeed) {
+  // 【アルゴリズム】
+  // 1. 食材ごとに「最も効率よく集められるポケモン」を担当者に割り当て
+  // 2. 担当食材の必要量を満たすのに必要な稼働日数を計算
+  // 3. 必要日数分だけ稼働させる（合計稼働 ≤ 枠数×7日 の範囲内）
+  // これにより余剰を出さず全食材をバランスよく集められる
+
+  const totalDays = 7;
+  const n = ingEntries.length;
+  const workDays = new Array(n).fill(0);
+  if (n === 0) return workDays;
+
+  const needKeys = Object.keys(dailyNeed);
+  if (needKeys.length === 0) {
+    const scale = Math.min(1, ingSlotCount / n);
+    return workDays.map(() => totalDays * scale);
+  }
+
+  // 各ポケモンの1日あたり食材獲得量
+  const dailyRates = ingEntries.map(({weekly}) => {
+    const d = {};
+    for (const [k,v] of Object.entries(weekly)) d[k] = v / 7;
+    return d;
+  });
+
+  // 週間必要量
+  const weeklyNeed = {};
+  for (const k of needKeys) weeklyNeed[k] = dailyNeed[k] * totalDays;
+
+  // ── STEP1: 食材ごとに担当ポケモンを決定 ──
+  // 各食材を最も効率よく集められるポケモンに割り当て
+  const pokemonReqDays = new Array(n).fill(0);
+
+  for (const k of needKeys) {
+    if (weeklyNeed[k] <= 0) continue;
+    // この食材を持てるポケモン中で最高レートのものを担当者に
+    let bestIdx = -1, bestRate = 0;
+    for (let i = 0; i < n; i++) {
+      const rate = dailyRates[i][k] ?? 0;
+      if (rate > bestRate) { bestRate = rate; bestIdx = i; }
+    }
+    if (bestIdx < 0) continue;
+    // 担当ポケモンの必要稼働日数を更新（浮動小数点誤差対策で+0.5%マージン）
+    const daysNeeded = (weeklyNeed[k] / bestRate) * 1.005;
+    pokemonReqDays[bestIdx] = Math.max(pokemonReqDays[bestIdx], daysNeeded);
+  }
+
+  // ── STEP2: 各ポケモンを必要日数分稼働 ──
+  // 合計稼働が 枠数×7日 を超える場合は比例縮小
+  const totalReq = pokemonReqDays.reduce((s, d) => s + d, 0);
+  const maxTotal = ingSlotCount * totalDays;
+
+  if (totalReq <= maxTotal) {
+    // 枠に余裕あり: そのまま必要日数分稼働
+    for (let i = 0; i < n; i++) {
+      workDays[i] = Math.min(pokemonReqDays[i], totalDays);
+    }
+  } else {
+    // 枠が足りない: 比例縮小（全員が同じ割合で削られる）
+    const scale = maxTotal / totalReq;
+    for (let i = 0; i < n; i++) {
+      workDays[i] = Math.min(pokemonReqDays[i] * scale, totalDays);
+    }
+  }
+
+  return workDays;
+}
+
+
+function calculate() {
+  // ── チームおてぼボーナス集計 ──
+  let teamOtebonusRaw = 0;
+
+  const SUB_UNLOCK_LEVELS = [10, 25, 50, 70, 80];
+  for (const slot of pokemonSlots.filter(s => s.slotType !== "ing")) {
+    const e = getEntry(slot.prefix);
+    if (!e) continue;
+    const scale = slot.scale ?? 1.0;
+    const activeSubs = e.subs.filter((_, i) => e.level >= SUB_UNLOCK_LEVELS[i]);
+    teamOtebonusRaw += activeSubs.filter(s => s === "おてぼ").length * 0.05 * scale;
+  }
+
+  // 食材枠 + 食材セレクト枠の合計で交代計算
+  const ingSlotCount = comp.ing;
+  const ingPokemons = pokemonSlots.filter(s => s.slotType === "ing" || s.slotType === "selIng");
+  const ingN = ingPokemons.length;
+  if (ingN > 0) {
+    const ingScale = Math.min(1, ingSlotCount / ingN);
+    for (const slot of ingPokemons) {
+      const e = getEntry(slot.prefix);
+      if (!e) continue;
+      const activeSubsIng = e.subs.filter((_, i) => e.level >= SUB_UNLOCK_LEVELS[i]);
+      teamOtebonusRaw += activeSubsIng.filter(s => s === "おてぼ").length * 0.05 * ingScale;
+    }
+  }
+  const teamOtebonus = teamOtebonusRaw;
+
+  // ── STEP1: 在庫 + きのみ・スキルの1週間分を先に計算 ──
+  // これらは交代なしでフル稼働するので確実に集まる
+  const stockMap = getStockMap();
+  let haveFixed = { ...stockMap }; // 週頭在庫
+  const perPokemon = [];
+
+  for (const slot of pokemonSlots.filter(s => s.slotType !== "ing")) {
+    const e = getEntry(slot.prefix);
+    if (!e) continue;
+    const weekly = calcWeekly(e, teamOtebonus);
+    const scale = slot.scale ?? 1.0;
+    const scaledWeekly = {};
+    for (const [k, v] of Object.entries(weekly)) scaledWeekly[k] = v * scale;
+    haveFixed = mergeIng(haveFixed, scaledWeekly);
+    const displayDaily = calcDaily(e, teamOtebonus);
+    const workDaysFixed = 7 * scale;
+    const skillInfo = calcSkillTriggersInfo(e, teamOtebonus);
+    perPokemon.push({ name: e.pokemon.name, slotType: slot.slotType, daily: displayDaily, workDays: workDaysFixed, skillInfo });
+  }
+
+  // ── STEP2: 21食分の必要量を計算 ──
+  const need = {};
+  for (const id of recipeRows) {
+    const genre = document.getElementById(`rg_${id}`)?.value;
+    const name  = document.getElementById(`rn_${id}`)?.value;
+    const count = Number(document.getElementById(`rc_${id}`)?.value || 0);
+    if (!genre || !name || count === 0) continue;
+    const recipe = RECIPE_DATA.recipes[genre]?.[name];
+    if (!recipe) continue;
+    for (const [ing, perR] of Object.entries(recipe)) {
+      const k = normIng(ing);
+      need[k] = (need[k] ?? 0) + perR * count;
+    }
+  }
+
+  // ── STEP3: 在庫＋きのみ・スキル分を差し引いた「食材ポケモンが集めるべき残量」を計算 ──
+  const needAfterFixed = {};
+  for (const k of Object.keys(need)) {
+    const remaining = (need[k] ?? 0) - (haveFixed[k] ?? 0);
+    if (remaining > 0) needAfterFixed[k] = remaining;
+    // 0以下ならすでに充足 → 食材ポケモンの担当なし
+  }
+  const dailyNeedForIng = {};
+  for (const [k, v] of Object.entries(needAfterFixed)) dailyNeedForIng[k] = v / 7;
+
+  // ── STEP4: 食材ポケモンの最適稼働スケジュール計算 ──
+  const ingEntries = [];
+  for (const slot of ingPokemons) {
+    const e = getEntry(slot.prefix);
+    if (!e) continue;
+    ingEntries.push({ slot, entry: e, weekly: calcWeekly(e, teamOtebonus) });
+  }
+
+  const workDays = calcIngPokemonSchedule(ingEntries, ingSlotCount, dailyNeedForIng);
+
+  // ── STEP5: 食材ポケモンの獲得量を加算 ──
+  let have = { ...haveFixed };
+
+  ingEntries.forEach(({ entry: e }, i) => {
+    const scale = workDays[i] / 7;
+    const weekly = ingEntries[i].weekly;
+    const scaledWeekly = {};
+    for (const [k, v] of Object.entries(weekly)) scaledWeekly[k] = v * scale;
+    have = mergeIng(have, scaledWeekly);
+    const displayDaily = calcDaily(e, teamOtebonus);
+    const skillInfo = calcSkillTriggersInfo(e, teamOtebonus);
+    perPokemon.push({ name: e.pokemon.name, slotType: "ing", daily: displayDaily, workDays: workDays[i], skillInfo });
+  });
+
+  // ── STEP6: 充足判定 ──
+  const needKeys = Object.keys(need);
+  let allOk = true, minRatio = Infinity;
+  for (const k of needKeys) {
+    const ratio = (have[k] ?? 0) / need[k];
+    if (ratio < 1) allOk = false;
+    if (ratio < minRatio) minRatio = ratio;
+  }
+  if (needKeys.length === 0) { minRatio = 1; allOk = true; }
+
+  // 余剰食材
+  const surplus = {};
+  for (const [k, v] of Object.entries(have)) {
+    const leftover = v - (need[k] ?? 0);
+    if (leftover > 0.05) surplus[k] = leftover;
+  }
+
+  const surplusDays = allOk ? 7 * (minRatio - 1) : 0;
+  // 実際にかかる日数 = 食材ポケモンの稼働日数合計 / 食材枠数
+  const totalIngWorkDays = workDays.reduce((s, d) => s + d, 0);
+  const actualDays = ingSlotCount > 0 && workDays.length > 0
+    ? totalIngWorkDays / ingSlotCount
+    : (allOk ? 7 * (1/minRatio) : 7 / minRatio);
+
+  renderResult(have, need, surplus, perPokemon, allOk, minRatio, surplusDays, stockMap, teamOtebonus, actualDays);
+  // エナジー提案は追加機能：万一エラーが出ても、上の既存の結果表示には影響させない
+  try { renderEnergyPanel({ teamOtebonus, haveFixed, need, ingEntries, workDays, ingSlotCount }); }
+  catch (e) { console.warn("エナジー提案の表示でエラー:", e); }
+}
+
+
+function renderResult(have, need, surplus, perPokemon, allOk, minRatio, surplusDays, stockMap={}, teamOtebonus=0, actualDays=null) {
+  const needKeys = Object.keys(need);
+
+  // イベントバフ適用中の表示
+  const evInfo = getEventBuff();
+  const evNote = evInfo.on
+    ? `<div style="font-size:11px;color:var(--pks-star);margin-top:4px;">🎉 イベントバフ適用中（食材タイプ＋${evInfo.add}個／食材セレクト×${evInfo.mult}倍）</div>`
+    : "";
+
+  // 食材充足バー
+  const ingHtml = needKeys.map(k => {
+    const h=have[k]??0, n=need[k];
+    const ok=h>=n;
+    const pct=Math.round(Math.min(h/n,1)*100);
+    return `<div class="pks-ing-card">
+      <div class="pks-ing-name">${k}</div>
+      <div class="pks-ing-bar-bg"><div class="pks-ing-bar ${ok?"ok":"ng"}" style="width:${pct}%"></div></div>
+      <div class="pks-ing-nums">
+        <span class="pks-ing-have ${ok?"ok":"ng"}">${h.toFixed(1)}個</span>
+        <span class="pks-ing-need">必要:${n}</span>
+      </div>
+    </div>`;
+  }).join("");
+
+  // 全食材が揃うまでの日数
+  // 集め切れる場合: actualDays（実稼働日数）を使用
+  // 集め切れない場合: 7 / minRatio（現在の収集ペースで何日かかるか）
+  let daysNeeded;
+  if (allOk) {
+    daysNeeded = actualDays !== null ? actualDays : (needKeys.length > 0 ? (7 / minRatio) : 0);
+  } else {
+    // 不足している場合: 必要量 / 1日あたり収集ペース = 何日かかるか
+    // minRatio = have/need なので、need日数 = 7 / minRatio
+    daysNeeded = needKeys.length > 0 ? (7 / minRatio) : 7;
+  }
+
+  // 時間的余力 or 不足
+  let detailHtml = "";
+  if (allOk) {
+    detailHtml = `<div class="pks-surplus">
+      <div class="pks-surplus-label">⏱ 全食材が揃うまでの日数</div>
+      <div class="pks-surplus-val">${daysNeeded.toFixed(1)} 日</div>
+      <div class="pks-surplus-desc">
+        7日間で余裕をもって準備できます。<br>
+        余力：${(7 - daysNeeded).toFixed(1)}日分 ／ 充足率：${(minRatio*100).toFixed(0)}%
+      </div>
+    </div>`;
+  } else {
+    const shortages = needKeys
+      .filter(k=>(have[k]??0)<need[k])
+      .map(k=>`・${k}：あと ${(need[k]-(have[k]??0)).toFixed(1)} 個不足`)
+      .join("<br>");
+    detailHtml = `<div class="pks-shortage">
+      <div class="pks-shortage-label">⏱ 全食材を集めるのに必要な日数</div>
+      <div style="font-family:'Zen Maru Gothic',sans-serif;font-size:26px;font-weight:900;color:var(--pks-red);margin:4px 0;">${daysNeeded.toFixed(1)} 日必要</div>
+      <div class="pks-shortage-item" style="margin-top:8px;">
+        <b style="color:var(--pks-red);">⚠️ 不足している食材</b><br>
+        ${shortages}
+      </div>
+    </div>`;
+  }
+
+  // ポケモン別食材内訳（1日あたり）
+  const slotEmoji = { berry:"🍒", ing:"🍳", selIng:"🎯", skill:"⚡" };
+  const pbHtml = perPokemon.map(p => {
+    const workNote = p.slotType === "ing"
+      ? `<span style="font-size:10px;color:var(--pks-text-dim);margin-left:6px;">実稼働 ${p.workDays.toFixed(1)}日/週</span>`
+      : `<span style="font-size:10px;color:var(--pks-text-dim);margin-left:6px;"></span>`;
+    const lines = Object.entries(p.daily)
+      .filter(([,v])=>v>0.01)
+      .map(([k,v])=>`<div class="pks-pb-row"><span class="pks-pb-ing">${k}</span><span class="pks-pb-val">${v.toFixed(2)}個/日</span></div>`)
+      .join("");
+    // スキル発動回数表示
+    let skillLine = "";
+    if (p.skillInfo) {
+      if (sleepTap) {
+        skillLine = `<div class="pks-pb-row"><span class="pks-pb-ing">スキル発動（週）</span><span style="color:var(--pks-purple);font-weight:700;">${p.skillInfo.total.toFixed(1)}回</span></div>`;
+      } else {
+        skillLine = `<div class="pks-pb-row"><span class="pks-pb-ing">スキル発動（昼）</span><span style="color:var(--pks-purple);font-weight:700;">${p.skillInfo.awake.toFixed(1)}回/週</span></div>`
+          + `<div class="pks-pb-row"><span class="pks-pb-ing">スキル発動（夜・上限${p.skillInfo.sleepMax}回/日）</span><span style="color:var(--pks-purple);font-weight:700;">${p.skillInfo.sleep.toFixed(1)}回/週</span></div>`;
+      }
+    }
+    return `<div class="pks-pb-card">
+      <div class="pks-pb-name">${slotEmoji[p.slotType]??""} ${p.name}${workNote}</div>
+      ${lines||'<div style="font-size:11px;color:var(--pks-text-dim)">食材なし</div>'}
+      ${skillLine}
+    </div>`;
+  }).join("");
+
+  // 余剰食材（週間）
+  const surplusEntries = Object.entries(surplus).sort((a,b)=>b[1]-a[1]);
+  const surplusListHtml = surplusEntries.length
+    ? surplusEntries.map(([k,v])=>`・${k}：${v.toFixed(1)}個/週`).join("<br>")
+    : "なし";
+
+  document.getElementById("resultContent").innerHTML = `
+    <div class="pks-verdict">
+      <div class="pks-verdict-main ${allOk?"ok":"ng"}">${allOk?"✅ 21食分 準備OK！":"❌ 食材が不足しています"}</div>
+      <div class="pks-verdict-sub">1週間（7日）・21食分シミュレーション結果</div>
+      ${teamOtebonus > 0 ? `<div style="font-size:11px;color:var(--pks-green);margin-top:4px;">🤝 チームおてぼボーナス +${Math.round(teamOtebonus*100)}%（編成中のおてぼ持ち分・上限35%）</div>` : ""}
+      ${evNote}
+      ${Object.keys(stockMap).length > 0 ? `<div style="font-size:11px;color:var(--pks-text-dim);margin-top:4px;">週頭在庫込み</div>` : ""}
+    </div>
+    ${needKeys.length?`<div class="pks-result-section-title">食材ごとの充足状況（週間）</div><div class="pks-ing-grid">${ingHtml}</div>`:""}
+    ${detailHtml}
+    <div class="pks-result-section-title" style="margin-top:16px;">🐾 ポケモン別 食材獲得量（1日フル稼働・げんきMAX想定）</div>
+    <div class="pks-pb-list">${pbHtml}</div>
+    <div class="pks-extra">
+      <div class="pks-extra-label">📦 余剰食材（週間・料理使用後の残り）</div>
+      <div class="pks-extra-item">${surplusListHtml}</div>
+    </div>
+  `;
+}
+
+/* ===== エナジー最大化の提案（第1段階：きのみ＋食材）===== */
+// 前提：げんき81%以上を維持／スキルエナジーは未反映／大成功は期待値で計算
+let ENERGY = null;
+const ENERGY_JSON_URL = "https://simulator.tofumentalpapa.com/energy_data.json";
+const ENERGY_LANG = "jp";
+let ENERGY_RECIPE_MAP = {};
+
+function indexEnergyData() {
+  ENERGY_RECIPE_MAP = {};
+  if (!ENERGY) return;
+  for (const [jpName, r] of Object.entries(ENERGY.recipes)) {
+    if (ENERGY_LANG === "jp") ENERGY_RECIPE_MAP[jpName] = r;
+    else for (const en of (r.en || [])) ENERGY_RECIPE_MAP[en] = r;
+  }
+}
+function ingBaseEnergy(name) {
+  const f = ENERGY?.ingredients.find(x => x[ENERGY_LANG] === name);
+  return f ? f.base : 0;
+}
+function berryBaseOf(type) {
+  const f = ENERGY?.berry.types.find(x => x[ENERGY_LANG] === type);
+  return f ? f.base : 0;
+}
+
+function renderEnergySettings() {
+  const body = document.getElementById("energyBody");
+  const fail = document.getElementById("energyLoadFail");
+  if (!body || !fail) return;
+  if (!ENERGY) { body.classList.add("pks-hidden"); fail.classList.remove("pks-hidden"); return; }
+  body.classList.remove("pks-hidden"); fail.classList.add("pks-hidden");
+  indexEnergyData();
+  const favs = document.getElementById("enFavs");
+  if (favs) {
+    favs.innerHTML = ENERGY.berry.types.map(t =>
+      `<label class="pks-fav"><input type="checkbox" value="${esc(t[ENERGY_LANG])}"> ${esc(t[ENERGY_LANG])}</label>`
+    ).join("");
+  }
+}
+
+function getEnergySettings() {
+  const num = (id, def) => {
+    const raw = document.getElementById(id)?.value;
+    if (raw === "" || raw == null) return def;
+    const v = Number(raw);
+    return Number.isFinite(v) ? v : def;
+  };
+  const ev = num("enEvent", 1);
+  return {
+    field: Math.max(0, num("enField", 0)) / 100,
+    pot: Math.max(0, Math.floor(num("enPot", 15))),
+    recipeLv: Math.min(55, Math.max(1, Math.round(num("enRecipeLv", 30)))),
+    gsUp: Math.max(0, num("enGsUp", 0)) / 100,
+    eventMul: ev > 0 ? ev : 1,
+    favs: [...document.querySelectorAll("#enFavs input:checked")].map(x => x.value)
+  };
+}
+
+// きのみ1個のエナジー: Max(基礎+(Lv-1), Round(基礎×1.025^(Lv-1))) → ×(1+フィールド)を切り上げ → 好物は×2
+function berryEnergyEach(base, level, field, fav) {
+  const lvE = Math.max(base + (level - 1), Math.round(base * Math.pow(1.025, level - 1)));
+  const e = Math.ceil(lvE * (1 + field));
+  return fav ? e * 2 : e;
+}
+
+// 大成功の週平均倍率（月〜土は2倍・日曜は3倍。21食のうち日曜は3食）
+function greatSuccessAverage(set) {
+  const g = ENERGY.greatSuccess;
+  const pw = Math.min(1, g.baseRate + set.gsUp);
+  const ps = Math.min(1, g.sundayRate + set.gsUp);
+  const weekdayMeals = g.mealsPerWeek - g.sundayMeals;
+  const total = weekdayMeals * (1 + pw * (g.multiplier - 1)) + g.sundayMeals * (1 + ps * (g.sundayMultiplier - 1));
+  return total / g.mealsPerWeek;
+}
+
+// 1体のお手伝い統計（calcWeeklyと同じ前提）
+function calcHelpStats(entry, teamOtebonus = 0) {
+  const {pokemon, level, pattern, natureUp, natureDown, subs} = entry;
+  const ev = getEventBuff();
+  const SUB_UNLOCK = [10, 25, 50, 70, 80];
+  const activeSubs = subs.filter((_, i) => level >= SUB_UNLOCK[i]);
+  const speedM = activeSubs.filter(s => s === "おてスピM").length;
+  const speedS = activeSubs.filter(s => s === "おてスピS").length;
+  let tf = 1.0;
+  if (natureUp === "speedUp") tf *= 0.9;
+  if (natureDown === "speedDown") tf *= 1.075;
+  const totalBonus = Math.min(speedM * 0.14 + speedS * 0.07 + teamOtebonus, 0.35);
+  tf *= (1 - totalBonus);
+  const levelCoef = 1 - (level - 1) * LEVEL_TIME_COEF;
+  const campCoef = campTicket ? (1 / 1.2) : 1.0;
+  const interval = (pokemon.helpTime * levelCoef * tf * campCoef) / BASE_DIVISOR;
+  const hpw = WEEK_SECONDS / interval;
+
+  const foodM = activeSubs.filter(s => s === "食材確率M").length;
+  const foodS = activeSubs.filter(s => s === "食材確率S").length;
+  let fr = (pokemon.ingredientFindRate ?? 0) / 100;
+  fr *= (1 + 0.36 * foodM + 0.18 * foodS);
+  if (natureUp === "foodUp") fr *= 1.2;
+  if (natureDown === "foodDown") fr *= 0.8;
+  fr = Math.max(0, Math.min(1, fr));
+
+  const slots = level < 30 ? [1] : level < 60 ? [1, 2] : [1, 2, 3];
+  const sp = 1 / slots.length;
+  let avgIngPerHelp = 0;
+  for (const slot of slots) {
+    let ing = null, cnt = 0;
+    if (slot === 1) { ing = pokemon.ingredientA; cnt = pokemon["1a"] ?? 0; }
+    else if (slot === 2) {
+      const t = pattern[1];
+      ing = t === "a" ? pokemon.ingredientA : pokemon.ingredientB;
+      cnt = t === "a" ? (pokemon["2a"] ?? 0) : (pokemon["2b"] ?? 0);
+    } else {
+      const t = pattern[2];
+      if (t === "a") { ing = pokemon.ingredientA; cnt = pokemon["3a"] ?? 0; }
+      else if (t === "b") { ing = pokemon.ingredientB; cnt = pokemon["3b"] ?? 0; }
+      else { ing = pokemon.ingredientC; cnt = pokemon["3c"] ?? 0; }
+    }
+    if (ing && cnt > 0 && pokemon.category === "食材") cnt += ev.add;
+    if (ing && cnt > 0) avgIngPerHelp += cnt * sp;
+  }
+  const invS = activeSubs.filter(s => s === "最大所持数アップS").length;
+  const invM = activeSubs.filter(s => s === "最大所持数アップM").length;
+  const invL = activeSubs.filter(s => s === "最大所持数アップL").length;
+  const maxInventory = (pokemon.maxInventory != null) ? pokemon.maxInventory + invS * 6 + invM * 12 + invL * 18 : null;
+  const berryNumS = activeSubs.filter(s => s === "きのみの数S").length;
+  const berryPerHelp = (pokemon.category === "きのみ" ? 2 : 1) + berryNumS;
+  const avgPerHelp = (1 - fr) * berryPerHelp + fr * avgIngPerHelp;
+  return { interval, hpw, fr, berryPerHelp, maxInventory, avgPerHelp };
+}
+
+// 1体の週間きのみ獲得量とエナジー
+function calcBerryWeekly(entry, teamOtebonus, set) {
+  const st = calcHelpStats(entry, teamOtebonus);
+  const {pokemon, level} = entry;
+  let berries;
+  if (!sleepTap && st.maxInventory != null && st.maxInventory > 0 && st.avgPerHelp > 0) {
+    // 睡眠中に満タンになると、以降はきのみのみ（食材ロス）
+    const awake = 15.5 * 3600 / st.interval, sleep = 8.5 * 3600 / st.interval;
+    const eff = Math.min(sleep, st.maxInventory / st.avgPerHelp);
+    berries = ((awake + eff) * (1 - st.fr) * st.berryPerHelp + (sleep - eff) * st.berryPerHelp) * 7;
+  } else {
+    berries = st.hpw * (1 - st.fr) * st.berryPerHelp;
+  }
+  const base = berryBaseOf(pokemon.type);
+  const perBerry = base > 0 ? berryEnergyEach(base, level, set.field, set.favs.includes(pokemon.type)) : 0;
+  return { berries, perBerry, energy: berries * perBerry };
+}
+
+// ---- 単体の線形計画法（Stanford ACM notebookの二段階シンプレックス法を移植）----
+// max c·x  s.t. A x <= b, x >= 0
+function lpMaximize(A, b, c) {
+  const EPS = 1e-9;
+  const m = b.length, n = c.length;
+  const D = Array.from({length: m + 2}, () => new Array(n + 2).fill(0));
+  const B = new Array(m), N = new Array(n + 1);
+  for (let i = 0; i < m; i++) for (let j = 0; j < n; j++) D[i][j] = A[i][j];
+  for (let i = 0; i < m; i++) { B[i] = n + i; D[i][n] = -1; D[i][n + 1] = b[i]; }
+  for (let j = 0; j < n; j++) { N[j] = j; D[m][j] = -c[j]; }
+  N[n] = -1; D[m + 1][n] = 1;
+  function pivot(r, s) {
+    const inv = 1 / D[r][s];
+    for (let i = 0; i < m + 2; i++) if (i !== r) {
+      const f = D[i][s] * inv;
+      if (f !== 0) for (let j = 0; j < n + 2; j++) if (j !== s) D[i][j] -= D[r][j] * f;
+    }
+    for (let j = 0; j < n + 2; j++) if (j !== s) D[r][j] *= inv;
+    for (let i = 0; i < m + 2; i++) if (i !== r) D[i][s] *= -inv;
+    D[r][s] = inv;
+    const t = B[r]; B[r] = N[s]; N[s] = t;
+  }
+  function simplex(phase) {
+    const x = phase === 1 ? m + 1 : m;
+    for (let iter = 0; iter < 20000; iter++) {
+      let s = -1;
+      for (let j = 0; j <= n; j++) {
+        if (phase === 2 && N[j] === -1) continue;
+        if (s === -1 || D[x][j] < D[x][s] || (D[x][j] === D[x][s] && N[j] < N[s])) s = j;
+      }
+      if (s === -1 || D[x][s] > -EPS) return true;
+      let r = -1;
+      for (let i = 0; i < m; i++) {
+        if (D[i][s] < EPS) continue;
+        if (r === -1) { r = i; continue; }
+        const q = D[i][n + 1] / D[i][s], p = D[r][n + 1] / D[r][s];
+        if (q < p || (q === p && B[i] < B[r])) r = i;
+      }
+      if (r === -1) return false;
+      pivot(r, s);
+    }
+    return false;
+  }
+  let r = 0;
+  for (let i = 1; i < m; i++) if (D[i][n + 1] < D[r][n + 1]) r = i;
+  if (m > 0 && D[r][n + 1] < -EPS) {
+    pivot(r, n);
+    if (!simplex(1) || D[m + 1][n + 1] < -EPS) return { status: "infeasible" };
+    for (let i = 0; i < m; i++) if (B[i] === -1) {
+      let s = -1;
+      for (let j = 0; j <= n; j++) if (s === -1 || D[i][j] < D[i][s] || (D[i][j] === D[i][s] && N[j] < N[s])) s = j;
+      pivot(i, s);
+    }
+  }
+  if (!simplex(2)) return { status: "unbounded" };
+  const x = new Array(n).fill(0);
+  for (let i = 0; i < m; i++) if (B[i] < n) x[B[i]] = D[i][n + 1];
+  return { status: "optimal", value: D[m][n + 1], x };
+}
+
+// 稼働日数 w に対する週間エナジー（きのみ＋料理＋追加食材）
+function planEnergy(w, P) {
+  const surplus = {}; let shortage = 0;
+  for (const k of P.keys) {
+    let have = P.F[k] || 0;
+    for (let i = 0; i < w.length; i++) have += w[i] * (P.rate[i][k] || 0);
+    const d = have - (P.need[k] || 0);
+    if (d >= 0) surplus[k] = d; else shortage += -d;
+  }
+  // 追加食材：基礎エナジーの高い食材から、なべの余り枠へ入れる
+  let slots = P.T, extra = 0;
+  const order = P.keys.slice().sort((a, b) => P.base[b] - P.base[a]);
+  for (const k of order) {
+    if (slots <= 0) break;
+    const u = Math.min(surplus[k] || 0, slots);
+    extra += u * P.base[k]; slots -= u;
+  }
+  let berry = P.fixedBerry;
+  for (let i = 0; i < w.length; i++) berry += w[i] * P.berryDay[i];
+  const dish = P.fixedDish * P.mulAll;
+  const extraE = extra * P.mulAll;
+  return { berry, dish, extra: extraE, total: berry + dish + extraE, shortage };
+}
+
+// 最適な稼働日数を求める（食材の必要量を満たす条件で、週間エナジー最大）
+function optimizeSchedule(P) {
+  const n = P.berryDay.length, keys = P.keys, K = keys.length, nv = n + K, SC = 1000;
+  const A = [], b = [], c = new Array(nv).fill(0);
+  for (let i = 0; i < n; i++) c[i] = P.berryDay[i] / SC;
+  keys.forEach((k, j) => { c[n + j] = P.base[k] * P.mulAll / SC; });
+  const rateRow = k => { const r = new Array(nv).fill(0); for (let i = 0; i < n; i++) r[i] = -(P.rate[i][k] || 0); return r; };
+  keys.forEach((k, j) => {
+    const F = P.F[k] || 0, need = P.need[k] || 0;
+    if (need > 0) { A.push(rateRow(k)); b.push(F - need); }          // 必要量を満たす
+    const r2 = rateRow(k); r2[n + j] = 1; A.push(r2); b.push(F - need); // 追加食材は余剰分まで
+  });
+  { const r = new Array(nv).fill(0); for (let j = 0; j < K; j++) r[n + j] = 1; A.push(r); b.push(P.T); }
+  { const r = new Array(nv).fill(0); for (let i = 0; i < n; i++) r[i] = 1; A.push(r); b.push(P.slotCount * 7); }
+  for (let i = 0; i < n; i++) { const r = new Array(nv).fill(0); r[i] = 1; A.push(r); b.push(7); }
+  const res = lpMaximize(A, b, c);
+  if (res.status !== "optimal") return { status: res.status };
+  const w = res.x.slice(0, n).map(v => Math.min(7, Math.max(0, v < 1e-7 ? 0 : v)));
+  return { status: "optimal", w };
+}
+
+// 稼働日数をスロットに並べる（McNaughton法：同じポケモンが同時に2枠に入らない）
+function layoutSchedule(w, slotCount) {
+  const total = slotCount * 7;
+  let pos = 0;
+  return w.map(d => {
+    const start = Math.min(pos, total);
+    const end = Math.min(pos + d, total);
+    pos += d;
+    const segs = [];
+    let a = start;
+    while (a < end - 1e-9) {
+      const slotIdx = Math.floor(a / 7 + 1e-9);
+      const slotEnd = (slotIdx + 1) * 7;
+      const b2 = Math.min(end, slotEnd);
+      segs.push({ slot: slotIdx + 1, from: a - slotIdx * 7, to: b2 - slotIdx * 7 });
+      a = b2;
+    }
+    return segs;
+  });
+}
+
+function fmtE(v) { return Math.round(v).toLocaleString("ja-JP"); }
+function fmtD(v) { return (Math.abs(v) < 0.05 ? 0 : v).toFixed(1); }
+
+function renderEnergyPanel(ctx) {
+  const host = document.getElementById("resultContent");
+  if (!host) return;
+  if (!ENERGY) return;
+  const set = getEnergySettings();
+  const warnings = [];
+
+  // ── 料理（レシピ食材）のエナジーと、追加食材を入れられる枠数 ──
+  let dishBase = 0, extraSlots = 0, unknownRecipe = 0, estimatedUsed = false, overPot = false;
+  for (const id of recipeRows) {
+    const name = document.getElementById(`rn_${id}`)?.value;
+    const count = Number(document.getElementById(`rc_${id}`)?.value || 0);
+    if (!name || count <= 0) continue;
+    const r = ENERGY_RECIPE_MAP[name];
+    if (!r) { unknownRecipe += count; continue; }
+    const lvB = ENERGY.recipeLevelBonusPercent[set.recipeLv - 1] / 100;
+    dishBase += count * (r.lv0 + Math.round(r.lv0 * lvB));
+    if (r.estimated) estimatedUsed = true;
+    if (r.count > set.pot) overPot = true;
+    extraSlots += count * Math.max(0, set.pot - r.count);
+  }
+  if (unknownRecipe) warnings.push(`エナジーデータにない料理が${unknownRecipe}食あります（料理エナジーに含めていません）`);
+  if (estimatedUsed) warnings.push("概算値（要確認）のレシピを使っています");
+  if (overPot) warnings.push("なべ容量より食材数の多いレシピがあります。なべ容量を確認してください");
+
+  const gsAvg = greatSuccessAverage(set);
+  const mulAll = (1 + set.field) * set.eventMul * gsAvg;
+
+  // ── きのみのエナジー（きのみ枠・スキル枠は固定、食材枠は稼働日数で変わる）──
+  let fixedBerry = 0;
+  for (const slot of pokemonSlots.filter(s => s.slotType !== "ing")) {
+    const e = getEntry(slot.prefix);
+    if (!e) continue;
+    fixedBerry += calcBerryWeekly(e, ctx.teamOtebonus, set).energy * (slot.scale ?? 1.0);
+  }
+  const ingInfo = ctx.ingEntries.map(({entry, weekly}) => {
+    const bw = calcBerryWeekly(entry, ctx.teamOtebonus, set);
+    const rate = {};
+    for (const [k, v] of Object.entries(weekly)) rate[k] = v / 7;
+    return { name: entry.pokemon.name, berryDay: bw.energy / 7, rate };
+  });
+
+  const keys = ENERGY.ingredients.map(x => x[ENERGY_LANG]);
+  const base = {}; keys.forEach(k => { base[k] = ingBaseEnergy(k); });
+  const P = {
+    keys, base, F: ctx.haveFixed, need: ctx.need,
+    rate: ingInfo.map(x => x.rate), berryDay: ingInfo.map(x => x.berryDay),
+    fixedBerry, fixedDish: dishBase, mulAll, T: extraSlots, slotCount: ctx.ingSlotCount
+  };
+
+  // 比較の基準：登録した食材ポケモンを均等に交代させた場合
+  const nIng = ingInfo.length;
+  const eqDays = nIng > 0 ? Math.min(7, ctx.ingSlotCount * 7 / nIng) : 0;
+  const eqW = ingInfo.map(() => eqDays);
+  const cur = planEnergy(eqW, P);
+  let best = null, plan = null, status = "none";
+  if (ingInfo.length > 0 && ctx.ingSlotCount > 0) {
+    const res = optimizeSchedule(P);
+    status = res.status;
+    if (res.status === "optimal") {
+      const cand = planEnergy(res.w, P);
+      if (cand.shortage <= 1e-3) { best = cand; plan = res.w; }
+    }
+  }
+
+  const row = (label, a, b2) => `<div class="pks-pb-row"><span class="pks-pb-ing">${label}</span><span class="pks-pb-val">${b2 === undefined ? fmtE(a) : fmtE(a) + " → " + fmtE(b2)}</span></div>`;
+  let html = `<div class="pks-extra" style="margin-top:14px;">
+    <div class="pks-extra-label">⚡ エナジー最大化の提案（きのみ＋食材）</div>`;
+
+  if (best) {
+    const gain = cur.total > 0 ? (best.total / cur.total - 1) * 100 : 0;
+    html += `<div class="pks-surplus" style="margin-top:8px;">
+      <div class="pks-surplus-label">週間エナジー（提案どおりに稼働した場合）</div>
+      <div class="pks-surplus-val">${fmtE(best.total)}</div>
+      <div class="pks-surplus-desc">均等に交代した場合 ${fmtE(cur.total)} に対して ${gain >= 0 ? "+" : ""}${gain.toFixed(1)}%</div>
+    </div>`;
+    html += `<div class="pks-result-section-title">内訳（均等に交代 → 提案）</div>
+      ${row("きのみ", cur.berry, best.berry)}
+      ${row("料理（レシピ食材）", cur.dish, best.dish)}
+      ${row("追加食材", cur.extra, best.extra)}`;
+    const lay = layoutSchedule(plan, ctx.ingSlotCount);
+    html += `<div class="pks-result-section-title">稼働日数の提案（週頭を0日として、同じ行は同時に稼働しません）</div>`;
+    ingInfo.forEach((x, i) => {
+      const segs = lay[i].map(s => `枠${s.slot}: ${fmtD(s.from)}〜${fmtD(s.to)}日`).join(" / ");
+      html += `<div class="pks-pb-card" style="margin-top:6px;">
+        <div class="pks-pb-name">🍳 ${esc(x.name)}</div>
+        <div class="pks-pb-row"><span class="pks-pb-ing">稼働日数（均等 → 提案）</span><span class="pks-pb-val">${fmtD(eqW[i])} → ${fmtD(plan[i])}日/週</span></div>
+        ${segs ? `<div style="font-size:11px;color:var(--pks-text-dim);">${segs}</div>` : `<div style="font-size:11px;color:var(--pks-text-dim);">稼働なし</div>`}
+      </div>`;
+    });
+  } else if (status === "infeasible") {
+    html += `<div class="pks-shortage-item" style="margin-top:8px;">食材が足りないため、稼働日数の提案は出せません。上の「不足している食材」を先に解消してください。<br>参考：均等に交代した場合の週間エナジー ${fmtE(cur.total)}</div>`;
+  } else if (ingInfo.length === 0 || ctx.ingSlotCount <= 0) {
+    html += `<div class="pks-shortage-item" style="margin-top:8px;">食材ポケモンの枠がないため、提案する稼働日数はありません。<br>週間エナジー ${fmtE(cur.total)}</div>`;
+  } else {
+    html += `<div class="pks-shortage-item" style="margin-top:8px;">最適化の計算に失敗しました。均等に交代した場合の週間エナジー ${fmtE(cur.total)}</div>`;
+  }
+
+  const notes = [
+    "げんきは常に81%以上を維持している前提です（げんきの増減による回数の変化は反映していません）",
+    "スキルで稼ぐエナジー・おてつだいサポートなどの効果は含めていません",
+    `大成功は期待値で計算しています（週平均 ×${gsAvg.toFixed(3)}）`,
+    "追加食材は、なべの余り枠に基礎エナジーの高い食材から入れる想定です",
+    "結果は目安です。実際のゲームとは差が出る場合があります"
+  ].concat(warnings);
+  if (best && cur.shortage > 1e-3) notes.push("均等に交代した場合は食材が不足するため、比較の数値は参考です");
+  html += `<div class="pks-extra-item" style="margin-top:10px;">${notes.map(n => "・" + esc(n)).join("<br>")}</div></div>`;
+  host.insertAdjacentHTML("beforeend", html);
+}
+
+loadDB();
+</script>
+  </script>
+</div> <!-- pks-wrap 終了 -->
+
+<!-- ★★★ ここに BMC セクションを追加 ★★★ -->
+<div style="margin: 24px 0; padding: 20px; background: rgba(169,142,232,0.08); border: 1px solid rgba(169,142,232,0.3); border-radius: 14px;">
+  <p style="font-size: 14px; line-height: 1.8; margin-bottom: 12px; color: var(--pks-text);">
+    ここまで読んでくださりありがとうございます。<br>
+    今後もツール改善や攻略記事を続けていくために、<br>
+    もしよければ少しだけ応援していただけると嬉しいです。<br>
+    投げ銭は <strong>ツール開発費用やポケスリ研究のために使用させていただきます。</strong>
+  </p>
+  <a href="https://www.buymeacoffee.com/Tofumental" target="_blank"
+     style="background: #FFDD00; color: #000; padding: 12px 18px; border-radius: 8px; font-weight: bold;
+            text-decoration: none; display: block; text-align: center;">
+    ☕ Buy Me a Coffee でサポートする
+  </a>
+</div>
+
+<!-- ★★★ フッター（運営者情報ページへのリンク） ★★★ -->
+<footer style="text-align:center; margin: 40px 0; color: var(--pks-text-dim); font-size: 12px;">
+  <a href="about.html" style="color: var(--pks-text-dim); margin: 0 8px;">運営者情報</a>
+  <a href="privacy.html" style="color: var(--pks-text-dim); margin: 0 8px;">プライバシーポリシー</a>
+  <a href="contact.html" style="color: var(--pks-text-dim); margin: 0 8px;">お問い合わせ</a>
+</footer>
+
+</body>
+</html>
+
+</body>
+</html>
