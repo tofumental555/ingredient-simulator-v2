@@ -353,6 +353,9 @@
       display: block; margin: 10px auto 0; background: none; border: none;
       color: var(--pks-red); font-size: 11px; text-decoration: underline; cursor: pointer;
     }
+    .pks-favs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px 8px; }
+    .pks-fav { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--pks-text); margin: 0; padding: 4px 2px; }
+    .pks-fav input { width: 16px; height: 16px; accent-color: var(--pks-purple); }
     #eventBuffInputs.off { opacity: 0.45; }
     .pks-event-note { font-size: 11px; color: var(--pks-text-dim); line-height: 1.8; margin-top: 10px; }
     .pks-divider { border: none; border-top: 1px solid var(--pks-border); margin: 14px 0; }
@@ -643,6 +646,41 @@
       <div id="stockList"></div>
       <button class="pks-btn-add" id="btnAddStock">＋ 在庫を追加</button>
     </div>
+    <div class="pks-panel" id="energyPanel">
+      <div class="pks-panel-title">⚡ エナジー設定（最大化の提案用）</div>
+      <div id="energyLoadFail" class="pks-hidden pks-note">エナジーデータ（energy_data.json）を読み込めなかったため、エナジーの提案は表示されません。</div>
+      <div id="energyBody">
+        <p class="pks-note">結果画面に「エナジー最大化の提案」を表示するための設定です。分からない項目は初期値のままで構いません。</p>
+        <div class="pks-row2">
+          <div class="field">
+            <label for="enField">フィールドボーナス（％）</label>
+            <input type="number" id="enField" min="0" step="1" value="0" inputmode="decimal">
+          </div>
+          <div class="field">
+            <label for="enPot">なべ容量（個）</label>
+            <input type="number" id="enPot" min="0" step="1" value="15" inputmode="numeric">
+          </div>
+        </div>
+        <div class="pks-row2">
+          <div class="field">
+            <label for="enRecipeLv">レシピレベル（全料理共通・1〜55）</label>
+            <input type="number" id="enRecipeLv" min="1" max="55" step="1" value="30" inputmode="numeric">
+          </div>
+          <div class="field">
+            <label for="enGsUp">大成功率アップ（＋％）</label>
+            <input type="number" id="enGsUp" min="0" step="1" value="0" inputmode="decimal">
+          </div>
+        </div>
+        <div class="field">
+          <label for="enEvent">料理エナジーのイベントボーナス（倍）</label>
+          <input type="number" id="enEvent" min="0" step="0.1" value="1" inputmode="decimal">
+        </div>
+        <div class="field">
+          <label>好物のきのみ（該当するタイプにチェック）</label>
+          <div id="enFavs" class="pks-favs"></div>
+        </div>
+      </div>
+    </div>
     <button class="pks-btn-secondary" id="btnBack1">← ポケモンを修正</button>
     <button class="pks-btn-primary" id="btnToStep3">計算する →</button>
 </div>
@@ -656,7 +694,7 @@
     <button class="pks-btn-secondary" id="btnRestart">最初からやり直す</button>
 </div>
 
-  <p class="pks-footnote">豆腐メンタルパパのポケモンスリープ攻略ツール</p>
+  <p class="pks-footnote">豆腐メンタルパパのポケモンスリープ攻略ツール<br><span id="verStamp">ver. 2026-10-24 エナジー提案版</span></p>
 </div>
 
 <script>
@@ -833,6 +871,8 @@ async function loadDB() {
     }
   }
   catch(e) { console.warn("pokemon_data.json読み込みエラー:", e); pokemonDB = []; }
+  try { ENERGY = await (await fetch(ENERGY_JSON_URL)).json(); }
+  catch(e) { console.warn("energy_data.json読み込みエラー:", e); ENERGY = null; }
   initEvents();
 }
 
@@ -840,6 +880,7 @@ function initEvents() {
   // 保存済みポケモンを読み込み
   loadSavedFromStorage();
   renderSavedManager();
+  renderEnergySettings();
 
   document.getElementById("btnToStep1").addEventListener("click", () => {
     const saved = savePokemonSettings();
@@ -2192,6 +2233,9 @@ function calculate() {
     : (allOk ? 7 * (1/minRatio) : 7 / minRatio);
 
   renderResult(have, need, surplus, perPokemon, allOk, minRatio, surplusDays, stockMap, teamOtebonus, actualDays);
+  // エナジー提案は追加機能：万一エラーが出ても、上の既存の結果表示には影響させない
+  try { renderEnergyPanel({ teamOtebonus, haveFixed, need, ingEntries, workDays, ingSlotCount }); }
+  catch (e) { console.warn("エナジー提案の表示でエラー:", e); }
 }
 
 
@@ -2307,6 +2351,392 @@ function renderResult(have, need, surplus, perPokemon, allOk, minRatio, surplusD
       <div class="pks-extra-item">${surplusListHtml}</div>
     </div>
   `;
+}
+
+/* ===== エナジー最大化の提案（第1段階：きのみ＋食材）===== */
+// 前提：げんき81%以上を維持／スキルエナジーは未反映／大成功は期待値で計算
+let ENERGY = null;
+const ENERGY_JSON_URL = "https://simulator.tofumentalpapa.com/energy_data.json";
+const ENERGY_LANG = "jp";
+let ENERGY_RECIPE_MAP = {};
+
+function indexEnergyData() {
+  ENERGY_RECIPE_MAP = {};
+  if (!ENERGY) return;
+  for (const [jpName, r] of Object.entries(ENERGY.recipes)) {
+    if (ENERGY_LANG === "jp") ENERGY_RECIPE_MAP[jpName] = r;
+    else for (const en of (r.en || [])) ENERGY_RECIPE_MAP[en] = r;
+  }
+}
+function ingBaseEnergy(name) {
+  const f = ENERGY?.ingredients.find(x => x[ENERGY_LANG] === name);
+  return f ? f.base : 0;
+}
+function berryBaseOf(type) {
+  const f = ENERGY?.berry.types.find(x => x[ENERGY_LANG] === type);
+  return f ? f.base : 0;
+}
+
+function renderEnergySettings() {
+  const body = document.getElementById("energyBody");
+  const fail = document.getElementById("energyLoadFail");
+  if (!body || !fail) return;
+  if (!ENERGY) { body.classList.add("pks-hidden"); fail.classList.remove("pks-hidden"); return; }
+  body.classList.remove("pks-hidden"); fail.classList.add("pks-hidden");
+  indexEnergyData();
+  const favs = document.getElementById("enFavs");
+  if (favs) {
+    favs.innerHTML = ENERGY.berry.types.map(t =>
+      `<label class="pks-fav"><input type="checkbox" value="${esc(t[ENERGY_LANG])}"> ${esc(t[ENERGY_LANG])}</label>`
+    ).join("");
+  }
+}
+
+function getEnergySettings() {
+  const num = (id, def) => {
+    const raw = document.getElementById(id)?.value;
+    if (raw === "" || raw == null) return def;
+    const v = Number(raw);
+    return Number.isFinite(v) ? v : def;
+  };
+  const ev = num("enEvent", 1);
+  return {
+    field: Math.max(0, num("enField", 0)) / 100,
+    pot: Math.max(0, Math.floor(num("enPot", 15))),
+    recipeLv: Math.min(55, Math.max(1, Math.round(num("enRecipeLv", 30)))),
+    gsUp: Math.max(0, num("enGsUp", 0)) / 100,
+    eventMul: ev > 0 ? ev : 1,
+    favs: [...document.querySelectorAll("#enFavs input:checked")].map(x => x.value)
+  };
+}
+
+// きのみ1個のエナジー: Max(基礎+(Lv-1), Round(基礎×1.025^(Lv-1))) → ×(1+フィールド)を切り上げ → 好物は×2
+function berryEnergyEach(base, level, field, fav) {
+  const lvE = Math.max(base + (level - 1), Math.round(base * Math.pow(1.025, level - 1)));
+  const e = Math.ceil(lvE * (1 + field));
+  return fav ? e * 2 : e;
+}
+
+// 大成功の週平均倍率（月〜土は2倍・日曜は3倍。21食のうち日曜は3食）
+function greatSuccessAverage(set) {
+  const g = ENERGY.greatSuccess;
+  const pw = Math.min(1, g.baseRate + set.gsUp);
+  const ps = Math.min(1, g.sundayRate + set.gsUp);
+  const weekdayMeals = g.mealsPerWeek - g.sundayMeals;
+  const total = weekdayMeals * (1 + pw * (g.multiplier - 1)) + g.sundayMeals * (1 + ps * (g.sundayMultiplier - 1));
+  return total / g.mealsPerWeek;
+}
+
+// 1体のお手伝い統計（calcWeeklyと同じ前提）
+function calcHelpStats(entry, teamOtebonus = 0) {
+  const {pokemon, level, pattern, natureUp, natureDown, subs} = entry;
+  const ev = getEventBuff();
+  const SUB_UNLOCK = [10, 25, 50, 70, 80];
+  const activeSubs = subs.filter((_, i) => level >= SUB_UNLOCK[i]);
+  const speedM = activeSubs.filter(s => s === "おてスピM").length;
+  const speedS = activeSubs.filter(s => s === "おてスピS").length;
+  let tf = 1.0;
+  if (natureUp === "speedUp") tf *= 0.9;
+  if (natureDown === "speedDown") tf *= 1.075;
+  const totalBonus = Math.min(speedM * 0.14 + speedS * 0.07 + teamOtebonus, 0.35);
+  tf *= (1 - totalBonus);
+  const levelCoef = 1 - (level - 1) * LEVEL_TIME_COEF;
+  const campCoef = campTicket ? (1 / 1.2) : 1.0;
+  const interval = (pokemon.helpTime * levelCoef * tf * campCoef) / BASE_DIVISOR;
+  const hpw = WEEK_SECONDS / interval;
+
+  const foodM = activeSubs.filter(s => s === "食材確率M").length;
+  const foodS = activeSubs.filter(s => s === "食材確率S").length;
+  let fr = (pokemon.ingredientFindRate ?? 0) / 100;
+  fr *= (1 + 0.36 * foodM + 0.18 * foodS);
+  if (natureUp === "foodUp") fr *= 1.2;
+  if (natureDown === "foodDown") fr *= 0.8;
+  fr = Math.max(0, Math.min(1, fr));
+
+  const slots = level < 30 ? [1] : level < 60 ? [1, 2] : [1, 2, 3];
+  const sp = 1 / slots.length;
+  let avgIngPerHelp = 0;
+  for (const slot of slots) {
+    let ing = null, cnt = 0;
+    if (slot === 1) { ing = pokemon.ingredientA; cnt = pokemon["1a"] ?? 0; }
+    else if (slot === 2) {
+      const t = pattern[1];
+      ing = t === "a" ? pokemon.ingredientA : pokemon.ingredientB;
+      cnt = t === "a" ? (pokemon["2a"] ?? 0) : (pokemon["2b"] ?? 0);
+    } else {
+      const t = pattern[2];
+      if (t === "a") { ing = pokemon.ingredientA; cnt = pokemon["3a"] ?? 0; }
+      else if (t === "b") { ing = pokemon.ingredientB; cnt = pokemon["3b"] ?? 0; }
+      else { ing = pokemon.ingredientC; cnt = pokemon["3c"] ?? 0; }
+    }
+    if (ing && cnt > 0 && pokemon.category === "食材") cnt += ev.add;
+    if (ing && cnt > 0) avgIngPerHelp += cnt * sp;
+  }
+  const invS = activeSubs.filter(s => s === "最大所持数アップS").length;
+  const invM = activeSubs.filter(s => s === "最大所持数アップM").length;
+  const invL = activeSubs.filter(s => s === "最大所持数アップL").length;
+  const maxInventory = (pokemon.maxInventory != null) ? pokemon.maxInventory + invS * 6 + invM * 12 + invL * 18 : null;
+  const berryNumS = activeSubs.filter(s => s === "きのみの数S").length;
+  const berryPerHelp = (pokemon.category === "きのみ" ? 2 : 1) + berryNumS;
+  const avgPerHelp = (1 - fr) * berryPerHelp + fr * avgIngPerHelp;
+  return { interval, hpw, fr, berryPerHelp, maxInventory, avgPerHelp };
+}
+
+// 1体の週間きのみ獲得量とエナジー
+function calcBerryWeekly(entry, teamOtebonus, set) {
+  const st = calcHelpStats(entry, teamOtebonus);
+  const {pokemon, level} = entry;
+  let berries;
+  if (!sleepTap && st.maxInventory != null && st.maxInventory > 0 && st.avgPerHelp > 0) {
+    // 睡眠中に満タンになると、以降はきのみのみ（食材ロス）
+    const awake = 15.5 * 3600 / st.interval, sleep = 8.5 * 3600 / st.interval;
+    const eff = Math.min(sleep, st.maxInventory / st.avgPerHelp);
+    berries = ((awake + eff) * (1 - st.fr) * st.berryPerHelp + (sleep - eff) * st.berryPerHelp) * 7;
+  } else {
+    berries = st.hpw * (1 - st.fr) * st.berryPerHelp;
+  }
+  const base = berryBaseOf(pokemon.type);
+  const perBerry = base > 0 ? berryEnergyEach(base, level, set.field, set.favs.includes(pokemon.type)) : 0;
+  return { berries, perBerry, energy: berries * perBerry };
+}
+
+// ---- 単体の線形計画法（Stanford ACM notebookの二段階シンプレックス法を移植）----
+// max c·x  s.t. A x <= b, x >= 0
+function lpMaximize(A, b, c) {
+  const EPS = 1e-9;
+  const m = b.length, n = c.length;
+  const D = Array.from({length: m + 2}, () => new Array(n + 2).fill(0));
+  const B = new Array(m), N = new Array(n + 1);
+  for (let i = 0; i < m; i++) for (let j = 0; j < n; j++) D[i][j] = A[i][j];
+  for (let i = 0; i < m; i++) { B[i] = n + i; D[i][n] = -1; D[i][n + 1] = b[i]; }
+  for (let j = 0; j < n; j++) { N[j] = j; D[m][j] = -c[j]; }
+  N[n] = -1; D[m + 1][n] = 1;
+  function pivot(r, s) {
+    const inv = 1 / D[r][s];
+    for (let i = 0; i < m + 2; i++) if (i !== r) {
+      const f = D[i][s] * inv;
+      if (f !== 0) for (let j = 0; j < n + 2; j++) if (j !== s) D[i][j] -= D[r][j] * f;
+    }
+    for (let j = 0; j < n + 2; j++) if (j !== s) D[r][j] *= inv;
+    for (let i = 0; i < m + 2; i++) if (i !== r) D[i][s] *= -inv;
+    D[r][s] = inv;
+    const t = B[r]; B[r] = N[s]; N[s] = t;
+  }
+  function simplex(phase) {
+    const x = phase === 1 ? m + 1 : m;
+    for (let iter = 0; iter < 20000; iter++) {
+      let s = -1;
+      for (let j = 0; j <= n; j++) {
+        if (phase === 2 && N[j] === -1) continue;
+        if (s === -1 || D[x][j] < D[x][s] || (D[x][j] === D[x][s] && N[j] < N[s])) s = j;
+      }
+      if (s === -1 || D[x][s] > -EPS) return true;
+      let r = -1;
+      for (let i = 0; i < m; i++) {
+        if (D[i][s] < EPS) continue;
+        if (r === -1) { r = i; continue; }
+        const q = D[i][n + 1] / D[i][s], p = D[r][n + 1] / D[r][s];
+        if (q < p || (q === p && B[i] < B[r])) r = i;
+      }
+      if (r === -1) return false;
+      pivot(r, s);
+    }
+    return false;
+  }
+  let r = 0;
+  for (let i = 1; i < m; i++) if (D[i][n + 1] < D[r][n + 1]) r = i;
+  if (m > 0 && D[r][n + 1] < -EPS) {
+    pivot(r, n);
+    if (!simplex(1) || D[m + 1][n + 1] < -EPS) return { status: "infeasible" };
+    for (let i = 0; i < m; i++) if (B[i] === -1) {
+      let s = -1;
+      for (let j = 0; j <= n; j++) if (s === -1 || D[i][j] < D[i][s] || (D[i][j] === D[i][s] && N[j] < N[s])) s = j;
+      pivot(i, s);
+    }
+  }
+  if (!simplex(2)) return { status: "unbounded" };
+  const x = new Array(n).fill(0);
+  for (let i = 0; i < m; i++) if (B[i] < n) x[B[i]] = D[i][n + 1];
+  return { status: "optimal", value: D[m][n + 1], x };
+}
+
+// 稼働日数 w に対する週間エナジー（きのみ＋料理＋追加食材）
+function planEnergy(w, P) {
+  const surplus = {}; let shortage = 0;
+  for (const k of P.keys) {
+    let have = P.F[k] || 0;
+    for (let i = 0; i < w.length; i++) have += w[i] * (P.rate[i][k] || 0);
+    const d = have - (P.need[k] || 0);
+    if (d >= 0) surplus[k] = d; else shortage += -d;
+  }
+  // 追加食材：基礎エナジーの高い食材から、なべの余り枠へ入れる
+  let slots = P.T, extra = 0;
+  const order = P.keys.slice().sort((a, b) => P.base[b] - P.base[a]);
+  for (const k of order) {
+    if (slots <= 0) break;
+    const u = Math.min(surplus[k] || 0, slots);
+    extra += u * P.base[k]; slots -= u;
+  }
+  let berry = P.fixedBerry;
+  for (let i = 0; i < w.length; i++) berry += w[i] * P.berryDay[i];
+  const dish = P.fixedDish * P.mulAll;
+  const extraE = extra * P.mulAll;
+  return { berry, dish, extra: extraE, total: berry + dish + extraE, shortage };
+}
+
+// 最適な稼働日数を求める（食材の必要量を満たす条件で、週間エナジー最大）
+function optimizeSchedule(P) {
+  const n = P.berryDay.length, keys = P.keys, K = keys.length, nv = n + K, SC = 1000;
+  const A = [], b = [], c = new Array(nv).fill(0);
+  for (let i = 0; i < n; i++) c[i] = P.berryDay[i] / SC;
+  keys.forEach((k, j) => { c[n + j] = P.base[k] * P.mulAll / SC; });
+  const rateRow = k => { const r = new Array(nv).fill(0); for (let i = 0; i < n; i++) r[i] = -(P.rate[i][k] || 0); return r; };
+  keys.forEach((k, j) => {
+    const F = P.F[k] || 0, need = P.need[k] || 0;
+    if (need > 0) { A.push(rateRow(k)); b.push(F - need); }          // 必要量を満たす
+    const r2 = rateRow(k); r2[n + j] = 1; A.push(r2); b.push(F - need); // 追加食材は余剰分まで
+  });
+  { const r = new Array(nv).fill(0); for (let j = 0; j < K; j++) r[n + j] = 1; A.push(r); b.push(P.T); }
+  { const r = new Array(nv).fill(0); for (let i = 0; i < n; i++) r[i] = 1; A.push(r); b.push(P.slotCount * 7); }
+  for (let i = 0; i < n; i++) { const r = new Array(nv).fill(0); r[i] = 1; A.push(r); b.push(7); }
+  const res = lpMaximize(A, b, c);
+  if (res.status !== "optimal") return { status: res.status };
+  const w = res.x.slice(0, n).map(v => Math.min(7, Math.max(0, v < 1e-7 ? 0 : v)));
+  return { status: "optimal", w };
+}
+
+// 稼働日数をスロットに並べる（McNaughton法：同じポケモンが同時に2枠に入らない）
+function layoutSchedule(w, slotCount) {
+  const total = slotCount * 7;
+  let pos = 0;
+  return w.map(d => {
+    const start = Math.min(pos, total);
+    const end = Math.min(pos + d, total);
+    pos += d;
+    const segs = [];
+    let a = start;
+    while (a < end - 1e-9) {
+      const slotIdx = Math.floor(a / 7 + 1e-9);
+      const slotEnd = (slotIdx + 1) * 7;
+      const b2 = Math.min(end, slotEnd);
+      segs.push({ slot: slotIdx + 1, from: a - slotIdx * 7, to: b2 - slotIdx * 7 });
+      a = b2;
+    }
+    return segs;
+  });
+}
+
+function fmtE(v) { return Math.round(v).toLocaleString("ja-JP"); }
+function fmtD(v) { return (Math.abs(v) < 0.05 ? 0 : v).toFixed(1); }
+
+function renderEnergyPanel(ctx) {
+  const host = document.getElementById("resultContent");
+  if (!host) return;
+  if (!ENERGY) return;
+  const set = getEnergySettings();
+  const warnings = [];
+
+  // ── 料理（レシピ食材）のエナジーと、追加食材を入れられる枠数 ──
+  let dishBase = 0, extraSlots = 0, unknownRecipe = 0, estimatedUsed = false, overPot = false;
+  for (const id of recipeRows) {
+    const name = document.getElementById(`rn_${id}`)?.value;
+    const count = Number(document.getElementById(`rc_${id}`)?.value || 0);
+    if (!name || count <= 0) continue;
+    const r = ENERGY_RECIPE_MAP[name];
+    if (!r) { unknownRecipe += count; continue; }
+    const lvB = ENERGY.recipeLevelBonusPercent[set.recipeLv - 1] / 100;
+    dishBase += count * (r.lv0 + Math.round(r.lv0 * lvB));
+    if (r.estimated) estimatedUsed = true;
+    if (r.count > set.pot) overPot = true;
+    extraSlots += count * Math.max(0, set.pot - r.count);
+  }
+  if (unknownRecipe) warnings.push(`エナジーデータにない料理が${unknownRecipe}食あります（料理エナジーに含めていません）`);
+  if (estimatedUsed) warnings.push("概算値（要確認）のレシピを使っています");
+  if (overPot) warnings.push("なべ容量より食材数の多いレシピがあります。なべ容量を確認してください");
+
+  const gsAvg = greatSuccessAverage(set);
+  const mulAll = (1 + set.field) * set.eventMul * gsAvg;
+
+  // ── きのみのエナジー（きのみ枠・スキル枠は固定、食材枠は稼働日数で変わる）──
+  let fixedBerry = 0;
+  for (const slot of pokemonSlots.filter(s => s.slotType !== "ing")) {
+    const e = getEntry(slot.prefix);
+    if (!e) continue;
+    fixedBerry += calcBerryWeekly(e, ctx.teamOtebonus, set).energy * (slot.scale ?? 1.0);
+  }
+  const ingInfo = ctx.ingEntries.map(({entry, weekly}) => {
+    const bw = calcBerryWeekly(entry, ctx.teamOtebonus, set);
+    const rate = {};
+    for (const [k, v] of Object.entries(weekly)) rate[k] = v / 7;
+    return { name: entry.pokemon.name, berryDay: bw.energy / 7, rate };
+  });
+
+  const keys = ENERGY.ingredients.map(x => x[ENERGY_LANG]);
+  const base = {}; keys.forEach(k => { base[k] = ingBaseEnergy(k); });
+  const P = {
+    keys, base, F: ctx.haveFixed, need: ctx.need,
+    rate: ingInfo.map(x => x.rate), berryDay: ingInfo.map(x => x.berryDay),
+    fixedBerry, fixedDish: dishBase, mulAll, T: extraSlots, slotCount: ctx.ingSlotCount
+  };
+
+  // 比較の基準：登録した食材ポケモンを均等に交代させた場合
+  const nIng = ingInfo.length;
+  const eqDays = nIng > 0 ? Math.min(7, ctx.ingSlotCount * 7 / nIng) : 0;
+  const eqW = ingInfo.map(() => eqDays);
+  const cur = planEnergy(eqW, P);
+  let best = null, plan = null, status = "none";
+  if (ingInfo.length > 0 && ctx.ingSlotCount > 0) {
+    const res = optimizeSchedule(P);
+    status = res.status;
+    if (res.status === "optimal") {
+      const cand = planEnergy(res.w, P);
+      if (cand.shortage <= 1e-3) { best = cand; plan = res.w; }
+    }
+  }
+
+  const row = (label, a, b2) => `<div class="pks-pb-row"><span class="pks-pb-ing">${label}</span><span class="pks-pb-val">${b2 === undefined ? fmtE(a) : fmtE(a) + " → " + fmtE(b2)}</span></div>`;
+  let html = `<div class="pks-extra" style="margin-top:14px;">
+    <div class="pks-extra-label">⚡ エナジー最大化の提案（きのみ＋食材）</div>`;
+
+  if (best) {
+    const gain = cur.total > 0 ? (best.total / cur.total - 1) * 100 : 0;
+    html += `<div class="pks-surplus" style="margin-top:8px;">
+      <div class="pks-surplus-label">週間エナジー（提案どおりに稼働した場合）</div>
+      <div class="pks-surplus-val">${fmtE(best.total)}</div>
+      <div class="pks-surplus-desc">均等に交代した場合 ${fmtE(cur.total)} に対して ${gain >= 0 ? "+" : ""}${gain.toFixed(1)}%</div>
+    </div>`;
+    html += `<div class="pks-result-section-title">内訳（均等に交代 → 提案）</div>
+      ${row("きのみ", cur.berry, best.berry)}
+      ${row("料理（レシピ食材）", cur.dish, best.dish)}
+      ${row("追加食材", cur.extra, best.extra)}`;
+    const lay = layoutSchedule(plan, ctx.ingSlotCount);
+    html += `<div class="pks-result-section-title">稼働日数の提案（週頭を0日として、同じ行は同時に稼働しません）</div>`;
+    ingInfo.forEach((x, i) => {
+      const segs = lay[i].map(s => `枠${s.slot}: ${fmtD(s.from)}〜${fmtD(s.to)}日`).join(" / ");
+      html += `<div class="pks-pb-card" style="margin-top:6px;">
+        <div class="pks-pb-name">🍳 ${esc(x.name)}</div>
+        <div class="pks-pb-row"><span class="pks-pb-ing">稼働日数（均等 → 提案）</span><span class="pks-pb-val">${fmtD(eqW[i])} → ${fmtD(plan[i])}日/週</span></div>
+        ${segs ? `<div style="font-size:11px;color:var(--pks-text-dim);">${segs}</div>` : `<div style="font-size:11px;color:var(--pks-text-dim);">稼働なし</div>`}
+      </div>`;
+    });
+  } else if (status === "infeasible") {
+    html += `<div class="pks-shortage-item" style="margin-top:8px;">食材が足りないため、稼働日数の提案は出せません。上の「不足している食材」を先に解消してください。<br>参考：均等に交代した場合の週間エナジー ${fmtE(cur.total)}</div>`;
+  } else if (ingInfo.length === 0 || ctx.ingSlotCount <= 0) {
+    html += `<div class="pks-shortage-item" style="margin-top:8px;">食材ポケモンの枠がないため、提案する稼働日数はありません。<br>週間エナジー ${fmtE(cur.total)}</div>`;
+  } else {
+    html += `<div class="pks-shortage-item" style="margin-top:8px;">最適化の計算に失敗しました。均等に交代した場合の週間エナジー ${fmtE(cur.total)}</div>`;
+  }
+
+  const notes = [
+    "げんきは常に81%以上を維持している前提です（げんきの増減による回数の変化は反映していません）",
+    "スキルで稼ぐエナジー・おてつだいサポートなどの効果は含めていません",
+    `大成功は期待値で計算しています（週平均 ×${gsAvg.toFixed(3)}）`,
+    "追加食材は、なべの余り枠に基礎エナジーの高い食材から入れる想定です",
+    "結果は目安です。実際のゲームとは差が出る場合があります"
+  ].concat(warnings);
+  if (best && cur.shortage > 1e-3) notes.push("均等に交代した場合は食材が不足するため、比較の数値は参考です");
+  html += `<div class="pks-extra-item" style="margin-top:10px;">${notes.map(n => "・" + esc(n)).join("<br>")}</div></div>`;
+  host.insertAdjacentHTML("beforeend", html);
 }
 
 loadDB();
