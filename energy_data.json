@@ -1,16 +1,18 @@
 {
  "meta": {
-  "version": 1,
-  "generated": "2026-10-24",
+  "version": 2,
+  "generated": "2026-11-10",
   "sources": [
    "wikiwiki.jp/poke_sleep (きのみ / 料理 / 料理/レシピの一覧 / 食材)",
    "pokemongo-raku.com (食材基礎エナジー一覧)",
-   "game8.jp (エナジーチャージ値)"
+   "game8.jp (エナジーチャージ値)",
+   "game8.jp (げんき回復スキル・料理チャンスSのレベル別効果)"
   ],
   "notes": [
    "lv0 = wikiレシピ一覧のLv0(レシピ画面)エナジー。食材の数ボーナス込み。数ボーナス表(料理ページ)は古いので使わない",
    "最終エナジー=(lv0+Round(lv0×レシピレベルボーナス)+追加食材の基礎エナジー合計)×(1+フィールドボーナス)×イベントボーナス。大成功で×倍率",
-   "きのみ1個=Max(基礎+(Lv-1), Round(基礎×1.025^(Lv-1)))→×(1+フィールドボーナス)を切り上げ→好物は×2(順序は要確認)"
+   "きのみ1個=Max(基礎+(Lv-1), Round(基礎×1.025^(Lv-1)))→×(1+フィールドボーナス)を切り上げ→好物は×2(順序は要確認)",
+   "recipes[*].ingredients/genre を追加（最適化ツールの料理選択用）。日本語版ツールに無い3レシピも含む"
   ]
  },
  "ingredients": [
@@ -370,7 +372,11 @@
    "estimated": false,
    "en": [
     "Fancy Apple Curry"
-   ]
+   ],
+   "genre": "カレー",
+   "ingredients": {
+    "とくせんリンゴ": 7
+   }
   },
   "あぶりテールカレー": {
    "count": 33,
@@ -378,7 +384,12 @@
    "estimated": false,
    "en": [
     "Grilled Tail Curry"
-   ]
+   ],
+   "genre": "カレー",
+   "ingredients": {
+    "おいしいしっぽ": 8,
+    "げきからハーブ": 25
+   }
   },
   "サンパワートマトカレー": {
    "count": 15,
@@ -386,7 +397,12 @@
    "estimated": false,
    "en": [
     "\"Solar Power\" Tomato Curry"
-   ]
+   ],
+   "genre": "カレー",
+   "ingredients": {
+    "あんみんトマト": 10,
+    "げきからハーブ": 5
+   }
   },
   "ぜったいねむりバターカレー": {
    "count": 55,
@@ -394,7 +410,14 @@
    "estimated": false,
    "en": [
     "\"Dream Eater\" Butter Curry"
-   ]
+   ],
+   "genre": "カレー",
+   "ingredients": {
+    "ほっこりポテト": 18,
+    "あんみんトマト": 15,
+    "リラックスカカオ": 12,
+    "モーモーミルク": 10
+   }
   },
   "からくちネギもりカレー": {
    "count": 32,
@@ -402,7 +425,13 @@
    "estimated": false,
    "en": [
     "Spicy Leek Curry"
-   ]
+   ],
+   "genre": "カレー",
+   "ingredients": {
+    "ふといナガネギ": 14,
+    "あったかジンジャー": 10,
+    "げきからハーブ": 8
+   }
   },
   "キノコのほうしカレー": {
    "count": 23,
@@ -410,7 +439,12 @@
    "estimated": false,
    "en": [
     "\"Spore\" Mushroom Curry"
-   ]
+   ],
+   "genre": "カレー",
+   "ingredients": {
+    "あじわいキノコ": 14,
+    "ほっこりポテト": 9
+   }
   },
   "おやこあいカレー": {
    "count": 35,
@@ -418,7 +452,14 @@
    "estimated": false,
    "en": [
     "\"Egg Bomb\" Curry"
-   ]
+   ],
+   "genre": "カレー",
+   "ingredients": {
+    "あまいミツ": 12,
+    "とくせんリンゴ": 11,
+    "とくせんエッグ": 8,
+    "ほっこりポテト": 4
+   }
   },
   "満腹チーズバーグカレー": {
    "count": 16,
@@ -426,7 +467,12 @@
    "estimated": false,
    "en": [
     "Hearty Cheeseburger Curry"
-   ]
+   ],
+   "genre": "カレー",
+   "ingredients": {
+    "モーモーミルク": 8,
+    "マメミート": 8
+   }
   },
   "ほっこりホワイトシチュー": {
    "count": 22,
@@ -434,7 +480,13 @@
    "estimated": false,
    "en": [
     "Soft Potato Chowder"
-   ]
+   ],
+   "genre": "カレー",
+   "ingredients": {
+    "モーモーミルク": 10,
+    "ほっこりポテト": 8,
+    "あじわいキノコ": 4
+   }
   },
   "たんじゅんホワイトシチュー": {
    "count": 7,
@@ -443,7 +495,11 @@
    "en": [
     "Simple Chowder",
     "Warm Moomoo Milk"
-   ]
+   ],
+   "genre": "カレー",
+   "ingredients": {
+    "モーモーミルク": 7
+   }
   },
   "マメバーグカレー": {
    "count": 7,
@@ -451,7 +507,11 @@
    "estimated": false,
    "en": [
     "Beanburger Curry"
-   ]
+   ],
+   "genre": "カレー",
+   "ingredients": {
+    "マメミート": 7
+   }
   },
   "ベイビィハニーカレー": {
    "count": 7,
@@ -459,7 +519,11 @@
    "estimated": false,
    "en": [
     "Mild Honey Curry"
-   ]
+   ],
+   "genre": "カレー",
+   "ingredients": {
+    "あまいミツ": 7
+   }
   },
   "ニンジャカレー": {
    "count": 50,
@@ -467,7 +531,14 @@
    "estimated": false,
    "en": [
     "Ninja Curry"
-   ]
+   ],
+   "genre": "カレー",
+   "ingredients": {
+    "ワカクサ大豆": 24,
+    "マメミート": 9,
+    "ふといナガネギ": 12,
+    "あじわいキノコ": 5
+   }
   },
   "ワカクサカレーパン": {
    "count": 63,
@@ -475,7 +546,14 @@
    "estimated": true,
    "en": [
     "Greengrass Curry Bread"
-   ]
+   ],
+   "genre": "カレー",
+   "ingredients": {
+    "ワカクサ大豆": 8,
+    "ピュアなオイル": 15,
+    "げきからハーブ": 20,
+    "あったかジンジャー": 20
+   }
   },
   "ひでりカツレツカレー": {
    "count": 15,
@@ -483,7 +561,12 @@
    "estimated": false,
    "en": [
     "\"Drought\" Katsu Curry"
-   ]
+   ],
+   "genre": "カレー",
+   "ingredients": {
+    "マメミート": 10,
+    "ピュアなオイル": 5
+   }
   },
   "とけるオムカレー": {
    "count": 16,
@@ -491,7 +574,12 @@
    "estimated": false,
    "en": [
     "Melty Omelette Curry"
-   ]
+   ],
+   "genre": "カレー",
+   "ingredients": {
+    "とくせんエッグ": 10,
+    "あんみんトマト": 6
+   }
   },
   "ビルドアップマメカレー": {
    "count": 26,
@@ -499,7 +587,14 @@
    "estimated": false,
    "en": [
     "\"Bulk Up\" Bean Curry"
-   ]
+   ],
+   "genre": "カレー",
+   "ingredients": {
+    "ワカクサ大豆": 12,
+    "マメミート": 6,
+    "げきからハーブ": 4,
+    "とくせんエッグ": 4
+   }
   },
   "じゅうなんコーンシチュー": {
    "count": 30,
@@ -507,7 +602,13 @@
    "estimated": false,
    "en": [
     "\"Limber\" Corn Stew"
-   ]
+   ],
+   "genre": "カレー",
+   "ingredients": {
+    "ワカクサコーン": 14,
+    "モーモーミルク": 8,
+    "ほっこりポテト": 8
+   }
   },
   "れんごくコーンキーマカレー": {
    "count": 77,
@@ -515,7 +616,14 @@
    "estimated": false,
    "en": [
     "\"Inferno\" Corn Keema Curry"
-   ]
+   ],
+   "genre": "カレー",
+   "ingredients": {
+    "げきからハーブ": 27,
+    "マメミート": 24,
+    "ワカクサコーン": 14,
+    "あったかジンジャー": 12
+   }
   },
   "ピヨピヨパンチ辛口カレー": {
    "count": 33,
@@ -523,7 +631,13 @@
    "estimated": false,
    "en": [
     "\"Dizzy Punch\" Spicy Curry"
-   ]
+   ],
+   "genre": "カレー",
+   "ingredients": {
+    "めざましコーヒー": 11,
+    "げきからハーブ": 11,
+    "あまいミツ": 11
+   }
   },
   "めざめるパワーシチュー": {
    "count": 92,
@@ -531,7 +645,14 @@
    "estimated": false,
    "en": [
     "\"Hidden Power\" Perk-Up Stew"
-   ]
+   ],
+   "genre": "カレー",
+   "ingredients": {
+    "ワカクサ大豆": 28,
+    "あんみんトマト": 25,
+    "あじわいキノコ": 23,
+    "めざましコーヒー": 16
+   }
   },
   "いあいぎりすき焼きカレー": {
    "count": 101,
@@ -539,7 +660,14 @@
    "estimated": false,
    "en": [
     "\"Cut\" Sukiyaki Curry"
-   ]
+   ],
+   "genre": "カレー",
+   "ingredients": {
+    "ふといナガネギ": 27,
+    "マメミート": 26,
+    "あまいミツ": 26,
+    "とくせんエッグ": 22
+   }
   },
   "なりきりバケッチャシチュー": {
    "count": 69,
@@ -547,7 +675,14 @@
    "estimated": false,
    "en": [
     "\"Role Play\" Pumpkaboo Stew"
-   ]
+   ],
+   "genre": "カレー",
+   "ingredients": {
+    "ずっしりカボチャ": 10,
+    "マメミート": 16,
+    "ほっこりポテト": 18,
+    "あじわいキノコ": 25
+   }
   },
   "とびはねるカレーうどん": {
    "count": 112,
@@ -555,7 +690,14 @@
    "estimated": true,
    "en": [
     "\"Bounce\" Curry Udon"
-   ]
+   ],
+   "genre": "カレー",
+   "ingredients": {
+    "げきからハーブ": 22,
+    "マメミート": 20,
+    "あったかジンジャー": 39,
+    "あじわいキノコ": 31
+   }
   },
   "しんりょくアボカドグラタン": {
    "count": 115,
@@ -563,7 +705,14 @@
    "estimated": false,
    "en": [
     "\"Overgrow\" Avocado Gratin"
-   ]
+   ],
+   "genre": "カレー",
+   "ingredients": {
+    "つやつやアボカド": 22,
+    "ほっこりポテト": 20,
+    "モーモーミルク": 41,
+    "ピュアなオイル": 32
+   }
   },
   "とくせんリンゴサラダ": {
    "count": 8,
@@ -572,7 +721,11 @@
    "en": [
     "Fancy Apple Salad",
     "Fancy Apple Juice"
-   ]
+   ],
+   "genre": "サラダ",
+   "ingredients": {
+    "とくせんリンゴ": 8
+   }
   },
   "マメハムサラダ": {
    "count": 8,
@@ -580,7 +733,11 @@
    "estimated": false,
    "en": [
     "Bean Ham Salad"
-   ]
+   ],
+   "genre": "サラダ",
+   "ingredients": {
+    "マメミート": 8
+   }
   },
   "あんみんトマトサラダ": {
    "count": 8,
@@ -588,7 +745,11 @@
    "estimated": false,
    "en": [
     "Snoozy Tomato Salad"
-   ]
+   ],
+   "genre": "サラダ",
+   "ingredients": {
+    "あんみんトマト": 8
+   }
   },
   "ゆきかきシーザーサラダ": {
    "count": 16,
@@ -596,7 +757,12 @@
    "estimated": false,
    "en": [
     "\"Snow Cloak\" Caesar Salad"
-   ]
+   ],
+   "genre": "サラダ",
+   "ingredients": {
+    "モーモーミルク": 10,
+    "マメミート": 6
+   }
   },
   "ねっぷうとうふサラダ": {
    "count": 16,
@@ -604,7 +770,12 @@
    "estimated": false,
    "en": [
     "\"Heat Wave\" Tofu Salad"
-   ]
+   ],
+   "genre": "サラダ",
+   "ingredients": {
+    "ワカクサ大豆": 10,
+    "げきからハーブ": 6
+   }
   },
   "うるおいとうふサラダ": {
    "count": 24,
@@ -612,7 +783,12 @@
    "estimated": false,
    "en": [
     "\"Water Veil\" Tofu Salad"
-   ]
+   ],
+   "genre": "サラダ",
+   "ingredients": {
+    "ワカクサ大豆": 15,
+    "あんみんトマト": 9
+   }
   },
   "みだれづきコーンサラダ": {
    "count": 17,
@@ -620,7 +796,12 @@
    "estimated": false,
    "en": [
     "\"Fury Attack\" Corn Salad"
-   ]
+   ],
+   "genre": "サラダ",
+   "ingredients": {
+    "ワカクサコーン": 9,
+    "ピュアなオイル": 8
+   }
   },
   "メロメロりんごのチーズサラダ": {
    "count": 23,
@@ -628,7 +809,13 @@
    "estimated": false,
    "en": [
     "\"Dazzling\" Apple Cheese Salad"
-   ]
+   ],
+   "genre": "サラダ",
+   "ingredients": {
+    "とくせんリンゴ": 15,
+    "モーモーミルク": 5,
+    "ピュアなオイル": 3
+   }
   },
   "めんえきネギサラダ": {
    "count": 15,
@@ -636,7 +823,12 @@
    "estimated": false,
    "en": [
     "\"Immunity\" Leek Salad"
-   ]
+   ],
+   "genre": "サラダ",
+   "ingredients": {
+    "ふといナガネギ": 10,
+    "あったかジンジャー": 5
+   }
   },
   "モーモーカプレーゼ": {
    "count": 23,
@@ -644,7 +836,13 @@
    "estimated": false,
    "en": [
     "Moomoo Caprese Salad"
-   ]
+   ],
+   "genre": "サラダ",
+   "ingredients": {
+    "モーモーミルク": 12,
+    "ピュアなオイル": 5,
+    "あんみんトマト": 6
+   }
   },
   "ばかぢからワイルドサラダ": {
    "count": 23,
@@ -652,7 +850,14 @@
    "estimated": false,
    "en": [
     "\"Superpower\" Extreme Salad"
-   ]
+   ],
+   "genre": "サラダ",
+   "ingredients": {
+    "マメミート": 9,
+    "ほっこりポテト": 3,
+    "とくせんエッグ": 5,
+    "あったかジンジャー": 6
+   }
   },
   "ムラっけチョコミートサラダ": {
    "count": 23,
@@ -660,7 +865,12 @@
    "estimated": false,
    "en": [
     "\"Contrary\" Chocolate Meat Salad"
-   ]
+   ],
+   "genre": "サラダ",
+   "ingredients": {
+    "リラックスカカオ": 14,
+    "マメミート": 9
+   }
   },
   "くいしんぼうポテトサラダ": {
    "count": 36,
@@ -668,7 +878,14 @@
    "estimated": false,
    "en": [
     "\"Gluttony\" Potato Salad"
-   ]
+   ],
+   "genre": "サラダ",
+   "ingredients": {
+    "ほっこりポテト": 14,
+    "とくせんエッグ": 9,
+    "マメミート": 7,
+    "とくせんリンゴ": 6
+   }
   },
   "オーバーヒートサラダ": {
    "count": 35,
@@ -676,7 +893,13 @@
    "estimated": false,
    "en": [
     "\"Overheat\" Ginger Salad"
-   ]
+   ],
+   "genre": "サラダ",
+   "ingredients": {
+    "げきからハーブ": 17,
+    "あんみんトマト": 8,
+    "あったかジンジャー": 10
+   }
   },
   "キノコのほうしサラダ": {
    "count": 33,
@@ -684,7 +907,13 @@
    "estimated": false,
    "en": [
     "\"Spore\" Mushroom Salad"
-   ]
+   ],
+   "genre": "サラダ",
+   "ingredients": {
+    "あじわいキノコ": 17,
+    "あんみんトマト": 8,
+    "ピュアなオイル": 8
+   }
   },
   "ヤドンテールのペッパーサラダ": {
    "count": 35,
@@ -692,7 +921,13 @@
    "estimated": false,
    "en": [
     "Slowpoke Tail Pepper Salad"
-   ]
+   ],
+   "genre": "サラダ",
+   "ingredients": {
+    "おいしいしっぽ": 10,
+    "げきからハーブ": 10,
+    "ピュアなオイル": 15
+   }
   },
   "めいそうスイートサラダ": {
    "count": 49,
@@ -700,7 +935,13 @@
    "estimated": false,
    "en": [
     "\"Calm Mind\" Fruit Salad"
-   ]
+   ],
+   "genre": "サラダ",
+   "ingredients": {
+    "とくせんリンゴ": 21,
+    "あまいミツ": 16,
+    "ワカクサコーン": 12
+   }
   },
   "ニンジャサラダ": {
    "count": 57,
@@ -708,7 +949,14 @@
    "estimated": false,
    "en": [
     "Ninja Salad"
-   ]
+   ],
+   "genre": "サラダ",
+   "ingredients": {
+    "ワカクサ大豆": 19,
+    "ふといナガネギ": 15,
+    "あったかジンジャー": 11,
+    "あじわいキノコ": 12
+   }
   },
   "ワカクササラダ": {
    "count": 62,
@@ -716,7 +964,14 @@
    "estimated": false,
    "en": [
     "Greengrass Salad"
-   ]
+   ],
+   "genre": "サラダ",
+   "ingredients": {
+    "ほっこりポテト": 9,
+    "ピュアなオイル": 22,
+    "あんみんトマト": 14,
+    "ワカクサコーン": 17
+   }
   },
   "クロスチョップドサラダ": {
    "count": 56,
@@ -724,7 +979,14 @@
    "estimated": false,
    "en": [
     "\"Cross Chop\" Salad"
-   ]
+   ],
+   "genre": "サラダ",
+   "ingredients": {
+    "マメミート": 15,
+    "とくせんエッグ": 20,
+    "あんみんトマト": 10,
+    "ワカクサコーン": 11
+   }
   },
   "まけんきコーヒーサラダ": {
    "count": 100,
@@ -732,7 +994,14 @@
    "estimated": false,
    "en": [
     "\"Defiant\" Coffee-Dressed Salad"
-   ]
+   ],
+   "genre": "サラダ",
+   "ingredients": {
+    "めざましコーヒー": 28,
+    "マメミート": 28,
+    "ピュアなオイル": 22,
+    "ほっこりポテト": 22
+   }
   },
   "ごろごろねっとうサラダ": {
    "count": 95,
@@ -740,7 +1009,14 @@
    "estimated": false,
    "en": [
     "\"Scald\" Chunky Salad"
-   ]
+   ],
+   "genre": "サラダ",
+   "ingredients": {
+    "ほっこりポテト": 30,
+    "あじわいキノコ": 27,
+    "ワカクサコーン": 18,
+    "ずっしりカボチャ": 20
+   }
   },
   "じならしワカモレチップス": {
    "count": 105,
@@ -748,7 +1024,14 @@
    "estimated": false,
    "en": [
     "\"Bulldoze\" Guacamole and Chips"
-   ]
+   ],
+   "genre": "サラダ",
+   "ingredients": {
+    "ワカクサ大豆": 22,
+    "げきからハーブ": 30,
+    "ワカクサコーン": 25,
+    "つやつやアボカド": 28
+   }
   },
   "りんごさんヨーグルトサラダ": {
    "count": 104,
@@ -756,7 +1039,14 @@
    "estimated": false,
    "en": [
     "\"Apple Acid\" Yogurt-Dressed Salad"
-   ]
+   ],
+   "genre": "サラダ",
+   "ingredients": {
+    "モーモーミルク": 18,
+    "とくせんリンゴ": 28,
+    "とくせんエッグ": 35,
+    "あんみんトマト": 23
+   }
   },
   "はなふぶきミモザサラダ": {
    "count": 69,
@@ -764,7 +1054,14 @@
    "estimated": false,
    "en": [
     "\"Petal Blizzard\" Layered Salad"
-   ]
+   ],
+   "genre": "サラダ",
+   "ingredients": {
+    "マメミート": 12,
+    "ほっこりポテト": 15,
+    "ピュアなオイル": 17,
+    "とくせんエッグ": 25
+   }
   },
   "みつあつめチョコワッフル": {
    "count": 115,
@@ -772,7 +1069,14 @@
    "estimated": false,
    "en": [
     "\"Honey Gather\" Chocolate Waffles"
-   ]
+   ],
+   "genre": "デザート",
+   "ingredients": {
+    "あまいミツ": 38,
+    "ピュアなオイル": 28,
+    "ワカクサコーン": 28,
+    "リラックスカカオ": 21
+   }
   },
   "ドキドキこわいかおパンケーキ": {
    "count": 103,
@@ -780,7 +1084,14 @@
    "estimated": false,
    "en": [
     "\"Scary Face\" Pancakes"
-   ]
+   ],
+   "genre": "デザート",
+   "ingredients": {
+    "あまいミツ": 32,
+    "あんみんトマト": 29,
+    "とくせんエッグ": 24,
+    "ずっしりカボチャ": 18
+   }
   },
   "ドオーのエクレア": {
    "count": 102,
@@ -788,7 +1099,14 @@
    "estimated": false,
    "en": [
     "Clodsire Éclair"
-   ]
+   ],
+   "genre": "デザート",
+   "ingredients": {
+    "リラックスカカオ": 30,
+    "モーモーミルク": 26,
+    "めざましコーヒー": 24,
+    "あまいミツ": 22
+   }
   },
   "スパークスパイスコーラ": {
    "count": 87,
@@ -796,7 +1114,14 @@
    "estimated": false,
    "en": [
     "\"Zing Zap\" Spiced Cola"
-   ]
+   ],
+   "genre": "デザート",
+   "ingredients": {
+    "とくせんリンゴ": 35,
+    "ふといナガネギ": 20,
+    "あったかジンジャー": 20,
+    "めざましコーヒー": 12
+   }
   },
   "フラワーギフトマカロン": {
    "count": 77,
@@ -804,7 +1129,14 @@
    "estimated": false,
    "en": [
     "\"Flower Gift\" Macarons"
-   ]
+   ],
+   "genre": "デザート",
+   "ingredients": {
+    "とくせんエッグ": 25,
+    "リラックスカカオ": 25,
+    "あまいミツ": 17,
+    "モーモーミルク": 10
+   }
   },
   "おちゃかいコーンスコーン": {
    "count": 67,
@@ -812,7 +1144,14 @@
    "estimated": false,
    "en": [
     "\"Teatime\" Corn Scone"
-   ]
+   ],
+   "genre": "デザート",
+   "ingredients": {
+    "とくせんリンゴ": 20,
+    "あったかジンジャー": 20,
+    "ワカクサコーン": 18,
+    "モーモーミルク": 9
+   }
   },
   "グラスミキサースムージー": {
    "count": 48,
@@ -820,7 +1159,13 @@
    "estimated": false,
    "en": [
     "\"Leaf Tornado\" Smoothie"
-   ]
+   ],
+   "genre": "デザート",
+   "ingredients": {
+    "つやつやアボカド": 18,
+    "あんみんトマト": 16,
+    "モーモーミルク": 14
+   }
   },
   "プリンのプリンアラモード": {
    "count": 55,
@@ -828,7 +1173,14 @@
    "estimated": false,
    "en": [
     "Jigglypuff's Fruity Flan"
-   ]
+   ],
+   "genre": "デザート",
+   "ingredients": {
+    "あまいミツ": 20,
+    "とくせんエッグ": 15,
+    "とくせんリンゴ": 10,
+    "モーモーミルク": 10
+   }
   },
   "かたやぶりコーンティラミス": {
    "count": 40,
@@ -836,7 +1188,13 @@
    "estimated": false,
    "en": [
     "\"Mold Breaker\" Corn Tiramisu"
-   ]
+   ],
+   "genre": "デザート",
+   "ingredients": {
+    "めざましコーヒー": 14,
+    "ワカクサコーン": 14,
+    "モーモーミルク": 12
+   }
   },
   "はやおきコーヒーゼリー": {
    "count": 42,
@@ -844,7 +1202,13 @@
    "estimated": false,
    "en": [
     "\"Early Bird\" Coffee Jelly"
-   ]
+   ],
+   "genre": "デザート",
+   "ingredients": {
+    "めざましコーヒー": 16,
+    "あまいミツ": 12,
+    "モーモーミルク": 14
+   }
   },
   "だいばくはつポップコーン": {
    "count": 36,
@@ -852,7 +1216,13 @@
    "estimated": false,
    "en": [
     "\"Explosion\" Popcorn"
-   ]
+   ],
+   "genre": "デザート",
+   "ingredients": {
+    "ワカクサコーン": 15,
+    "ピュアなオイル": 14,
+    "モーモーミルク": 7
+   }
   },
   "ちからもちソイドーナッツ": {
    "count": 35,
@@ -860,7 +1230,13 @@
    "estimated": false,
    "en": [
     "\"Huge Power\" Soy Donuts"
-   ]
+   ],
+   "genre": "デザート",
+   "ingredients": {
+    "ワカクサ大豆": 16,
+    "ピュアなオイル": 12,
+    "リラックスカカオ": 7
+   }
   },
   "ネロリのデトックスティー": {
    "count": 35,
@@ -868,7 +1244,13 @@
    "estimated": false,
    "en": [
     "Neroli's Restorative Tea"
-   ]
+   ],
+   "genre": "デザート",
+   "ingredients": {
+    "とくせんリンゴ": 15,
+    "あったかジンジャー": 11,
+    "あじわいキノコ": 9
+   }
   },
   "ふくつのジンジャークッキー": {
    "count": 35,
@@ -876,7 +1258,14 @@
    "estimated": false,
    "en": [
     "\"Steadfast\" Ginger Cookies"
-   ]
+   ],
+   "genre": "デザート",
+   "ingredients": {
+    "あまいミツ": 14,
+    "あったかジンジャー": 12,
+    "リラックスカカオ": 5,
+    "とくせんエッグ": 4
+   }
   },
   "あくまのキッスフルーツオレ": {
    "count": 35,
@@ -884,7 +1273,14 @@
    "estimated": false,
    "en": [
     "\"Lovely Kiss\" Smoothie"
-   ]
+   ],
+   "genre": "デザート",
+   "ingredients": {
+    "とくせんリンゴ": 11,
+    "モーモーミルク": 9,
+    "リラックスカカオ": 8,
+    "あまいミツ": 7
+   }
   },
   "あまいかおりチョコケーキ": {
    "count": 24,
@@ -892,7 +1288,13 @@
    "estimated": false,
    "en": [
     "\"Sweet Scent\" Chocolate Cake"
-   ]
+   ],
+   "genre": "デザート",
+   "ingredients": {
+    "あまいミツ": 9,
+    "リラックスカカオ": 8,
+    "モーモーミルク": 7
+   }
   },
   "はなびらのまいチョコタルト": {
    "count": 22,
@@ -900,7 +1302,12 @@
    "estimated": false,
    "en": [
     "\"Petal Dance\" Chocolate Tart"
-   ]
+   ],
+   "genre": "デザート",
+   "ingredients": {
+    "とくせんリンゴ": 11,
+    "リラックスカカオ": 11
+   }
   },
   "はりきりプロテインスムージー": {
    "count": 23,
@@ -908,7 +1315,12 @@
    "estimated": false,
    "en": [
     "\"Hustle\" Protein Smoothie"
-   ]
+   ],
+   "genre": "デザート",
+   "ingredients": {
+    "ワカクサ大豆": 15,
+    "リラックスカカオ": 8
+   }
   },
   "おおきいマラサダ": {
    "count": 23,
@@ -916,7 +1328,13 @@
    "estimated": false,
    "en": [
     "Big Malasada"
-   ]
+   ],
+   "genre": "デザート",
+   "ingredients": {
+    "ピュアなオイル": 10,
+    "モーモーミルク": 7,
+    "あまいミツ": 6
+   }
   },
   "マイペースやさいジュース": {
    "count": 16,
@@ -924,7 +1342,12 @@
    "estimated": false,
    "en": [
     "\"Stalwart\" Vegetable Juice"
-   ]
+   ],
+   "genre": "デザート",
+   "ingredients": {
+    "あんみんトマト": 9,
+    "とくせんリンゴ": 7
+   }
   },
   "かるわざソイケーキ": {
    "count": 15,
@@ -932,7 +1355,12 @@
    "estimated": false,
    "en": [
     "\"Cloud Nine\" Soy Cake"
-   ]
+   ],
+   "genre": "デザート",
+   "ingredients": {
+    "とくせんエッグ": 8,
+    "ワカクサ大豆": 7
+   }
   },
   "ひのこのジンジャーティー": {
    "count": 16,
@@ -940,7 +1368,12 @@
    "estimated": false,
    "en": [
     "\"Ember\" Ginger Tea"
-   ]
+   ],
+   "genre": "デザート",
+   "ingredients": {
+    "あったかジンジャー": 9,
+    "とくせんリンゴ": 7
+   }
   },
   "じゅくせいスイートポテト": {
    "count": 14,
@@ -948,7 +1381,12 @@
    "estimated": false,
    "en": [
     "\"Fluffy\" Sweet Potatoes"
-   ]
+   ],
+   "genre": "デザート",
+   "ingredients": {
+    "ほっこりポテト": 9,
+    "モーモーミルク": 5
+   }
   },
   "ねがいごとアップルパイ": {
    "count": 16,
@@ -956,7 +1394,12 @@
    "estimated": false,
    "en": [
     "\"Lucky Chant\" Apple Pie"
-   ]
+   ],
+   "genre": "デザート",
+   "ingredients": {
+    "とくせんリンゴ": 12,
+    "モーモーミルク": 4
+   }
   },
   "クラフトサイコソーダ": {
    "count": 9,
@@ -964,7 +1407,11 @@
    "estimated": false,
    "en": [
     "Craft Soda Pop"
-   ]
+   ],
+   "genre": "デザート",
+   "ingredients": {
+    "あまいミツ": 9
+   }
   },
   "くだけるアボカドサラダ": {
    "count": 42,
@@ -973,7 +1420,13 @@
    "en": [
     "Luscious Avocado Salad"
    ],
-   "notInJpTool": true
+   "notInJpTool": true,
+   "genre": "サラダ",
+   "ingredients": {
+    "つやつやアボカド": 14,
+    "ワカクサ大豆": 18,
+    "ピュアなオイル": 10
+   }
   },
   "とくせんリンゴジュース": {
    "count": 8,
@@ -982,7 +1435,11 @@
    "en": [
     "Fancy Apple Juice"
    ],
-   "notInJpTool": true
+   "notInJpTool": true,
+   "genre": "デザート",
+   "ingredients": {
+    "とくせんリンゴ": 8
+   }
   },
   "モーモーホットミルク": {
    "count": 7,
@@ -991,14 +1448,112 @@
    "en": [
     "Warm Moomoo Milk"
    ],
-   "notInJpTool": true
+   "notInJpTool": true,
+   "genre": "デザート",
+   "ingredients": {
+    "モーモーミルク": 7
+   }
   }
  },
  "unverified": [
   "ワカクサカレーパン・とびはねるカレーうどん(lv0はwiki一覧に無く、食材数の段階から概算)",
-  "料理チャンスS・たくわえるの効果値",
   "レシピLv56以上のボーナス",
   "好物×2とフィールドボーナスの適用順",
-  "スキルエナジー値(第三者サイト)"
- ]
+  "スキルエナジー値(第三者サイト)",
+  "げんき速度倍率の0.58/0.66/1.0はユーザー指定値(情報源で食い違いあり)",
+  "起床時の睡眠回復がチーム外(ボックス)のポケモンにも及ぶかは未確認",
+  "回復スキル・料理チャンスSのLv7以降の値",
+  "派生スキル(つきのひかり等)の追加効果"
+ ],
+ "genki": {
+  "note": "最適化ツール用のげんきモデル。速度倍率の帯はユーザー指定。睡眠スコア100想定(起床時にげんき100まで回復)",
+  "max": 150,
+  "decayPerMinute": 0.1,
+  "decayNote": "チーム編成中は10分ごとに1減る。ボックス内のポケモンは減らない(wiki)",
+  "wakeRecoveryTo": 100,
+  "speedMultiplier": [
+   {
+    "min": 81,
+    "max": 150,
+    "mult": 0.45
+   },
+   {
+    "min": 61,
+    "max": 80,
+    "mult": 0.52
+   },
+   {
+    "min": 41,
+    "max": 60,
+    "mult": 0.58
+   },
+   {
+    "min": 1,
+    "max": 40,
+    "mult": 0.66
+   },
+   {
+    "min": 0,
+    "max": 0,
+    "mult": 1.0
+   }
+  ],
+  "skills": {
+   "charge": {
+    "jp": "げんきチャージS",
+    "en": "Charge Strength S",
+    "target": "self",
+    "values": [
+     12,
+     16,
+     21,
+     27,
+     34,
+     43
+    ]
+   },
+   "all": {
+    "jp": "げんきオールS",
+    "en": "Charge Strength S Range",
+    "target": "team",
+    "values": [
+     5,
+     7,
+     9,
+     11,
+     15,
+     18
+    ]
+   },
+   "cheer": {
+    "jp": "げんきエールS",
+    "en": "Energizing Cheer S",
+    "target": "random other 1",
+    "values": [
+     12,
+     15,
+     20,
+     25,
+     33,
+     44
+    ]
+   }
+  },
+  "skillNote": "Lv1〜6の値(Lv7以降は未取得)。げんきエールSはVer.3.0.0以降の値(旧値は14,17,23,29,38,50)。つきのひかり・みかづきのいのり・いやしのはどう等の派生スキルは基本スキルと同じ扱いの近似。回復量は性格・サブスキル(げんき回復ボーナス)で変わるが未反映"
+ },
+ "cookingChance": {
+  "jp": "料理チャンスS",
+  "en": "Tasty Chance S",
+  "valuesPercent": [
+   4,
+   5,
+   6,
+   7,
+   8,
+   10
+  ],
+  "capPercent": 70,
+  "reset": "大成功が出るか、フィールドを移動するとリセット。大成功が出なければ次の大成功まで継続",
+  "note": "Lv1〜6の値(game8)。上限+70%。日曜は基本10%+20%に加算"
+ }
 }
