@@ -459,8 +459,8 @@
   <div class="pks-row2">
     <div class="field"><label for="enE0">週の始まりのげんき（0〜150）</label>
       <input type="number" id="enE0" min="0" max="150" step="1" value="100" inputmode="numeric"></div>
-    <div class="field"><label for="enSkillLv">スキルレベル（全員共通・1〜7）</label>
-      <input type="number" id="enSkillLv" min="1" max="7" step="1" value="6" inputmode="numeric"></div>
+    <div class="field"><label>スキルレベル</label>
+      <div class="pks-note" style="margin:6px 0 0;">ポケモンの登録時に、1体ずつ設定します</div></div>
   </div>
   <div class="pks-row2">
     <div class="field"><label for="enGenre">今週の料理ジャンル</label>
@@ -474,8 +474,8 @@
     <label>好物のきのみ（該当するタイプにチェック）</label>
     <div id="enFavs" class="pks-favs"></div>
   </div>
-  <label class="pks-fav" style="margin:4px 0 8px;"><input type="checkbox" id="enEst"> 概算値（要確認）のレシピも候補に入れる</label>
-  <p class="pks-note" style="margin-bottom:0;">週末備蓄は「週の初めに持っている食材の総数」です。食材の組み合わせは、ツールがエナジーの高くなるように決めます。「概算値のレシピ」は、wikiの一覧に無く食材数から推定した値のレシピ（ワカクサカレーパン・とびはねるカレーうどん）で、初期設定では候補から外しています。</p>
+  <label class="pks-fav" style="margin:4px 0 8px;"><input type="checkbox" id="enEst" checked> 概算値のレシピ（ワカクサカレーパン・とびはねるカレーうどん）も候補に入れる</label>
+  <p class="pks-note" style="margin-bottom:0;">週末備蓄は「週の初めに持っている食材の総数」です。食材の組み合わせは、ツールがエナジーの高くなるように決めます。「概算値のレシピ」は、wikiの一覧に無く、食材数から基本エナジーを推定したレシピです。ゲーム内のレシピ画面の値と違う場合は、チェックを外して除外できます。</p>
 </div>
 
 <div class="pks-panel">
@@ -538,7 +538,7 @@
   ・ 結果は目安です。実際のゲームとは差が出る場合があります
 </div>
 
-<p class="pks-footnote">豆腐メンタルパパのポケモンスリープ攻略ツール<br><span id="verStamp">ver. 2026-11-10 エナジー最適化ツール v2</span></p>
+<p class="pks-footnote">豆腐メンタルパパのポケモンスリープ攻略ツール<br><span id="verStamp">ver. 2026-11-12 エナジー最適化ツール v2.1</span></p>
 
 <script>
 /* ===== 定数 ===== */
@@ -691,7 +691,8 @@ function prepCandidate(saved, set, ev) {
   const helpsUntilFull = (maxInv && maxInv > 0 && avgPerHelp > 0) ? maxInv / avgPerHelp : Infinity;
 
   // スキル
-  const G = ENERGY.genki.skills, SE = ENERGY.skillEnergy, L = set.skillLv;
+  const G = ENERGY.genki.skills, SE = ENERGY.skillEnergy;
+  const L = Math.min(7, Math.max(1, Math.round(Number(saved.sl)) || 6));   // ポケモンごとのスキルレベル（未設定は6）
   const t = pokemon.skillType;
   let kind = null, val = 0, ingSel = null;
   const lv6 = Math.min(6, Math.max(1, L)), lv7 = Math.min(7, Math.max(1, L));
@@ -716,7 +717,7 @@ function prepCandidate(saved, set, ev) {
     name: pokemon.name, label: saved.label, pokemon, level,
     base0, ownSpeed: cnt("おてスピM") * 0.14 + cnt("おてスピS") * 0.07, otebo: cnt("おてぼ") * 0.05,
     fr, bp, ingList, helpsUntilFull, skillRate, kind, val, ingSel, capNight, perBerry,
-    category: pokemon.category, skillType: t
+    category: pokemon.category, skillType: t, sl: L
   };
 }
 
@@ -1054,6 +1055,13 @@ function pokemonFormHTML(pre, category) {
         <div class="pks-sw"><select id="${pre}_pat">${optsPattern()}</select></div>
       </div>
     </div>
+    <div class="pks-row2">
+      <div class="field">
+        <label>スキルレベル（1〜7）</label>
+        <input type="number" id="${pre}_sl" min="1" max="7" value="6">
+      </div>
+      <div class="field"></div>
+    </div>
     <button class="pks-accordion-btn" type="button" onclick="toggleAccordion('${pre}_detail')">
       <span>性格・サブスキルを設定</span><span id="${pre}_detail_arrow">▼</span>
     </button>
@@ -1119,11 +1127,14 @@ function sanitizeSaved(raw) {
   const subs = SUB_IDS.map((_, i) => SUB_SKILLS.includes(subsIn[i]) ? subsIn[i] : "その他");
   const label = String(raw.label ?? "").trim().slice(0, 40) || `${p} Lv${lv}`;
   const id = (typeof raw.id === "string" && /^[a-z0-9]{4,24}$/i.test(raw.id)) ? raw.id : newSavedId();
-  return { id, label, p, lv, pat, nu, nd, subs };
+  let sl = Math.round(Number(raw.sl));
+  if (!Number.isFinite(sl)) sl = 6;
+  sl = Math.min(7, Math.max(1, sl));
+  return { id, label, p, lv, pat, nu, nd, subs, sl };
 }
 
 function sameContent(a, b) {
-  return a.p === b.p && a.lv === b.lv && a.pat === b.pat && a.nu === b.nu && a.nd === b.nd
+  return a.p === b.p && a.lv === b.lv && a.pat === b.pat && a.nu === b.nu && a.nd === b.nd && a.sl === b.sl
       && a.subs.join("|") === b.subs.join("|");
 }
 
@@ -1202,6 +1213,7 @@ function applyPokemonData(pre, data) {
     if (el) el.value = val;
   };
   set("lv", data.lv);
+  set("sl", data.sl);
   set("pat", data.pat);
   set("nu", data.nu);
   set("nd", data.nd);
@@ -1238,8 +1250,10 @@ function saveCurrentPokemon(pre) {
   if (!p) { showMsg(`${pre}_msg`, "ポケモンを選んでください", false); return; }
   let lv = Math.round(Number(g("lv"))) || 50;
   lv = Math.min(100, Math.max(1, lv));
+  let sl = Math.round(Number(g("sl"))) || 6;
+  sl = Math.min(7, Math.max(1, sl));
   const entry = {
-    p, lv,
+    p, lv, sl,
     pat: g("pat") || "aab",
     nu: g("nu") || "other",
     nd: g("nd") || "other",
@@ -1293,7 +1307,7 @@ function renderSavedManager() {
     box.innerHTML = `<div class="pks-saved-empty">まだ保存されたポケモンはありません。各カードの「💾 保存」で登録できます。</div>`;
   } else {
     box.innerHTML = savedPokemon.map(s => {
-      const meta = `${esc(s.p)} / Lv${s.lv} / ${esc(s.pat)}`;
+      const meta = `${esc(s.p)} / Lv${s.lv} / スキルLv${s.sl} / ${esc(s.pat)}`;
       if (s.id === pendingDeleteId) {
         return `
           <div class="pks-saved-item confirming">
@@ -1529,7 +1543,6 @@ function getSettings() {
     eventMul: evm > 0 ? evm : 1,
     favs: [...document.querySelectorAll("#enFavs input:checked")].map(x => x.value),
     e0: Math.min(150, Math.max(0, num("enE0", 100))),
-    skillLv: Math.min(7, Math.max(1, Math.round(num("enSkillLv", 6)))),
     genre: document.getElementById("enGenre")?.value || "",
     stockN: Math.max(0, Math.floor(num("enStock", 0)))
   };
@@ -1584,7 +1597,7 @@ function renderCandidateList() {
       <label class="pks-cand">
         <input type="checkbox" ${des.has(s.id) ? "" : "checked"} onchange="onCandToggle('${esc(s.id)}', this.checked)">
         <span>${esc(s.label)}</span>
-        <small>${esc(s.p)} Lv${s.lv}</small>
+        <small>${esc(s.p)} Lv${s.lv} / スキルLv${s.sl}</small>
       </label>`).join("");
   }
   updateCandCount();
@@ -1609,6 +1622,7 @@ function roundToSum(vals) {
 }
 function roleTags(c) {
   const t = [];
+  if (c.kind) t.push("スキルLv" + c.sl);
   if (c.kind === "charge") t.push("自己回復");
   if (c.kind === "all") t.push("全体回復");
   if (c.kind === "cheer") t.push("味方回復");
@@ -1741,7 +1755,7 @@ function runOptimizer() {
   const R = inGenre.filter(r => useEst || !r.estimated);
   const excluded = inGenre.filter(r => r.estimated && !useEst).map(r => r.label);
   if (excluded.length) warnings.push("概算値のレシピは候補から外しています：" + excluded.join("、"));
-  if (R.some(r => r.estimated)) warnings.push("概算値（要確認）のレシピを候補に含めています");
+  if (R.some(r => r.estimated)) warnings.push("概算値のレシピ（" + R.filter(r => r.estimated).map(r => r.label).join("、") + "）は、基本エナジーを食材数から推定した値です。ゲーム内の値と違う場合は教えてください");
   const effort = { fast: 0.4, normal: 1, deep: 3 }[document.getElementById("enEffort")?.value] || 1;
   const search = createSearch(C, set, R, { phase1Iters: Math.round(250 * effort), phase2Iters: Math.round(1500 * effort) });
   optRunning = true;
