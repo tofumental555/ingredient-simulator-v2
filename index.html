@@ -415,7 +415,7 @@
               font-weight:800;
               text-decoration:none;
               box-shadow:0 2px 4px rgba(0,0,0,0.2);">
-      ⚡ 最適化ツール(開発中)
+      ⚡ 最適化ツール
     </a>
   </div>
 
@@ -1168,7 +1168,10 @@ function sanitizeSaved(raw) {
   const subs = SUB_IDS.map((_, i) => SUB_SKILLS.includes(subsIn[i]) ? subsIn[i] : "その他");
   const label = String(raw.label ?? "").trim().slice(0, 40) || `${p} Lv${lv}`;
   const id = (typeof raw.id === "string" && /^[a-z0-9]{4,24}$/i.test(raw.id)) ? raw.id : newSavedId();
-  return { id, label, p, lv, pat, nu, nd, subs };
+  // 最適化ツールで設定するスキルレベル(sl)を、このページで保存し直しても消さないよう引き継ぐ
+  let sl = Math.round(Number(raw.sl));
+  const keepSl = Number.isFinite(sl) && sl >= 1 && sl <= 7;
+  return keepSl ? { id, label, p, lv, pat, nu, nd, subs, sl } : { id, label, p, lv, pat, nu, nd, subs };
 }
 
 function sameContent(a, b) {
@@ -1306,7 +1309,7 @@ function saveCurrentPokemon(pre) {
 
   let overwrote = false;
   if (idx >= 0) {
-    savedPokemon[idx] = { ...entry, id: savedPokemon[idx].id, label };
+    savedPokemon[idx] = { ...entry, id: savedPokemon[idx].id, label, ...(savedPokemon[idx].sl ? { sl: savedPokemon[idx].sl } : {}) };
     overwrote = true;
   } else {
     if (savedPokemon.length >= SAVED_MAX) {
