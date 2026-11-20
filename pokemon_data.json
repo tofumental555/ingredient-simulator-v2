@@ -1879,6 +1879,26 @@
     "3c": 2,
     "maxInventory": 29
   },
+    {
+    "name": "エルフーン",
+    "no": 547,
+    "helpTime": 2400,
+    "ingredientFindRate": 19.9,
+    "skillRate": 3.8,
+    "skillType": "げんきチャージS",
+    "type": "フェアリー",
+    "category": "食材",
+    "ingredientA": "ひとくちナッツ",
+    "ingredientB": "つやつやアボカド",
+    "ingredientC": "あんみんトマト",
+    "1a": 2,
+    "2a": 5
+    "2b": 3,
+    "3a": 7,
+    "3b": 5,
+    "3c": 7,
+    "maxInventory": 22
+  },
   {
     "name": "イワパレス",
     "no": 558,
