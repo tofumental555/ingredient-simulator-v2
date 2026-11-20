@@ -385,36 +385,35 @@
     .pks-sched-line { font-size:12px; line-height:1.8; color:var(--pks-text); }
     .pks-sched-line b { display:inline-block; min-width:58px; color:var(--pks-text-dim); font-weight:700; margin-right:6px; }
     .pks-two { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-  </style>
+  
+    /* ===== 最適化ツール v3 ===== */
+    #eventBuffBody.off { opacity: 0.45; }
+    .pks-ev-row { display:flex; flex-direction:column; gap:6px; padding:10px; border:1.5px solid var(--pks-border); border-radius:10px; margin-bottom:8px; background:rgba(22,16,41,0.5); }
+    .pks-ev-row select { font-size:12.5px; }
+    .pks-ev-val { display:flex; gap:8px; align-items:center; }
+    .pks-ev-val input { flex:1; }
+    .pks-cand { display:flex; align-items:center; gap:8px; padding:8px 10px; border:1.5px solid var(--pks-border); border-radius:10px; margin-bottom:6px; background:rgba(22,16,41,0.5); }
+    .pks-cand input[type=checkbox] { width:18px; height:18px; accent-color:var(--pks-purple); flex-shrink:0; }
+    .pks-cand small { color:var(--pks-text-dim); margin-left:auto; font-size:11px; }
+</style>
 </head>
 <body>
 <div class="pks-wrap">
   <div class="pks-eyebrow">POKEMON SLEEP TOOLS</div>
-
   <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:20px;">
-    <a href="index.html"
-       style="padding:8px 16px;background:#ff9f1c;color:#2a1f4d;border-radius:8px;font-family:'Zen Maru Gothic',sans-serif;font-size:13px;font-weight:800;text-decoration:none;box-shadow:0 2px 4px rgba(0,0,0,0.2);">
-      ← 食材シミュレーター
-    </a>
-    <a href="guide.html"
-       style="padding:8px 16px;background:#6a4cff;color:#fff;border-radius:8px;font-family:'Zen Maru Gothic',sans-serif;font-size:13px;font-weight:700;text-decoration:none;box-shadow:0 2px 4px rgba(0,0,0,0.2);">
-      ガイド
-    </a>
-    <a href="https://www.tofumentalpapa.com/entry/pksl_homepage"
-       style="padding:8px 16px;background:#00a86b;color:#fff;border-radius:8px;font-family:'Zen Maru Gothic',sans-serif;font-size:13px;font-weight:700;text-decoration:none;box-shadow:0 2px 4px rgba(0,0,0,0.2);">
-      ブログ
-    </a>
+    <a href="index.html" style="padding:8px 16px;background:#ff9f1c;color:#2a1f4d;border-radius:8px;font-family:'Zen Maru Gothic',sans-serif;font-size:13px;font-weight:800;text-decoration:none;box-shadow:0 2px 4px rgba(0,0,0,0.2);">← 食材シミュレーター</a>
+    <a href="guide.html" style="padding:8px 16px;background:#6a4cff;color:#fff;border-radius:8px;font-family:'Zen Maru Gothic',sans-serif;font-size:13px;font-weight:700;text-decoration:none;box-shadow:0 2px 4px rgba(0,0,0,0.2);">ガイド</a>
+    <a href="https://www.tofumentalpapa.com/entry/pksl_homepage" style="padding:8px 16px;background:#00a86b;color:#fff;border-radius:8px;font-family:'Zen Maru Gothic',sans-serif;font-size:13px;font-weight:700;text-decoration:none;box-shadow:0 2px 4px rgba(0,0,0,0.2);">ブログ</a>
   </div>
-
   <h1>⚡ エナジー最適化ツール</h1>
-  <p class="pks-sub">登録したポケモンの中から、1週間のエナジーが最大になる編成・料理・食材の使い方を提案します。げんきの増減と回復役、料理チャンス、日曜の大成功3倍も考慮します。</p>
+  <p class="pks-sub">登録したポケモンの中から、1週間のエナジーが最大になる編成・料理・食材の使い方を提案します。げんきの増減と回復役、料理チャンス、なべ容量、EXステージ、イベントバフに対応しています。</p>
 </div>
 
 <div class="pks-panel">
   <div class="pks-panel-title">🎫 前提の設定</div>
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
     <div><div style="font-size:13px;font-weight:700;color:var(--pks-text);">いいキャンプチケットを使う</div>
-      <div style="font-size:11px;color:var(--pks-text-dim);margin-top:2px;">お手伝いスピード×1.2倍</div></div>
+      <div style="font-size:11px;color:var(--pks-text-dim);margin-top:2px;">お手伝いスピード×1.2・最大所持数×1.2・なべ容量×1.5</div></div>
     <div class="pks-toggle-wrap" onclick="toggleCamp()" id="campToggleWrap"><div class="pks-toggle"></div></div>
   </div>
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
@@ -422,45 +421,70 @@
       <div style="font-size:11px;color:var(--pks-text-dim);margin-top:2px;">OFFだと、睡眠中に所持数が満タンになると食材を取れず、スキル発動も1晩に1〜2回まで</div></div>
     <div class="pks-toggle-wrap on" onclick="toggleSleepTap()" id="sleepTapToggleWrap"><div class="pks-toggle"></div></div>
   </div>
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-    <div><div style="font-size:13px;font-weight:700;color:var(--pks-text);">イベントバフを適用する</div>
-      <div style="font-size:11px;color:var(--pks-text-dim);margin-top:2px;">OFFの間は、入力した数値を残したまま計算に反映しません</div></div>
-    <div class="pks-toggle-wrap" onclick="toggleEventBuff()" id="eventBuffToggleWrap"><div class="pks-toggle"></div></div>
+  <div class="field" style="margin-bottom:0;">
+    <label for="enTeam">編成枠の数</label>
+    <div class="pks-sw"><select id="enTeam"><option value="5" selected>5体</option><option value="6">6体（いいキャンプチケットで6体になる場合）</option></select></div>
   </div>
-  <div id="eventBuffInputs" class="off">
-    <div class="pks-row2">
-      <div class="field"><label for="eventAdd">食材タイプの食材獲得数（＋個）</label>
-        <input type="number" id="eventAdd" min="0" step="1" value="1" inputmode="decimal"></div>
-      <div class="field"><label for="eventMult">スキルで獲得する食材数（×倍）</label>
-        <input type="number" id="eventMult" min="0" step="0.1" value="1.5" inputmode="decimal"></div>
-    </div>
-  </div>
-  <p class="pks-event-note" style="font-size:11px;color:var(--pks-text-dim);line-height:1.8;">
-    ・「＋個」は食材タイプの、お手伝い1回あたりの食材獲得数に加算<br>
-    ・「×倍」は<b style="color:var(--pks-star);">食材セレクトのみ</b>計算に考慮します
-  </p>
 </div>
 
 <div class="pks-panel">
-  <div class="pks-panel-title">⚡ エナジー設定</div>
+  <div class="pks-panel-title">🎉 イベントバフ</div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+    <div><div style="font-size:13px;font-weight:700;color:var(--pks-text);">イベントバフを適用する</div>
+      <div style="font-size:11px;color:var(--pks-text-dim);margin-top:2px;">OFFの間は、入れた効果を残したまま計算に反映しません</div></div>
+    <div class="pks-toggle-wrap" onclick="toggleEventBuff()" id="eventBuffToggleWrap"><div class="pks-toggle"></div></div>
+  </div>
+  <div id="eventBuffBody" class="off">
+    <div id="evList"></div>
+    <div class="pks-sw" style="margin-top:6px;"><select id="evPreset" onchange="addEventPreset(this)"></select></div>
+    <button class="pks-btn-add" type="button" onclick="addEventEffect()">＋ 効果を追加</button>
+    <p class="pks-note" style="margin:10px 0 0;">
+      ・効果を1つずつ追加し、「種類」「対象」「数値」を選びます。複数の効果を組み合わせられます<br>
+      ・対象は「全員」「とくいなもの（きのみ・食材・スキル）」「タイプ（18種）」から選びます。<b style="color:var(--pks-star);">とくいなものがオールのポケモンは、3種すべての対象</b>になります<br>
+      ・「追加で拾う食材」は、お手伝い1回ごとに指定の食材を指定の個数、追加で拾う想定です<br>
+      ・「料理のたびに全員のげんき回復」は、朝・昼・夜の料理のたびにチーム全員が回復する効果です
+    </p>
+  </div>
+</div>
+
+<div class="pks-panel">
+  <div class="pks-panel-title">⚡ フィールド・エナジー設定</div>
   <div id="energyLoadFail" class="pks-hidden pks-note">エナジーデータ（energy_data.json）を読み込めませんでした。ページを再読み込みしてください。</div>
+  <div class="field">
+    <label for="enMode">フィールド</label>
+    <div class="pks-sw"><select id="enMode" onchange="onModeChange()">
+      <option value="normal">通常のフィールド</option><option value="wakakusa">ワカクサ本島EX</option><option value="cyan">シアンの砂浜EX</option></select></div>
+  </div>
+  <div id="normalFavBox" class="field">
+    <label>好物のきのみ（該当するタイプにチェック）</label>
+    <div id="enFavs" class="pks-favs"></div>
+  </div>
+  <div id="exBox" class="pks-hidden">
+    <div class="pks-row2">
+      <div class="field"><label for="enMain">好きなきのみ：メイン</label><div class="pks-sw"><select id="enMain"></select></div></div>
+      <div class="field"><label for="enExBuff">EXのランダム効果（メイン・サブに適用）</label>
+        <div class="pks-sw"><select id="enExBuff">
+          <option value="berry">きのみエナジー（好物が2倍→2.4倍）</option>
+          <option value="ing">食材獲得数＋1個（とくいなもの食材は50%でさらに＋1個）</option>
+          <option value="skill">スキル発生確率 ×1.25</option></select></div></div>
+    </div>
+    <div class="pks-row2">
+      <div class="field"><label for="enSub1">好きなきのみ：サブ1</label><div class="pks-sw"><select id="enSub1"></select></div></div>
+      <div class="field"><label for="enSub2">好きなきのみ：サブ2</label><div class="pks-sw"><select id="enSub2"></select></div></div>
+    </div>
+    <p class="pks-note">ワカクサEX：メインはお手伝い時間10%短縮・メインスキルLv+1、好物以外は時間+15%。シアンEX：メインは時間20%短縮・メインスキルLv+1・最大所持数+5、好物以外は時間+35%（メインの値は要確認）。</p>
+  </div>
   <div class="pks-row2">
     <div class="field"><label for="enField">フィールドボーナス（％）</label>
       <input type="number" id="enField" min="0" step="1" value="0" inputmode="decimal"></div>
-    <div class="field"><label for="enPot">なべ容量（個）</label>
+    <div class="field"><label for="enPot">なべ容量（個・基本の容量／現在の上限は87）</label>
       <input type="number" id="enPot" min="0" step="1" value="15" inputmode="numeric"></div>
   </div>
   <div class="pks-row2">
     <div class="field"><label for="enRecipeLv">レシピレベル（全料理共通・1〜55）</label>
       <input type="number" id="enRecipeLv" min="1" max="55" step="1" value="30" inputmode="numeric"></div>
-    <div class="field"><label for="enEvent">料理エナジーのイベントボーナス（倍）</label>
-      <input type="number" id="enEvent" min="0" step="0.1" value="1" inputmode="decimal"></div>
-  </div>
-  <div class="pks-row2">
     <div class="field"><label for="enE0">週の始まりのげんき（0〜150）</label>
       <input type="number" id="enE0" min="0" max="150" step="1" value="100" inputmode="numeric"></div>
-    <div class="field"><label>スキルレベル</label>
-      <div class="pks-note" style="margin:6px 0 0;">ポケモンの登録時に、1体ずつ設定します</div></div>
   </div>
   <div class="pks-row2">
     <div class="field"><label for="enGenre">今週の料理ジャンル</label>
@@ -470,27 +494,25 @@
     <div class="field"><label for="enStock">週末備蓄で用意できる食材の総数（個）</label>
       <input type="number" id="enStock" min="0" step="1" value="0" inputmode="numeric"></div>
   </div>
-  <div class="field">
-    <label>好物のきのみ（該当するタイプにチェック）</label>
-    <div id="enFavs" class="pks-favs"></div>
-  </div>
   <label class="pks-fav" style="margin:4px 0 8px;"><input type="checkbox" id="enEst" checked> 概算値のレシピ（ワカクサカレーパン・とびはねるカレーうどん）も候補に入れる</label>
-  <p class="pks-note" style="margin-bottom:0;">週末備蓄は「週の初めに持っている食材の総数」です。食材の組み合わせは、ツールがエナジーの高くなるように決めます。「概算値のレシピ」は、wikiの一覧に無く、食材数から基本エナジーを推定したレシピです。ゲーム内のレシピ画面の値と違う場合は、チェックを外して除外できます。</p>
+  <p class="pks-note" style="margin-bottom:0;">料理は週ごとにジャンルが決まるので、今週のジャンルを選んでください。週末備蓄は「週の初めに持っている食材の総数」で、組み合わせはツールがエナジーの高くなるように決めます。「概算値のレシピ」は、wikiの一覧に無く食材数から基本エナジーを推定したレシピです。</p>
 </div>
 
 <div class="pks-panel">
   <div class="pks-panel-title">📋 候補にするポケモン</div>
-  <p class="pks-note">チェックしたポケモンの中から、編成を提案します。食材シミュレーターで保存したポケモンも使えます。</p>
+  <p class="pks-note">チェックしたポケモンの中から、編成を提案します。「編集」を押すと、下の入力欄に読み込まれます。</p>
   <div id="candList"></div>
-  <div class="pks-two" style="margin-top:6px;">
+  <div class="pks-row2" style="margin-top:6px;">
     <button class="pks-btn-secondary" type="button" onclick="candSelectAll(true)" style="margin-top:0">すべて選ぶ</button>
     <button class="pks-btn-secondary" type="button" onclick="candSelectAll(false)" style="margin-top:0">すべて外す</button>
   </div>
   <div id="candCount" class="pks-save-msg" style="color:var(--pks-text-dim);"></div>
-  <button class="pks-accordion-btn" type="button" onclick="toggleAccordion('newCardBox')">
-    <span>＋ 新しいポケモンを登録</span><span id="newCardBox_arrow">▼</span>
-  </button>
-  <div class="pks-accordion-body" id="newCardBox"></div>
+</div>
+
+<div class="pks-panel" id="addPanel">
+  <div class="pks-panel-title">➕ ポケモンを追加・編集</div>
+  <p class="pks-note">ポケモン・レベル・食材配列・スキルレベル（性格・サブスキルは「性格・サブスキルを設定」を開いて入力）を決めて「💾 保存」を押すと、候補に追加されます。同じ保存名で保存すると上書きされます。</p>
+  <div id="newCardBox"></div>
 </div>
 
 <div class="pks-panel">
@@ -529,16 +551,16 @@
 
 <div class="pks-panel" style="font-size:12px;color:var(--pks-text-dim);line-height:1.85;">
   <div style="font-size:12.5px;font-weight:800;color:var(--pks-star-soft);margin-bottom:8px;">📋 このツールの考え方</div>
-  ・ 1週間（月曜はじまり）を、朝〜昼・昼〜夜・睡眠中の3つの時間帯に分け、時間帯ごとに5体を入れ替えられるものとして、エナジーが最大になる編成を探します<br>
+  ・ 1週間（月曜はじまり）を、朝〜昼・昼〜夜・睡眠中の3つの時間帯に分け、時間帯ごとに編成を入れ替えられるものとして、エナジーが最大になる編成を探します<br>
   ・ げんきは、チームにいる間10分ごとに1減ります（ボックスでは減りません）。起床時に回復するのは、睡眠中にチームにいたポケモンだけです（睡眠スコア100）<br>
-  ・ げんきの帯でお手伝い時間が変わります（150〜81：×0.45／80〜61：×0.52／60〜41：×0.58／40〜1：×0.66／0：×1.0）<br>
-  ・ げんきチャージ・げんきオール・げんきエールで回復し、上限は150です<br>
-  ・ 料理チャンスSは大成功が出るまで積み上がります（上限＋70%）。日曜は大成功が3倍・確率＋20%です<br>
-  ・ 食材は、週末備蓄と集めた食材から、エナジーが最大になる料理と追加食材に振り分けます<br>
+  ・ げんきの帯でお手伝い時間が変わります（150〜81：×0.45／80〜61：×0.52／60〜41：×0.58／40〜1：×0.66／0：×1.0）。げんきチャージ・げんきオール・げんきエールで回復し、上限は150です<br>
+  ・ 料理チャンスSは大成功が出るまで積み上がります（合計の上限は月〜土が80%、日曜が100%）。大成功が出ると基本の率（月〜土10%、日曜30%）に戻ります。日曜は大成功が3倍です<br>
+  ・ なべ容量を超える食材数のレシピは作れません。日曜は容量が2倍、いいキャンプチケットで1.5倍、料理パワーアップSで次の料理だけ増えます<br>
+  ・ 余った食材は、なべの余り枠に追加食材として入れます（基礎エナジーのみで、食材の数ボーナスとレシピレベルはかかりません）<br>
   ・ 結果は目安です。実際のゲームとは差が出る場合があります
 </div>
 
-<p class="pks-footnote">豆腐メンタルパパのポケモンスリープ攻略ツール<br><span id="verStamp">ver. 2026-11-12 エナジー最適化ツール v2.1</span></p>
+<p class="pks-footnote">豆腐メンタルパパのポケモンスリープ攻略ツール<br><span id="verStamp">ver. 2026-11-17 エナジー最適化ツール v3.1</span></p>
 
 <script>
 /* ===== 定数 ===== */
@@ -559,15 +581,16 @@ const LEVEL_TIME_COEF= 0.002;
 const BASE_DIVISOR   = 2.222;
 
 
-/* ===== エナジー最適化の計算コア（編成・料理・げんき）===== */
-// 前提：週の始まり=月曜。1日=起床15.5時間+睡眠8.5時間。編成は5枠で、ブロックごとに入れ替え可能。
+
+/* ===== エナジー最適化の計算コア ===== */
+// 前提：週の始まり=月曜。1日=起床15.5時間+睡眠8.5時間。編成は5枠（いいキャンプチケットで6枠にもできる）で、時間帯ごとに入れ替え可能。
 //  ・チームにいる間はげんきが10分ごとに1減る（ボックス内は減らない）
 //  ・起床時に回復するのは「睡眠中にチームにいたポケモン」だけ（睡眠スコア100→げんき100）
-//  ・げんきの帯でお手伝い時間が変わる。回復スキル・料理チャンスS・エナジーチャージ・食材セレクトを反映
+//  ・げんきの帯でお手伝い時間が変わる。回復スキル・料理チャンスS・料理パワーアップS・エナジーチャージ・食材セレクトを反映
 const ENERGY_JSON_URL = "https://simulator.tofumentalpapa.com/energy_data.json";
 const LANG = "jp";                 // 英語版は "en"
 let ENERGY = null;
-let ING_NAMES = [], ING_BASE = [], ING_BY_LANG = {}, ING_BY_JP = {}, KN = 0;
+let ING_NAMES = [], ING_BASE = [], ING_BY_LANG = {}, ING_BY_JP = {}, KN = 0, TYPE_NAMES = [];
 let RECIPES = [];
 let MULT_TABLE = [];
 
@@ -578,6 +601,7 @@ function buildEnergyIndexes() {
   ING_BASE = ings.map(x => x.base);
   ING_BY_LANG = {}; ING_BY_JP = {};
   ings.forEach((x, i) => { ING_BY_LANG[x[LANG]] = i; ING_BY_JP[x.jp] = i; });
+  TYPE_NAMES = ENERGY.berry.types.map(t => t[LANG]);
   RECIPES = [];
   for (const [jp, r] of Object.entries(ENERGY.recipes)) {
     if (!r.ingredients) continue;
@@ -610,33 +634,81 @@ function buildSteps() {
     SIM_BLOCKS.forEach((b, bi) => {
       const n = Math.ceil(b.len / 0.5), dt = b.len / n;
       for (let s = 0; s < n; s++) {
-        const mid = t0 + (s + 0.5) * dt;
+        const start = t0 + s * dt, mid = start + dt / 2;
         let meal;
         if (mid < MEAL_T[0]) meal = 3 * d;
         else if (mid < MEAL_T[1]) meal = 3 * d + 1;
         else if (mid < MEAL_T[2]) meal = 3 * d + 2;
         else meal = d < 6 ? 3 * (d + 1) : -1;
-        STEP_LIST.push({ d, bi, dt, sleep: b.sleep, meal, first: s === 0 });
+        let cookK = -1;
+        for (let k = 0; k < MEAL_T.length; k++) if (MEAL_T[k] >= start - 1e-9 && MEAL_T[k] < start + dt - 1e-9) cookK = k;
+        STEP_LIST.push({ d, bi, dt, sleep: b.sleep, meal, cookK, first: s === 0 });
       }
       t0 += b.len;
     });
   }
 }
 
+/* ---------- バフの対象判定（イベント・EX共通）---------- */
+// target: "all" / "spec:きのみ|食材|スキル"（オールのポケモンは3種すべての対象）/ "type:タイプ名"
+function targetMatch(pokemon, target) {
+  if (!target || target === "all") return true;
+  if (target.startsWith("spec:")) {
+    const k = target.slice(5);
+    return pokemon.category === k || pokemon.category === "オール" || pokemon.category === "All";
+  }
+  if (target.startsWith("type:")) return pokemon.type === target.slice(5);
+  return false;
+}
+
+// 1体に適用されるバフをまとめる
+function modsFor(pokemon, set) {
+  const m = { ingPlus: 0, invPlus: 0, skillRate: 1, ingSel: 1, extra: [], timeMult: 1, lvPlus: 0, favMult: 1, isFav: false, isMain: false };
+  for (const e of set.effects) {
+    if (!targetMatch(pokemon, e.target)) continue;
+    if (e.kind === "ingPlus") m.ingPlus += e.value;
+    else if (e.kind === "invPlus") m.invPlus += e.value;
+    else if (e.kind === "skillRate") m.skillRate *= e.value;
+    else if (e.kind === "ingSel") m.ingSel *= e.value;
+    else if (e.kind === "extraDrop") { const idx = ING_BY_LANG[e.ing]; if (idx !== undefined) m.extra.push([idx, e.value]); }
+  }
+  const ex = set.ex;
+  if (ex && ex.mode !== "normal") {
+    const P = ENERGY.exFields[ex.mode];
+    const t = pokemon.type;
+    m.isMain = t === ex.main;
+    m.isFav = m.isMain || t === ex.sub1 || t === ex.sub2;
+    if (m.isMain) { m.timeMult *= (1 - P.mainTimeCut); m.lvPlus += P.mainSkillLv; m.invPlus += P.mainInv; }
+    if (!m.isFav) m.timeMult *= (1 + P.nonFavTimePenalty);
+    if (m.isFav) {
+      m.favMult = 2;
+      const B = ENERGY.exFields.buffs;
+      if (ex.buff === "berry") m.favMult = B.berry.favBerryEnergyMult;
+      else if (ex.buff === "ing") m.ingPlus += (pokemon.category === "食材" ? B.ing.ingPlusSpecialist : B.ing.ingPlus);
+      else if (ex.buff === "skill") m.skillRate *= B.skill.skillRateMult;
+    }
+  } else {
+    m.isFav = set.favs.includes(pokemon.type);
+    m.favMult = m.isFav ? 2 : 1;
+  }
+  return m;
+}
+
 /* ---------- 候補ポケモンの下準備 ---------- */
-function berryEnergyEach(base, level, field, fav) {
+function berryEnergyEach(base, level, field, favMult) {
   const lvE = Math.max(base + (level - 1), Math.round(base * Math.pow(1.025, level - 1)));
   const e = Math.ceil(lvE * (1 + field));
-  return fav ? e * 2 : e;
+  return favMult === 2 ? e * 2 : (favMult === 1 ? e : Math.round(e * favMult));
 }
 function berryBaseOf(type) {
   const f = ENERGY.berry.types.find(x => x[LANG] === type);
   return f ? f.base : 0;
 }
 
-function prepCandidate(saved, set, ev) {
+function prepCandidate(saved, set) {
   const pokemon = pokemonDB.find(p => p.name === saved.p);
   if (!pokemon) return null;
+  const m = modsFor(pokemon, set);
   const level = saved.lv, subs = saved.subs, pattern = saved.pat;
   const SUB_UNLOCK = [10, 25, 50, 70, 80];
   const act = subs.filter((_, i) => level >= SUB_UNLOCK[i]);
@@ -645,8 +717,8 @@ function prepCandidate(saved, set, ev) {
   if (saved.nu === "speedUp") tf *= 0.9;
   if (saved.nd === "speedDown") tf *= 1.075;
   const levelCoef = 1 - (level - 1) * LEVEL_TIME_COEF;
-  const campCoef = campTicket ? (1 / 1.2) : 1.0;
-  const base0 = pokemon.helpTime * levelCoef * tf * campCoef;
+  const campCoef = campTicket ? (1 / ENERGY.pot.ticketSpeedMult) : 1.0;
+  const base0 = pokemon.helpTime * levelCoef * tf * campCoef * m.timeMult;
 
   let fr = (pokemon.ingredientFindRate ?? 0) / 100;
   fr *= (1 + 0.36 * cnt("食材確率M") + 0.18 * cnt("食材確率S"));
@@ -658,11 +730,11 @@ function prepCandidate(saved, set, ev) {
   skillRate *= (1 + 0.36 * cnt("スキル確率M") + 0.18 * cnt("スキル確率S"));
   if (saved.nu === "skillUp") skillRate *= 1.1;
   if (saved.nd === "skillDown") skillRate *= 0.9;
-  skillRate = Math.max(0, skillRate);
+  skillRate = Math.max(0, skillRate * m.skillRate);
 
   const slots = level < 30 ? [1] : level < 60 ? [1, 2] : [1, 2, 3];
   const sp = 1 / slots.length;
-  const ingList = [];   // [ingredientIndex, perHelp(フィルタ前)]
+  const ingList = [];
   let avgIng = 0;
   for (const slot of slots) {
     let ing = null, c = 0;
@@ -677,47 +749,59 @@ function prepCandidate(saved, set, ev) {
       else if (t === "b") { ing = pokemon.ingredientB; c = pokemon["3b"] ?? 0; }
       else { ing = pokemon.ingredientC; c = pokemon["3c"] ?? 0; }
     }
-    if (ing && c > 0 && pokemon.category === "食材") c += ev.add;
+    if (ing && c > 0) c += m.ingPlus;
     if (ing && c > 0) {
       const idx = ING_BY_LANG[ing];
-      if (idx !== undefined) { ingList.push([idx, c * sp]); }
+      if (idx !== undefined) ingList.push([idx, c * sp]);
       avgIng += c * sp;
     }
   }
+  // 追加で拾う食材（1回のお手伝いごと）
+  const extraList = m.extra.slice();
+  const extraTotal = extraList.reduce((a, x) => a + x[1], 0);
+  const invMult = campTicket ? ENERGY.pot.ticketInventoryMult : 1;
   const maxInv = (pokemon.maxInventory != null)
-    ? pokemon.maxInventory + cnt("最大所持数アップS") * 6 + cnt("最大所持数アップM") * 12 + cnt("最大所持数アップL") * 18 : null;
+    ? Math.round((pokemon.maxInventory + cnt("最大所持数アップS") * 6 + cnt("最大所持数アップM") * 12 + cnt("最大所持数アップL") * 18 + m.invPlus) * invMult) : null;
   const bp = (pokemon.category === "きのみ" ? 2 : 1) + cnt("きのみの数S");
-  const avgPerHelp = (1 - fr) * bp + fr * avgIng;
+  const avgPerHelp = (1 - fr) * bp + fr * avgIng + extraTotal;
   const helpsUntilFull = (maxInv && maxInv > 0 && avgPerHelp > 0) ? maxInv / avgPerHelp : Infinity;
 
   // スキル
-  const G = ENERGY.genki.skills, SE = ENERGY.skillEnergy;
-  const L = Math.min(7, Math.max(1, Math.round(Number(saved.sl)) || 6));   // ポケモンごとのスキルレベル（未設定は6）
+  const G = ENERGY.genki.skills, SE = ENERGY.skillEnergy, PW = ENERGY.pot.skills;
+  const Lraw = Math.min(7, Math.max(1, Math.round(Number(saved.sl)) || 6));
+  const L = Math.min(7, Lraw + m.lvPlus);
   const t = pokemon.skillType;
-  let kind = null, val = 0, ingSel = null;
-  const lv6 = Math.min(6, Math.max(1, L)), lv7 = Math.min(7, Math.max(1, L));
+  let kind = null, val = 0, ingSel = null, heal2 = 0;
+  const lv6 = Math.min(6, L), lv7 = L;
+  const minus = PW.minus.names[LANG].includes(pokemon.name);
   if (pokemon.skillIngredients && pokemon.skillIngredients.length > 0 && pokemon.skillIngCount > 0) {
     kind = "ingsel";
     ingSel = [];
-    const per = pokemon.skillIngCount * ev.mult / pokemon.skillIngredients.length;
+    const per = pokemon.skillIngCount * m.ingSel / pokemon.skillIngredients.length;
     for (const nm of pokemon.skillIngredients) { const idx = ING_BY_LANG[nm]; if (idx !== undefined) ingSel.push([idx, per]); }
   }
   else if (t === G.charge[LANG]) { kind = "charge"; val = G.charge.values[lv6 - 1]; }
   else if (t === G.all[LANG]) { kind = "all"; val = G.all.values[lv6 - 1]; }
   else if (t === G.cheer[LANG]) { kind = "cheer"; val = G.cheer.values[lv6 - 1]; }
-  else if (t === ENERGY.cookingChance[LANG]) { kind = "cc"; val = ENERGY.cookingChance.valuesPercent[lv6 - 1] / 100; }
+  else if (t === ENERGY.cookingChance[LANG]) { kind = "cc"; val = ENERGY.cookingChance.valuesPercent[Math.min(6, L) - 1] / 100; }
+  else if (t === PW.powerup[LANG]) {
+    kind = "pot";
+    val = (minus ? PW.minus.values : PW.powerup.values)[lv7 - 1];
+    if (minus) heal2 = PW.minus.heal[lv7 - 1];
+  }
   else if (t === SE.names[LANG].S) { kind = "eS"; val = SE.charge_S[lv7 - 1]; }
   else if (t === SE.names[LANG].M) { kind = "eM"; val = SE.charge_M[lv7 - 1]; }
   else if (t === SE.names[LANG].S_random) { kind = "eSR"; val = (SE.charge_S_random_min[lv7 - 1] + SE.charge_S_random_max[lv7 - 1]) / 2; }
   const capNight = (pokemon.category === "スキル") ? 2 : 1;
 
   const bBase = berryBaseOf(pokemon.type);
-  const perBerry = bBase > 0 ? berryEnergyEach(bBase, level, set.field, set.favs.includes(pokemon.type)) : 0;
+  const perBerry = bBase > 0 ? berryEnergyEach(bBase, level, set.field, m.favMult) : 0;
   return {
     name: pokemon.name, label: saved.label, pokemon, level,
     base0, ownSpeed: cnt("おてスピM") * 0.14 + cnt("おてスピS") * 0.07, otebo: cnt("おてぼ") * 0.05,
-    fr, bp, ingList, helpsUntilFull, skillRate, kind, val, ingSel, capNight, perBerry,
-    category: pokemon.category, skillType: t, sl: L
+    fr, bp, ingList, extraList, helpsUntilFull, skillRate, kind, val, heal2, ingSel, capNight, perBerry,
+    category: pokemon.category, skillType: t, sl: Lraw, slEff: L,
+    plusMinus: PW.plusMinusGroup[LANG].includes(pokemon.name), isFav: m.isFav, isMain: m.isMain
   };
 }
 
@@ -725,7 +809,7 @@ function prepCandidate(saved, set, ev) {
 function simulate(sched, C, set) {
   const n = C.length;
   const e = new Float64Array(n).fill(set.e0);
-  const acc = new Float64Array(21);
+  const acc = new Float64Array(21), accPot = new Float64Array(21);
   const supply = new Float64Array(KN);
   const onHours = new Float64Array(n), eSum = new Float64Array(n), helpsTot = new Float64Array(n);
   const nightHelps = new Float64Array(n), nightTrig = new Float64Array(n);
@@ -740,9 +824,10 @@ function simulate(sched, C, set) {
       }
       if (st.sleep) { nightHelps.fill(0); nightTrig.fill(0); }
     }
-    let tb = 0;
-    for (let q = 0; q < T.length; q++) tb += C[T[q]].otebo;
+    let tb = 0, hasPM = 0;
+    for (let q = 0; q < T.length; q++) { tb += C[T[q]].otebo; if (C[T[q]].plusMinus) hasPM++; }
     for (let q = 0; q < T.length; q++) add[T[q]] = 0;
+    if (st.cookK >= 0 && set.cookHeal > 0) for (let q = 0; q < T.length; q++) add[T[q]] += set.cookHeal;
     for (let q = 0; q < T.length; q++) {
       const i = T[q], c = C[i];
       const bonus = Math.min(c.ownSpeed + tb, 0.35);
@@ -758,6 +843,7 @@ function simulate(sched, C, set) {
       if (ingHelps > 0) {
         const f = ingHelps * c.fr;
         for (let z = 0; z < c.ingList.length; z++) supply[c.ingList[z][0]] += f * c.ingList[z][1];
+        for (let z = 0; z < c.extraList.length; z++) supply[c.extraList[z][0]] += ingHelps * c.extraList[z][1];
       }
       if (c.kind) {
         let trig = helps * c.skillRate;
@@ -770,6 +856,11 @@ function simulate(sched, C, set) {
           case "all": for (let r = 0; r < T.length; r++) add[T[r]] += trig * c.val; break;
           case "cheer": if (T.length > 1) for (let r = 0; r < T.length; r++) if (T[r] !== i) add[T[r]] += trig * c.val / (T.length - 1); break;
           case "cc": if (st.meal >= 0) acc[st.meal] += trig * c.val; break;
+          case "pot":
+            if (st.meal >= 0) accPot[st.meal] += trig * c.val;
+            if (c.heal2 > 0 && c.plusMinus && hasPM > 1 && T.length > 1)
+              for (let r = 0; r < T.length; r++) if (T[r] !== i) add[T[r]] += trig * c.heal2 / (T.length - 1);
+            break;
           case "eS": case "eM": case "eSR": skillE += trig * c.val * (1 + set.field); break;
           case "ingsel": for (let z = 0; z < c.ingSel.length; z++) supply[c.ingSel[z][0]] += trig * c.ingSel[z][1]; break;
         }
@@ -780,15 +871,16 @@ function simulate(sched, C, set) {
       e[i] = Math.min(150, Math.max(0, e[i] - 6 * st.dt + add[i]));
     }
   }
-  return { berryE, skillE, supply, acc, onHours, eSum, helpsTot };
+  return { berryE, skillE, supply, acc, accPot, onHours, eSum, helpsTot };
 }
 
-/* ---------- 料理チャンス＋大成功の期待倍率（21食）---------- */
-function expectedMultipliers(acc) {
+/* ---------- 料理チャンス＋大成功（21食）---------- */
+// 返り値: mu=期待倍率, p=大成功の期待確率
+function expectedGreatSuccess(acc) {
   const G = ENERGY.greatSuccess, cap = ENERGY.cookingChance.capPercent / 100, step = 0.005;
   const S = Math.round(cap / step) + 1;
   let P = new Float64Array(S); P[0] = 1;
-  const mu = new Float64Array(21);
+  const mu = new Float64Array(21), pe = new Float64Array(21);
   for (let m = 0; m < 21; m++) {
     const sunday = Math.floor(m / 3) === 6;
     const shift = acc[m] / step;
@@ -809,9 +901,22 @@ function expectedMultipliers(acc) {
       const p = Math.min(1, p0 + s * step);
       ev += P[s] * (1 + p * (mult - 1)); succ += P[s] * p; R[s] = P[s] * (1 - p);
     }
-    R[0] += succ; mu[m] = ev; P = R;
+    R[0] += succ; mu[m] = ev; pe[m] = succ; P = R;
   }
-  return mu;
+  return { mu, p: pe };
+}
+
+// 各食事のなべ容量 = Round[ ((基本容量 × 日曜2倍) + 料理パワーアップ) × キャンプチケット1.5倍 ]
+function mealCapacities(accPot, set) {
+  const P = ENERGY.pot;
+  const base = (set.pot + set.potAdd) * set.potMult;
+  const tk = campTicket ? P.ticketMult : 1;
+  const caps = new Float64Array(21);
+  for (let m = 0; m < 21; m++) {
+    const sun = Math.floor(m / 3) === 6;
+    caps[m] = Math.round((base * (sun ? P.weekendMult : 1) + accPot[m]) * tk);
+  }
+  return caps;
 }
 
 /* ---------- 単体の線形計画法（二段階シンプレックス法）---------- */
@@ -873,54 +978,71 @@ function lpMaximize(A, b, c) {
   return { status: "optimal", value: D[m][n + 1], x };
 }
 
+/* ---------- 食事のグループ分け ---------- */
+// 月〜土の18食は大成功率の低い順に6食ずつ3グループ、日曜の3食は別グループ（なべ容量2倍・大成功3倍）
+function buildMealClasses(gs, caps) {
+  const avg = (arr, idx) => idx.reduce((a, i) => a + arr[i], 0) / idx.length;
+  const weekday = []; for (let m = 0; m < 18; m++) weekday.push(m);
+  weekday.sort((a, b) => gs.mu[a] - gs.mu[b]);
+  const groups = [weekday.slice(0, 6), weekday.slice(6, 12), weekday.slice(12, 18), [18, 19, 20]];
+  return groups.map(g => ({ meals: g, n: g.length, mu: avg(gs.mu, g), p: avg(gs.p, g), cap: Math.floor(avg(caps, g) + 1e-9), sunday: g[0] >= 18 }));
+}
+
 /* ---------- 料理の選択（21食をエナジー最大に）---------- */
-const DISH_CLASS_SIZES = [5, 5, 5, 6];
-function solveDishes(supply, mu, set, R) {
-  const order = Array.from(mu.keys()).sort((a, b) => mu[a] - mu[b]);
-  const Cn = DISH_CLASS_SIZES.length, classMu = [];
-  let pos = 0;
-  for (const sz of DISH_CLASS_SIZES) {
-    let sum = 0; for (let q = 0; q < sz; q++) sum += mu[order[pos + q]];
-    classMu.push(sum / sz); pos += sz;
-  }
-  const J = R.length, nx = J * Cn, nu = KN * Cn, nv = nx + nu + KN, SC = 1000;
+function solveDishes(supply, classes, set, R) {
+  const Cn = classes.length, SC = 1000;
   const lvB = ENERGY.recipeLevelBonusPercent[set.recipeLv - 1] / 100;
-  const Edish = R.map(r => r.lv0 + Math.round(r.lv0 * lvB));
+  const boostK = new Float64Array(KN).fill(1);      // イベント：特定食材のエナジー倍率
+  for (const b of (set.ingBoost || [])) { const bi = ING_BY_LANG[b.ing]; if (bi !== undefined) boostK[bi] *= b.m; }
+  const Edish = R.map(r => {
+    let bm = 1; for (let k = 0; k < KN; k++) if (r.need[k] > 0 && boostK[k] !== 1) bm *= boostK[k];
+    return (r.lv0 + Math.round(r.lv0 * lvB)) * bm;     // その食材を含む料理は、料理のエナジーに倍率
+  });
+  const xv = [];   // なべ容量に収まるレシピだけが、そのグループで作れる
+  for (let c = 0; c < Cn; c++) for (let j = 0; j < R.length; j++) if (R[j].count <= classes[c].cap) xv.push([j, c]);
+  const nx = xv.length, nu = KN * Cn, nv = nx + nu + KN;
+  const mulC = classes.map(k => (1 + set.field) * set.dishMul * k.mu);
   const cc = new Array(nv).fill(0);
-  const mulC = classMu.map(m => (1 + set.field) * set.eventMul * m);
-  for (let j = 0; j < J; j++) for (let c = 0; c < Cn; c++) cc[j * Cn + c] = Edish[j] * mulC[c] / SC;
-  for (let k = 0; k < KN; k++) for (let c = 0; c < Cn; c++) cc[nx + k * Cn + c] = ING_BASE[k] * mulC[c] / SC;
+  for (let q = 0; q < nx; q++) cc[q] = Edish[xv[q][0]] * mulC[xv[q][1]] / SC;
+  for (let k = 0; k < KN; k++) for (let c = 0; c < Cn; c++) cc[nx + k * Cn + c] = ING_BASE[k] * boostK[k] * mulC[c] / SC;
   const A = [], b = [];
   const row = () => new Array(nv).fill(0);
-  for (let c = 0; c < Cn; c++) { const r = row(); for (let j = 0; j < J; j++) r[j * Cn + c] = 1; A.push(r); b.push(DISH_CLASS_SIZES[c]); }
+  for (let c = 0; c < Cn; c++) { const r = row(); for (let q = 0; q < nx; q++) if (xv[q][1] === c) r[q] = 1; A.push(r); b.push(classes[c].n); }
   for (let k = 0; k < KN; k++) {
     const r = row();
-    for (let j = 0; j < J; j++) { const a = R[j].need[k]; if (a) for (let c = 0; c < Cn; c++) r[j * Cn + c] = a; }
+    for (let q = 0; q < nx; q++) r[q] = R[xv[q][0]].need[k];
     for (let c = 0; c < Cn; c++) r[nx + k * Cn + c] = 1;
     r[nx + nu + k] = -1;
     A.push(r); b.push(supply[k]);
   }
-  for (let c = 0; c < Cn; c++) {
+  for (let c = 0; c < Cn; c++) {      // 追加食材は、なべの余り枠まで
     const r = row();
     for (let k = 0; k < KN; k++) r[nx + k * Cn + c] = 1;
-    for (let j = 0; j < J; j++) r[j * Cn + c] = -Math.max(0, set.pot - R[j].count);
+    for (let q = 0; q < nx; q++) if (xv[q][1] === c) r[q] = -(classes[c].cap - R[xv[q][0]].count);
     A.push(r); b.push(0);
   }
   { const r = row(); for (let k = 0; k < KN; k++) r[nx + nu + k] = 1; A.push(r); b.push(set.stockN); }
   const res = lpMaximize(A, b, cc);
-  if (res.status !== "optimal") return { value: 0, status: res.status };
+  if (res.status !== "optimal") return { value: 0, status: res.status, classes };
   const x = res.x;
   let recipeVal = 0, extraVal = 0;
-  for (let j = 0; j < J; j++) for (let c = 0; c < Cn; c++) recipeVal += x[j * Cn + c] * Edish[j] * mulC[c];
-  for (let k = 0; k < KN; k++) for (let c = 0; c < Cn; c++) extraVal += x[nx + k * Cn + c] * ING_BASE[k] * mulC[c];
-  return { value: res.value * SC, status: "optimal", x, J, Cn, nx, nu, classMu, recipeVal, extraVal, R, Edish };
+  const xs = [];
+  for (let q = 0; q < nx; q++) { const [j, c] = xv[q]; if (x[q] > 1e-9) { xs.push({ j, c, v: x[q] }); recipeVal += x[q] * Edish[j] * mulC[c]; } }
+  const extra = new Array(KN).fill(0), stock = new Array(KN).fill(0);
+  for (let k = 0; k < KN; k++) {
+    for (let c = 0; c < Cn; c++) { extra[k] += x[nx + k * Cn + c]; extraVal += x[nx + k * Cn + c] * ING_BASE[k] * boostK[k] * mulC[c]; }
+    stock[k] = x[nx + nu + k];
+  }
+  return { value: res.value * SC, status: "optimal", xs, extra, stock, classes, recipeVal, extraVal, R, Edish };
 }
 
 function evaluatePlan(sched, C, set, R) {
   const sim = simulate(sched, C, set);
-  const mu = expectedMultipliers(sim.acc);
-  const dish = solveDishes(sim.supply, mu, set, R);
-  return { total: sim.berryE + sim.skillE + dish.value, sim, mu, dish };
+  const gs = expectedGreatSuccess(sim.acc);
+  const caps = mealCapacities(sim.accPot, set);
+  const classes = buildMealClasses(gs, caps);
+  const dish = solveDishes(sim.supply, classes, set, R);
+  return { total: sim.berryE + sim.skillE + dish.value, sim, gs, caps, dish };
 }
 
 /* ---------- 編成の探索（焼きなまし法）---------- */
@@ -965,8 +1087,7 @@ function changeCount(sched) {
 const SWAP_PENALTY = 0.0003;   // 入れ替え1回あたり、合計エナジーの0.03%
 
 function createSearch(C, set, R, opts) {
-  const n = C.length, size = Math.min(5, n), rnd = makeRng(opts.seed || 20261110);
-  const pick = [];
+  const n = C.length, size = Math.max(1, Math.min(set.teamSize || 5, n)), rnd = makeRng(opts.seed || 20261110);
   const idx = Array.from({ length: n }, (_, i) => i);
   for (let i = idx.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [idx[i], idx[j]] = [idx[j], idx[i]]; }
   const init = idx.slice(0, size);
@@ -1098,6 +1219,7 @@ function toggleAccordion(id) {
   const isOpen = body.classList.toggle('open');
   if (arrow) arrow.textContent = isOpen ? '▲' : '▼';
 }
+
 
 
 /* ===== 保存ポケモン（localStorage）・書き出し・読み込み ===== */
@@ -1498,6 +1620,7 @@ function importFromTextarea() {
 }
 
 
+
 /* ===== 状態 ===== */
 let pokemonDB = [];
 let campTicket = false;
@@ -1511,20 +1634,104 @@ function toggleSleepTap() {
   sleepTap = !sleepTap;
   document.getElementById("sleepTapToggleWrap").classList.toggle("on", sleepTap);
 }
+
+/* ===== イベントバフ（効果の一覧を自由に組み合わせる）===== */
+// 効果の種類。target=true の効果は「対象（全員／とくいなもの／タイプ）」を選べる
+const EV_KINDS = {
+  dishMult:  { label: "料理エナジー ×倍",                 target: false, def: 1.5, step: 0.1 },
+  potAdd:    { label: "鍋の容量 ＋個",                    target: false, def: 30,  step: 1 },
+  potMult:   { label: "鍋の容量 ×倍（日曜の2倍に重なる）", target: false, def: 1.5, step: 0.1 },
+  ingPlus:   { label: "食材獲得数 ＋個",                  target: true,  def: 1,   step: 1,   tdef: "spec:食材" },
+  invPlus:   { label: "最大所持数 ＋個",                  target: true,  def: 10,  step: 1,   tdef: "spec:食材" },
+  skillRate: { label: "スキル発生確率 ×倍",               target: true,  def: 1.25, step: 0.05, tdef: "spec:スキル" },
+  extraDrop: { label: "追加で拾う食材（1回のお手伝いごと・個数）", target: true, def: 1, step: 1, tdef: "spec:食材", ing: true },
+  ingSel:    { label: "食材セレクトの食材数 ×倍",         target: true,  def: 1.5, step: 0.1, tdef: "all" },
+  cookHeal:  { label: "料理のたびに全員のげんき回復 ＋",   target: false, def: 5,   step: 1 },
+  ingBoost:  { label: "特定の食材のエナジー ×倍（その食材を含む料理と、追加分）", target: false, def: 1.5, step: 0.1, ing: true }
+};
+// 過去イベントの例（そのまま追加して、数値を直して使えます）
+const EV_PRESETS = [
+  { label: "① 料理エナジー ×1.5", e: { kind: "dishMult", value: 1.5 } },
+  { label: "② とくいなもの食材が、とくせんリンゴを追加で拾う", e: { kind: "extraDrop", target: "spec:食材", value: 1, ingJp: "とくせんリンゴ" } },
+  { label: "③ とくいなもの食材の食材獲得数 ＋1", e: { kind: "ingPlus", target: "spec:食材", value: 1 } },
+  { label: "④ とくいなもの食材の最大所持数 ＋10", e: { kind: "invPlus", target: "spec:食材", value: 10 } },
+  { label: "⑤ 鍋の容量 ＋30", e: { kind: "potAdd", value: 30 } },
+  { label: "⑥ とくいなものスキルのスキル発生確率 ×1.25", e: { kind: "skillRate", target: "spec:スキル", value: 1.25 } },
+  { label: "⑦ みずタイプの食材獲得数 ＋1（タイプは変更可）", e: { kind: "ingPlus", target: "type:みず", value: 1 } },
+  { label: "⑧ ひとくちナッツを使う料理のエナジー ×1.5（ごちそうウィーク）", e: { kind: "ingBoost", value: 1.5, ingJp: "ひとくちナッツ" } },
+  { label: "⑨ とくいなもの食材が、ひとくちナッツを追加で拾う（ごちそうウィーク）", e: { kind: "extraDrop", target: "spec:食材", value: 1, ingJp: "ひとくちナッツ" } }
+];
 let eventBuffOn = false;
+let eventEffects = [];       // { kind, target, value, ing }
+const EV_KEY = "pks_opt_events_v1";
+
 function toggleEventBuff() {
   eventBuffOn = !eventBuffOn;
   document.getElementById("eventBuffToggleWrap").classList.toggle("on", eventBuffOn);
-  document.getElementById("eventBuffInputs").classList.toggle("off", !eventBuffOn);
+  document.getElementById("eventBuffBody").classList.toggle("off", !eventBuffOn);
+  persistEvents();
 }
-function getEventBuff() {
-  if (!eventBuffOn) return { on: false, add: 0, mult: 1 };
-  const rawAdd = document.getElementById("eventAdd")?.value, rawMult = document.getElementById("eventMult")?.value;
-  let add = Number(rawAdd);
-  if (rawAdd === "" || rawAdd == null || !Number.isFinite(add) || add < 0) add = 0;
-  let mult = Number(rawMult);
-  if (rawMult === "" || rawMult == null || !Number.isFinite(mult) || mult <= 0) mult = 1;
-  return { on: true, add, mult };
+function persistEvents() {
+  try { localStorage.setItem(EV_KEY, JSON.stringify({ on: eventBuffOn, list: eventEffects })); } catch (e) { /* 保存できなくても動作は続ける */ }
+}
+function loadEvents() {
+  try {
+    const o = JSON.parse(localStorage.getItem(EV_KEY) || "null");
+    if (o && Array.isArray(o.list)) {
+      eventEffects = o.list.filter(e => EV_KINDS[e.kind]).map(e => ({ kind: e.kind, target: e.target || "all", value: Number(e.value), ing: e.ing || "" }));
+      eventBuffOn = !!o.on;
+    }
+  } catch (e) { eventEffects = []; }
+  document.getElementById("eventBuffToggleWrap")?.classList.toggle("on", eventBuffOn);
+  document.getElementById("eventBuffBody")?.classList.toggle("off", !eventBuffOn);
+}
+function targetOptionsHtml(sel) {
+  const opt = (v, l) => `<option value="${esc(v)}"${v === sel ? " selected" : ""}>${esc(l)}</option>`;
+  let h = opt("all", "全員");
+  h += ["きのみ", "食材", "スキル"].map(k => opt("spec:" + k, "とくいなもの：" + k)).join("");
+  h += TYPE_NAMES.map(t => opt("type:" + t, "タイプ：" + t)).join("");
+  return h;
+}
+function renderEventList() {
+  const box = document.getElementById("evList");
+  if (!box) return;
+  if (!eventEffects.length) { box.innerHTML = `<div class="pks-saved-empty">効果がまだありません。下の「過去イベントの例」または「効果を追加」から追加してください。</div>`; return; }
+  box.innerHTML = eventEffects.map((e, i) => {
+    const K = EV_KINDS[e.kind];
+    const kindSel = `<select onchange="onEvKind(${i}, this.value)">${Object.entries(EV_KINDS).map(([k, v]) => `<option value="${k}"${k === e.kind ? " selected" : ""}>${esc(v.label)}</option>`).join("")}</select>`;
+    const tgt = K.target ? `<div class="pks-sw"><select onchange="onEvField(${i}, 'target', this.value)">${targetOptionsHtml(e.target)}</select></div>` : "";
+    const ing = K.ing ? `<div class="pks-sw"><select onchange="onEvField(${i}, 'ing', this.value)">${ING_NAMES.map(n => `<option value="${esc(n)}"${n === e.ing ? " selected" : ""}>${esc(n)}</option>`).join("")}</select></div>` : "";
+    return `<div class="pks-ev-row">
+      <div class="pks-sw">${kindSel}</div>
+      ${tgt}${ing}
+      <div class="pks-ev-val"><input type="number" step="${K.step}" value="${Number.isFinite(e.value) ? e.value : ""}" onchange="onEvField(${i}, 'value', this.value)" inputmode="decimal">
+        <button class="pks-del-btn" type="button" onclick="delEvent(${i})" style="min-width:48px;">削除</button></div>
+    </div>`;
+  }).join("");
+}
+function newEffect(kind) {
+  const K = EV_KINDS[kind];
+  return { kind, target: K.tdef || "all", value: K.def, ing: K.ing ? (ING_NAMES[ING_BY_JP[kind === "ingBoost" ? "ひとくちナッツ" : "とくせんリンゴ"]] || ING_NAMES[0]) : "" };
+}
+function addEventEffect() { eventEffects.push(newEffect("dishMult")); persistEvents(); renderEventList(); }
+function onEvKind(i, kind) { eventEffects[i] = newEffect(kind); persistEvents(); renderEventList(); }
+function onEvField(i, f, v) {
+  if (f === "value") { const n = Number(v); eventEffects[i].value = Number.isFinite(n) ? n : NaN; }
+  else eventEffects[i][f] = v;
+  persistEvents();
+}
+function delEvent(i) { eventEffects.splice(i, 1); persistEvents(); renderEventList(); }
+function addEventPreset(sel) {
+  const i = Number(sel.value);
+  sel.value = "";
+  if (!(i >= 0)) return;
+  const p = EV_PRESETS[i].e;
+  const e = newEffect(p.kind);
+  if (p.target) e.target = p.target;
+  e.value = p.value;
+  if (p.ingJp) e.ing = ING_NAMES[ING_BY_JP[p.ingJp]] || e.ing;
+  eventEffects.push(e);
+  persistEvents(); renderEventList();
 }
 
 /* ===== 設定の読み取り ===== */
@@ -1535,28 +1742,49 @@ function getSettings() {
     const v = Number(raw);
     return Number.isFinite(v) ? v : def;
   };
-  const evm = num("enEvent", 1);
+  const val = id => document.getElementById(id)?.value || "";
+  const list = eventBuffOn ? eventEffects.filter(e => Number.isFinite(e.value)) : [];
+  const prod = k => list.filter(e => e.kind === k).reduce((a, e) => a * (e.value > 0 ? e.value : 1), 1);
+  const sum = k => list.filter(e => e.kind === k).reduce((a, e) => a + e.value, 0);
+  const mode = val("enMode") || "normal";
+  const ex = { mode, main: val("enMain"), sub1: val("enSub1"), sub2: val("enSub2"), buff: val("enExBuff") || "berry" };
   return {
     field: Math.max(0, num("enField", 0)) / 100,
     pot: Math.max(0, Math.floor(num("enPot", 15))),
     recipeLv: Math.min(55, Math.max(1, Math.round(num("enRecipeLv", 30)))),
-    eventMul: evm > 0 ? evm : 1,
-    favs: [...document.querySelectorAll("#enFavs input:checked")].map(x => x.value),
+    favs: mode === "normal" ? [...document.querySelectorAll("#enFavs input:checked")].map(x => x.value) : [ex.main, ex.sub1, ex.sub2],
     e0: Math.min(150, Math.max(0, num("enE0", 100))),
-    genre: document.getElementById("enGenre")?.value || "",
-    stockN: Math.max(0, Math.floor(num("enStock", 0)))
+    genre: val("enGenre"),
+    stockN: Math.max(0, Math.floor(num("enStock", 0))),
+    teamSize: Math.min(6, Math.max(1, Math.round(num("enTeam", 5)))),
+    ex, effects: list,
+    dishMul: prod("dishMult"), potAdd: sum("potAdd"), potMult: prod("potMult"), cookHeal: sum("cookHeal"),
+    ingBoost: list.filter(e => e.kind === "ingBoost" && e.ing).map(e => ({ ing: e.ing, m: e.value > 0 ? e.value : 1 }))
   };
 }
 
+function onModeChange() {
+  const mode = document.getElementById("enMode")?.value || "normal";
+  document.getElementById("exBox")?.classList.toggle("pks-hidden", mode === "normal");
+  document.getElementById("normalFavBox")?.classList.toggle("pks-hidden", mode !== "normal");
+}
+
 function renderEnergySettings() {
-  const favs = document.getElementById("enFavs");
   const fail = document.getElementById("energyLoadFail");
   if (!ENERGY) { if (fail) fail.classList.remove("pks-hidden"); return; }
   if (fail) fail.classList.add("pks-hidden");
-  if (favs) {
-    favs.innerHTML = ENERGY.berry.types.map(t =>
-      `<label class="pks-fav"><input type="checkbox" value="${esc(t[LANG])}"> ${esc(t[LANG])}</label>`).join("");
-  }
+  const favs = document.getElementById("enFavs");
+  if (favs) favs.innerHTML = TYPE_NAMES.map(t => `<label class="pks-fav"><input type="checkbox" value="${esc(t)}"> ${esc(t)}</label>`).join("");
+  const opts = TYPE_NAMES.map((t, i) => `<option value="${esc(t)}">${esc(t)}</option>`).join("");
+  [["enMain", 0], ["enSub1", 1], ["enSub2", 2]].forEach(([id, i]) => {
+    const el = document.getElementById(id);
+    if (el) { el.innerHTML = opts; el.value = TYPE_NAMES[i]; }
+  });
+  const ps = document.getElementById("evPreset");
+  if (ps) ps.innerHTML = `<option value="">過去イベントの例から追加…</option>` + EV_PRESETS.map((p, i) => `<option value="${i}">${esc(p.label)}</option>`).join("");
+  onModeChange();
+  loadEvents();
+  renderEventList();
 }
 
 /* ===== 候補ポケモン ===== */
@@ -1578,27 +1806,41 @@ function onCandToggle(id, checked) {
   updateCandCount();
 }
 function candSelectAll(flag) {
-  const des = flag ? new Set() : new Set(savedPokemon.map(s => s.id));
-  setDeselected(des);
+  setDeselected(flag ? new Set() : new Set(savedPokemon.map(s => s.id)));
   renderCandidateList();
 }
 function updateCandCount() {
   const el = document.getElementById("candCount");
   if (el) el.textContent = `候補 ${getSelectedSaved().length} 体 / 保存 ${savedPokemon.length} 体`;
 }
+function editCandidate(id) {
+  const data = savedPokemon.find(s => s.id === id);
+  if (!data) return;
+  if (!applyPokemonData("newcard", data)) { showMsg("newcard_msg", "このポケモンはデータにありません", false); return; }
+  const lab = document.getElementById("newcard_label");
+  if (lab) lab.value = data.label;
+  const box = document.getElementById("newCardBox");
+  box?.classList.add("open");
+  const ar = document.getElementById("newCardBox_arrow"); if (ar) ar.textContent = "▲";
+  showMsg("newcard_msg", `「${data.label}」を編集中です。変更して「💾 保存」を押すと上書きされます`);
+  document.getElementById("addPanel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
 function renderCandidateList() {
   const box = document.getElementById("candList");
   if (!box) return;
   if (!savedPokemon.length) {
-    box.innerHTML = `<div class="pks-saved-empty">まだポケモンが登録されていません。下の「新しいポケモンを登録」から追加してください（食材シミュレーターで保存したポケモンも使えます）。</div>`;
+    box.innerHTML = `<div class="pks-saved-empty">まだポケモンが登録されていません。下の「ポケモンを追加・編集」から追加してください（食材シミュレーターで保存したポケモンも使えます）。</div>`;
   } else {
     const des = getDeselected();
     box.innerHTML = savedPokemon.map(s => `
-      <label class="pks-cand">
-        <input type="checkbox" ${des.has(s.id) ? "" : "checked"} onchange="onCandToggle('${esc(s.id)}', this.checked)">
-        <span>${esc(s.label)}</span>
-        <small>${esc(s.p)} Lv${s.lv} / スキルLv${s.sl}</small>
-      </label>`).join("");
+      <div class="pks-cand">
+        <label style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;margin:0;cursor:pointer;">
+          <input type="checkbox" ${des.has(s.id) ? "" : "checked"} onchange="onCandToggle('${esc(s.id)}', this.checked)">
+          <span style="font-size:12.5px;color:var(--pks-text);font-weight:700;">${esc(s.label)}</span>
+          <small>${esc(s.p)} Lv${s.lv} / スキルLv${s.sl}</small>
+        </label>
+        <button class="pks-del-btn cancel" type="button" onclick="editCandidate('${esc(s.id)}')" style="min-width:52px;">編集</button>
+      </div>`).join("");
   }
   updateCandCount();
 }
@@ -1622,24 +1864,24 @@ function roundToSum(vals) {
 }
 function roleTags(c) {
   const t = [];
-  if (c.kind) t.push("スキルLv" + c.sl);
+  if (c.kind) t.push("スキルLv" + c.slEff);
   if (c.kind === "charge") t.push("自己回復");
   if (c.kind === "all") t.push("全体回復");
   if (c.kind === "cheer") t.push("味方回復");
   if (c.kind === "cc") t.push("料理チャンス");
+  if (c.kind === "pot") t.push("鍋容量アップ");
   if (c.kind === "ingsel") t.push("食材セレクト");
   if (c.kind === "eS" || c.kind === "eM" || c.kind === "eSR") t.push("エナジーチャージ");
   if (c.category === "食材") t.push("食材");
   if (c.category === "きのみ") t.push("きのみ");
+  if (c.isMain) t.push("EXメイン");
+  else if (c.isFav) t.push("好物");
   return t.join("・");
 }
 
 function scheduleHtml(sched, C) {
   const daySig = [];
-  for (let d = 0; d < 7; d++) {
-    const blocks = [0, 1, 2].map(b => sched[3 * d + b].map(i => C[i].label).sort());
-    daySig.push(blocks);
-  }
+  for (let d = 0; d < 7; d++) daySig.push([0, 1, 2].map(b => sched[3 * d + b].map(i => C[i].label).sort()));
   const groups = [];
   for (let d = 0; d < 7; d++) {
     const key = JSON.stringify(daySig[d]);
@@ -1666,7 +1908,7 @@ function renderOptResult(search, C, set, R, warnings) {
     <div class="pks-surplus">
       <div class="pks-surplus-label">週間エナジー（提案どおりに進めた場合の目安）</div>
       <div class="pks-surplus-val">${fmtE(best.total)}</div>
-      <div class="pks-surplus-desc">最も良い「5体固定の編成」 ${fmtE(base.total)} に対して ${gain >= 0 ? "+" : ""}${gain.toFixed(1)}%</div>
+      <div class="pks-surplus-desc">最も良い「${set.teamSize}体固定の編成」 ${fmtE(base.total)} に対して ${gain >= 0 ? "+" : ""}${gain.toFixed(1)}%</div>
     </div>
     <div class="pks-result-section-title">内訳</div>
     <div class="pks-pb-row"><span class="pks-pb-ing">きのみ</span><span class="pks-pb-val">${fmtE(sim.berryE)}</span></div>
@@ -1674,10 +1916,8 @@ function renderOptResult(search, C, set, R, warnings) {
     <div class="pks-pb-row"><span class="pks-pb-ing">料理（レシピ食材）</span><span class="pks-pb-val">${fmtE(dish.recipeVal || 0)}</span></div>
     <div class="pks-pb-row"><span class="pks-pb-ing">追加食材（なべの余り枠）</span><span class="pks-pb-val">${fmtE(dish.extraVal || 0)}</span></div>`;
 
-  // 編成スケジュール
-  html += `<div class="pks-result-section-title">編成スケジュール（5枠・同じ時間帯のポケモンは同時に編成）</div>${scheduleHtml(search.best, C)}`;
+  html += `<div class="pks-result-section-title">編成スケジュール（${set.teamSize}枠・同じ時間帯のポケモンは同時に編成）</div>${scheduleHtml(search.best, C)}`;
 
-  // ポケモン別
   const rows = C.map((c, i) => ({ c, h: sim.onHours[i], e: sim.onHours[i] > 0 ? sim.eSum[i] / sim.onHours[i] : 0, n: sim.helpsTot[i] }))
     .filter(r => r.h > 0).sort((a, b) => b.h - a.h);
   html += `<div class="pks-result-section-title">ポケモン別（週の編成時間・げんき・お手伝い）</div>`;
@@ -1688,29 +1928,29 @@ function renderOptResult(search, C, set, R, warnings) {
       <div class="pks-pb-row"><span class="pks-pb-ing">お手伝い回数</span><span class="pks-pb-val">${Math.round(r.n)}回</span></div>
     </div>`).join("");
 
-  // 料理プラン
   if (dish.status === "optimal") {
-    const { J, Cn, nx, nu, classMu, R: RR } = dish;
+    const { classes, xs, R: RR } = dish;
     let planned = 0, dhtml = "";
-    for (let c = Cn - 1; c >= 0; c--) {
-      const vals = []; for (let j = 0; j < J; j++) vals.push(dish.x[j * Cn + c]);
-      const ints = roundToSum(vals);
+    const order = classes.map((k, i) => i).sort((a, b) => (classes[b].sunday - classes[a].sunday) || (classes[b].p - classes[a].p));
+    for (const c of order) {
+      const k = classes[c];
+      const list = xs.filter(x => x.c === c);
+      const ints = roundToSum(list.map(x => x.v));
       const lines = []; let sz = 0;
-      ints.forEach((n, j) => { if (n > 0) { lines.push(`${esc(RR[j].label)} ×${n}`); sz += n; } });
+      list.forEach((x, q) => { if (ints[q] > 0) { lines.push(`${esc(RR[x.j].label)} ×${ints[q]}`); sz += ints[q]; } });
       planned += sz;
-      if (lines.length) dhtml += `<div class="pks-pb-card" style="margin-top:6px;">
-        <div class="pks-pb-name">大成功の期待倍率 ×${classMu[c].toFixed(2)}（${sz}食）</div>
-        <div style="font-size:12px;line-height:1.8;color:var(--pks-text);">${lines.join("<br>")}</div></div>`;
+      const head = k.sunday ? `日曜の${k.n}食（大成功で3倍）` : `月〜土の${k.n}食`;
+      dhtml += `<div class="pks-pb-card" style="margin-top:6px;">
+        <div class="pks-pb-name">${head}</div>
+        <div style="font-size:11px;color:var(--pks-text-dim);margin-bottom:4px;">大成功率 約${(k.p * 100).toFixed(0)}% ／ なべ容量 約${k.cap}個</div>
+        <div style="font-size:12px;line-height:1.8;color:var(--pks-text);">${lines.length ? lines.join("<br>") : "作れる料理がありません（なべ容量や食材が不足）"}</div></div>`;
     }
-    html += `<div class="pks-result-section-title">作る料理（21食・大成功が出やすい食事に、エナジーの高い料理を割り当て）</div>${dhtml}`;
-    // 追加食材・備蓄
-    const extra = new Array(KN).fill(0), stock = new Array(KN).fill(0);
-    for (let k = 0; k < KN; k++) { for (let c = 0; c < Cn; c++) extra[k] += dish.x[nx + k * Cn + c]; stock[k] = dish.x[nx + nu + k]; }
+    html += `<div class="pks-result-section-title">作る料理（21食）</div>${dhtml}`;
     const fmtList = arr => arr.map((v, k) => [v, k]).filter(x => x[0] >= 0.5).sort((a, b) => b[0] - a[0]).map(x => `${esc(ING_NAMES[x[1]])} ${Math.round(x[0])}個`).join("、");
-    const exList = fmtList(extra), stList = fmtList(stock);
+    const exList = fmtList(dish.extra), stList = fmtList(dish.stock);
     if (exList) html += `<div class="pks-result-section-title">追加食材として入れる食材（なべの余り枠）</div><div class="pks-extra-item">${exList}</div>`;
     if (set.stockN > 0) html += `<div class="pks-result-section-title">週末備蓄（${set.stockN}個）の内訳の提案</div><div class="pks-extra-item">${stList || "備蓄は使いません"}</div>`;
-    if (planned < 20.5) warnings.push(`食材が足りず、${planned}食分しか作れません。備蓄や編成を見直してください`);
+    if (planned < 20.5) warnings.push(`なべ容量や食材が足りず、${planned}食分しか作れません。なべ容量・備蓄・編成を見直してください`);
   } else {
     warnings.push("料理の計算に失敗しました");
   }
@@ -1718,13 +1958,16 @@ function renderOptResult(search, C, set, R, warnings) {
   const notes = [
     "げんきは、チームにいる間10分ごとに1減り、ボックスでは減りません。起床時に回復するのは睡眠中にチームにいたポケモンだけ（睡眠スコア100）という前提です",
     "げんきの帯ごとの速度倍率は、設定した値（0.45／0.52／0.58／0.66／0で1.0）を使っています",
-    "回復スキル・料理チャンスS・エナジーチャージ・食材セレクトを反映しています。それ以外のスキルは含めていません",
+    "なべ容量は「(基本容量×日曜2倍＋料理パワーアップS)×キャンプチケット1.5倍」で計算し、容量を超える食材数のレシピは作れません。料理パワーアップSは次の料理だけに効き、料理のたびにリセットされます（期待値で計算）",
+    "最終エナジーは「(レシピ画面のエナジー＋追加食材の基礎エナジー)×フィールドボーナス×イベントボーナス」で、大成功は2倍（日曜3倍）がかかります。食材の数ボーナスとレシピレベルは、レシピ食材だけにかかります",
+    "回復スキル・料理チャンスS・料理パワーアップS・エナジーチャージ・食材セレクトを反映しています。それ以外のスキルは含めていません",
     "週の食材は、1週間のどの食事にも使える前提です。料理の割り当ては概算です",
-    "大成功は期待値で計算（月〜土は2倍・日曜は3倍）。料理チャンスは大成功が出るまで積み上がる前提です",
     "探索は近似解法です。実行するたびに同じ結果になりますが、最適とは限りません",
     "結果は目安です。実際のゲームとは差が出る場合があります"
-  ].concat(warnings);
-  html += `<div class="pks-extra-item" style="margin-top:12px;">${notes.map(n => "・" + esc(n)).join("<br>")}</div></div>`;
+  ];
+  if (set.ex.mode !== "normal") notes.push(`EXモード（${set.ex.mode === "cyan" ? "シアンの砂浜EX" : "ワカクサ本島EX"}）：メイン=${set.ex.main}、サブ=${set.ex.sub1}・${set.ex.sub2}。好物以外のポケモンはお手伝い時間が長くなります`);
+  const all = notes.concat(warnings);
+  html += `<div class="pks-extra-item" style="margin-top:12px;">${all.map(n => "・" + esc(n)).join("<br>")}</div></div>`;
   host.innerHTML = html;
   host.scrollIntoView({ behavior: "smooth", block: "start" });
 }
@@ -1740,14 +1983,18 @@ function runOptimizer() {
   if (optRunning) return;
   setOptMsg("", true);
   if (!ENERGY) { setOptMsg("energy_data.json を読み込めていません。ページを再読み込みしてください", false); return; }
-  const set = getSettings(), ev = getEventBuff();
+  const set = getSettings();
+  if (set.ex.mode !== "normal") {
+    const ts = [set.ex.main, set.ex.sub1, set.ex.sub2];
+    if (new Set(ts).size < 3) { setOptMsg("EXモードのメイン・サブのきのみは、3つとも違うタイプにしてください", false); return; }
+  }
   let saved = getSelectedSaved();
   const warnings = [];
   if (!saved.length) { setOptMsg("候補にするポケモンを選んでください", false); return; }
   if (saved.length > 24) { saved = saved.slice(0, 24); warnings.push("候補が多いため、先頭の24体で計算しました"); }
-  const C = saved.map(s => prepCandidate(s, set, ev)).filter(Boolean);
+  const C = saved.map(s => prepCandidate(s, set)).filter(Boolean);
   if (!C.length) { setOptMsg("候補のポケモンがデータにありません", false); return; }
-  if (C.length < 5) warnings.push(`候補が${C.length}体のため、${C.length}体で編成します（5体以上を登録すると提案の幅が広がります）`);
+  if (C.length < set.teamSize) warnings.push(`候補が${C.length}体のため、${C.length}体で編成します（${set.teamSize}体以上を登録すると提案の幅が広がります）`);
   const unsupported = C.filter(c => !c.kind && c.skillType).map(c => `${c.label}（${c.skillType}）`);
   if (unsupported.length) warnings.push("スキル効果を反映していない候補：" + unsupported.join("、"));
   const useEst = !!document.getElementById("enEst")?.checked;
