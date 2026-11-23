@@ -560,7 +560,7 @@
   ・ 結果は目安です。実際のゲームとは差が出る場合があります
 </div>
 
-<p class="pks-footnote">豆腐メンタルパパのポケモンスリープ攻略ツール<br><span id="verStamp">ver. 2026-11-17 エナジー最適化ツール v3.1</span></p>
+<p class="pks-footnote">豆腐メンタルパパのポケモンスリープ攻略ツール<br><span id="verStamp">ver. 2026-11-21 エナジー最適化ツール v3.3</span></p>
 
 <script>
 /* ===== 定数 ===== */
@@ -771,7 +771,7 @@ function prepCandidate(saved, set) {
   const Lraw = Math.min(7, Math.max(1, Math.round(Number(saved.sl)) || 6));
   const L = Math.min(7, Lraw + m.lvPlus);
   const t = pokemon.skillType;
-  let kind = null, val = 0, ingSel = null, heal2 = 0;
+  let kind = null, val = 0, ingSel = null, heal2 = 0, bbOwn = 0, bbOther = 0, approx = false;
   const lv6 = Math.min(6, L), lv7 = L;
   const minus = PW.minus.names[LANG].includes(pokemon.name);
   if (pokemon.skillIngredients && pokemon.skillIngredients.length > 0 && pokemon.skillIngCount > 0) {
@@ -781,7 +781,8 @@ function prepCandidate(saved, set) {
     for (const nm of pokemon.skillIngredients) { const idx = ING_BY_LANG[nm]; if (idx !== undefined) ingSel.push([idx, per]); }
   }
   else if (t === G.charge[LANG]) { kind = "charge"; val = G.charge.values[lv6 - 1]; }
-  else if (t === G.all[LANG]) { kind = "all"; val = G.all.values[lv6 - 1]; }
+  else if (t === G.all[LANG] || (G.all.aliases && G.all.aliases[LANG].includes(t))) { kind = "all"; val = G.all.values[lv6 - 1]; approx = t !== G.all[LANG]; }
+  else if (t === SE.berryBurst[LANG]) { kind = "bb"; bbOwn = SE.berryBurst.own[lv6 - 1]; bbOther = SE.berryBurst.others[lv6 - 1]; }
   else if (t === G.cheer[LANG]) { kind = "cheer"; val = G.cheer.values[lv6 - 1]; }
   else if (t === ENERGY.cookingChance[LANG]) { kind = "cc"; val = ENERGY.cookingChance.valuesPercent[Math.min(6, L) - 1] / 100; }
   else if (t === PW.powerup[LANG]) {
@@ -799,7 +800,7 @@ function prepCandidate(saved, set) {
   return {
     name: pokemon.name, label: saved.label, pokemon, level,
     base0, ownSpeed: cnt("おてスピM") * 0.14 + cnt("おてスピS") * 0.07, otebo: cnt("おてぼ") * 0.05,
-    fr, bp, ingList, extraList, helpsUntilFull, skillRate, kind, val, heal2, ingSel, capNight, perBerry,
+    fr, bp, ingList, extraList, helpsUntilFull, skillRate, kind, val, heal2, bbOwn, bbOther, approx, ingSel, capNight, perBerry,
     category: pokemon.category, skillType: t, sl: Lraw, slEff: L,
     plusMinus: PW.plusMinusGroup[LANG].includes(pokemon.name), isFav: m.isFav, isMain: m.isMain
   };
@@ -860,6 +861,10 @@ function simulate(sched, C, set) {
             if (st.meal >= 0) accPot[st.meal] += trig * c.val;
             if (c.heal2 > 0 && c.plusMinus && hasPM > 1 && T.length > 1)
               for (let r = 0; r < T.length; r++) if (T[r] !== i) add[T[r]] += trig * c.heal2 / (T.length - 1);
+            break;
+          case "bb":   // きのみバースト：自分のきのみ＋チームの他のポケモンのきのみを獲得
+            berryE += trig * c.bbOwn * c.perBerry;
+            for (let r = 0; r < T.length; r++) if (T[r] !== i) berryE += trig * c.bbOther * C[T[r]].perBerry;
             break;
           case "eS": case "eM": case "eSR": skillE += trig * c.val * (1 + set.field); break;
           case "ingsel": for (let z = 0; z < c.ingSel.length; z++) supply[c.ingSel[z][0]] += trig * c.ingSel[z][1]; break;
@@ -1866,7 +1871,8 @@ function roleTags(c) {
   const t = [];
   if (c.kind) t.push("スキルLv" + c.slEff);
   if (c.kind === "charge") t.push("自己回復");
-  if (c.kind === "all") t.push("全体回復");
+  if (c.kind === "all") t.push(c.approx ? "全体回復（近似）" : "全体回復");
+  if (c.kind === "bb") t.push("きのみバースト");
   if (c.kind === "cheer") t.push("味方回復");
   if (c.kind === "cc") t.push("料理チャンス");
   if (c.kind === "pot") t.push("鍋容量アップ");
@@ -1960,7 +1966,7 @@ function renderOptResult(search, C, set, R, warnings) {
     "げんきの帯ごとの速度倍率は、設定した値（0.45／0.52／0.58／0.66／0で1.0）を使っています",
     "なべ容量は「(基本容量×日曜2倍＋料理パワーアップS)×キャンプチケット1.5倍」で計算し、容量を超える食材数のレシピは作れません。料理パワーアップSは次の料理だけに効き、料理のたびにリセットされます（期待値で計算）",
     "最終エナジーは「(レシピ画面のエナジー＋追加食材の基礎エナジー)×フィールドボーナス×イベントボーナス」で、大成功は2倍（日曜3倍）がかかります。食材の数ボーナスとレシピレベルは、レシピ食材だけにかかります",
-    "回復スキル・料理チャンスS・料理パワーアップS・エナジーチャージ・食材セレクトを反映しています。それ以外のスキルは含めていません",
+    "回復スキル・料理チャンスS・料理パワーアップS・エナジーチャージ・食材セレクト・きのみバーストを反映しています。それ以外のスキルは含めていません",
     "週の食材は、1週間のどの食事にも使える前提です。料理の割り当ては概算です",
     "探索は近似解法です。実行するたびに同じ結果になりますが、最適とは限りません",
     "結果は目安です。実際のゲームとは差が出る場合があります"
@@ -2023,9 +2029,59 @@ function runOptimizer() {
 
 /* ===== 起動 ===== */
 const POKEMON_JSON_URL = "https://simulator.tofumentalpapa.com/pokemon_data.json";
+/* ===== ポケモンデータの読み込み（失敗しても前回のデータで動くようにする）===== */
+const POKEMON_CACHE_KEY = "pks_pokemon_db_cache_v1";
+function showDataError(msg) {
+  let el = document.getElementById("dataErrorBanner");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "dataErrorBanner";
+    el.style.cssText = "position:relative;z-index:5;max-width:520px;margin:0 auto 14px;padding:10px 12px;border-radius:10px;border:1.5px solid rgba(255,126,126,0.6);background:rgba(255,126,126,0.12);color:#ffb3b3;font-size:12px;line-height:1.7;";
+    document.body.insertBefore(el, document.body.firstChild);
+  }
+  el.textContent = msg;
+}
+// JSONの「カンマの付け忘れ・余分なカンマ」がありそうな行を探す
+function guessJsonLine(text) {
+  const lines = text.split("\n");
+  const nextNonEmpty = i => { for (let j = i + 1; j < lines.length; j++) { const t = lines[j].trim(); if (t) return t; } return ""; };
+  for (let i = 0; i < lines.length; i++) {
+    const cur = lines[i].trim(); if (!cur) continue;
+    const nxt = nextNonEmpty(i);
+    if (/["\d\]}]$|true$|false$|null$/.test(cur) && nxt.startsWith('"')) return i + 1;            // 次の項目の前にカンマが無い
+    if (cur.endsWith(",") && (nxt.startsWith("]") || nxt.startsWith("}"))) return i + 1;            // 最後の項目の後ろに余分なカンマ
+  }
+  return 0;
+}
+async function loadPokemonDB() {
+  let text = "";
+  try {
+    const res = await fetch(POKEMON_JSON_URL);
+    text = await res.text();
+    const data = JSON.parse(text);
+    if (!Array.isArray(data) || !data.length) throw new Error("データが空です");
+    pokemonDB = data;
+    try { localStorage.setItem(POKEMON_CACHE_KEY, text); } catch (e) { /* 保存できなくても動作は続ける */ }
+    return true;
+  } catch (e) {
+    console.warn("pokemon_data.json読み込みエラー:", e);
+    const line = text ? guessJsonLine(text) : 0;
+    const where = line ? `（${line}行目付近：カンマの付け忘れ・余分なカンマの可能性があります）` : "";
+    let cached = null;
+    try { cached = JSON.parse(localStorage.getItem(POKEMON_CACHE_KEY) || "null"); } catch (_) { cached = null; }
+    if (Array.isArray(cached) && cached.length) {
+      pokemonDB = cached;
+      showDataError(`pokemon_data.json を読み込めませんでした${where}。前回読み込めたデータを使っています。ファイルの内容を確認してください。（${e.message}）`);
+    } else {
+      pokemonDB = [];
+      showDataError(`pokemon_data.json を読み込めませんでした${where}。ファイルの内容を確認してください。（${e.message}）`);
+    }
+    return false;
+  }
+}
+
 async function loadDB() {
-  try { pokemonDB = await (await fetch(POKEMON_JSON_URL)).json(); }
-  catch (e) { console.warn("pokemon_data.json読み込みエラー:", e); pokemonDB = []; }
+  await loadPokemonDB();
   try { ENERGY = await (await fetch(ENERGY_JSON_URL)).json(); buildEnergyIndexes(); }
   catch (e) { console.warn("energy_data.json読み込みエラー:", e); ENERGY = null; }
   loadSavedFromStorage();
