@@ -669,7 +669,7 @@
     <button class="pks-btn-secondary" id="btnRestart">最初からやり直す</button>
 </div>
 
-  <p class="pks-footnote">豆腐メンタルパパのポケモンスリープ攻略ツール<br><span id="verStamp">ver. 2026-11-17 新食材・新レシピ追加</span></p>
+  <p class="pks-footnote">豆腐メンタルパパのポケモンスリープ攻略ツール<br><span id="verStamp">ver. 2026-11-20 データ読み込みの安全対策</span></p>
 </div>
 
 <script>
@@ -839,16 +839,63 @@ let pokemonSlots = [];
 /* ===== DB読み込み ===== */
 const POKEMON_JSON_URL = "https://simulator.tofumentalpapa.com/pokemon_data.json";
 
-async function loadDB() {
-  try {
-    pokemonDB = await (await fetch(POKEMON_JSON_URL)).json();
-    // maxInventoryが含まれているか確認
-    const hasMaxInv = pokemonDB.length > 0 && pokemonDB[0].maxInventory !== undefined;
-    if (!hasMaxInv) {
-      console.warn("⚠️ pokemon_data.jsonにmaxInventoryが含まれていません。GitHubに最新のpokemon_data.jsonをアップロードしてください。");
-    }
+/* ===== ポケモンデータの読み込み（失敗しても前回のデータで動くようにする）===== */
+const POKEMON_CACHE_KEY = "pks_pokemon_db_cache_v1";
+function showDataError(msg) {
+  let el = document.getElementById("dataErrorBanner");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "dataErrorBanner";
+    el.style.cssText = "position:relative;z-index:5;max-width:520px;margin:0 auto 14px;padding:10px 12px;border-radius:10px;border:1.5px solid rgba(255,126,126,0.6);background:rgba(255,126,126,0.12);color:#ffb3b3;font-size:12px;line-height:1.7;";
+    document.body.insertBefore(el, document.body.firstChild);
   }
-  catch(e) { console.warn("pokemon_data.json読み込みエラー:", e); pokemonDB = []; }
+  el.textContent = msg;
+}
+// JSONの「カンマの付け忘れ・余分なカンマ」がありそうな行を探す
+function guessJsonLine(text) {
+  const lines = text.split("\n");
+  const nextNonEmpty = i => { for (let j = i + 1; j < lines.length; j++) { const t = lines[j].trim(); if (t) return t; } return ""; };
+  for (let i = 0; i < lines.length; i++) {
+    const cur = lines[i].trim(); if (!cur) continue;
+    const nxt = nextNonEmpty(i);
+    if (/["\d\]}]$|true$|false$|null$/.test(cur) && nxt.startsWith('"')) return i + 1;            // 次の項目の前にカンマが無い
+    if (cur.endsWith(",") && (nxt.startsWith("]") || nxt.startsWith("}"))) return i + 1;            // 最後の項目の後ろに余分なカンマ
+  }
+  return 0;
+}
+async function loadPokemonDB() {
+  let text = "";
+  try {
+    const res = await fetch(POKEMON_JSON_URL);
+    text = await res.text();
+    const data = JSON.parse(text);
+    if (!Array.isArray(data) || !data.length) throw new Error("データが空です");
+    pokemonDB = data;
+    try { localStorage.setItem(POKEMON_CACHE_KEY, text); } catch (e) { /* 保存できなくても動作は続ける */ }
+    return true;
+  } catch (e) {
+    console.warn("pokemon_data.json読み込みエラー:", e);
+    const line = text ? guessJsonLine(text) : 0;
+    const where = line ? `（${line}行目付近：カンマの付け忘れ・余分なカンマの可能性があります）` : "";
+    let cached = null;
+    try { cached = JSON.parse(localStorage.getItem(POKEMON_CACHE_KEY) || "null"); } catch (_) { cached = null; }
+    if (Array.isArray(cached) && cached.length) {
+      pokemonDB = cached;
+      showDataError(`pokemon_data.json を読み込めませんでした${where}。前回読み込めたデータを使っています。ファイルの内容を確認してください。（${e.message}）`);
+    } else {
+      pokemonDB = [];
+      showDataError(`pokemon_data.json を読み込めませんでした${where}。ファイルの内容を確認してください。（${e.message}）`);
+    }
+    return false;
+  }
+}
+
+async function loadDB() {
+  const ok = await loadPokemonDB();
+  // maxInventoryが含まれているか確認
+  if (ok && pokemonDB.length > 0 && pokemonDB[0].maxInventory === undefined) {
+    console.warn("⚠️ pokemon_data.jsonにmaxInventoryが含まれていません。GitHubに最新のpokemon_data.jsonをアップロードしてください。");
+  }
   initEvents();
 }
 
