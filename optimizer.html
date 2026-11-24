@@ -416,14 +416,10 @@
       <div style="font-size:11px;color:var(--pks-text-dim);margin-top:2px;">お手伝いスピード×1.2・最大所持数×1.2・なべ容量×1.5</div></div>
     <div class="pks-toggle-wrap" onclick="toggleCamp()" id="campToggleWrap"><div class="pks-toggle"></div></div>
   </div>
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0;">
     <div><div style="font-size:13px;font-weight:700;color:var(--pks-text);">睡眠中も毎分タップする</div>
       <div style="font-size:11px;color:var(--pks-text-dim);margin-top:2px;">OFFだと、睡眠中に所持数が満タンになると食材を取れず、スキル発動も1晩に1〜2回まで</div></div>
     <div class="pks-toggle-wrap on" onclick="toggleSleepTap()" id="sleepTapToggleWrap"><div class="pks-toggle"></div></div>
-  </div>
-  <div class="field" style="margin-bottom:0;">
-    <label for="enTeam">編成枠の数</label>
-    <div class="pks-sw"><select id="enTeam"><option value="5" selected>5体</option><option value="6">6体（いいキャンプチケットで6体になる場合）</option></select></div>
   </div>
 </div>
 
@@ -481,8 +477,8 @@
       <input type="number" id="enPot" min="0" step="1" value="15" inputmode="numeric"></div>
   </div>
   <div class="pks-row2">
-    <div class="field"><label for="enRecipeLv">レシピレベル（全料理共通・1〜55）</label>
-      <input type="number" id="enRecipeLv" min="1" max="55" step="1" value="30" inputmode="numeric"></div>
+    <div class="field"><label for="enRecipeLv">レシピレベル（全料理共通・1〜70）</label>
+      <input type="number" id="enRecipeLv" min="1" max="70" step="1" value="30" inputmode="numeric"></div>
     <div class="field"><label for="enE0">週の始まりのげんき（0〜150）</label>
       <input type="number" id="enE0" min="0" max="150" step="1" value="100" inputmode="numeric"></div>
   </div>
@@ -494,8 +490,7 @@
     <div class="field"><label for="enStock">週末備蓄で用意できる食材の総数（個）</label>
       <input type="number" id="enStock" min="0" step="1" value="0" inputmode="numeric"></div>
   </div>
-  <label class="pks-fav" style="margin:4px 0 8px;"><input type="checkbox" id="enEst" checked> 概算値のレシピ（ワカクサカレーパン・とびはねるカレーうどん）も候補に入れる</label>
-  <p class="pks-note" style="margin-bottom:0;">料理は週ごとにジャンルが決まるので、今週のジャンルを選んでください。週末備蓄は「週の初めに持っている食材の総数」で、組み合わせはツールがエナジーの高くなるように決めます。「概算値のレシピ」は、wikiの一覧に無く食材数から基本エナジーを推定したレシピです。</p>
+  <p class="pks-note" style="margin-bottom:0;">料理は週ごとにジャンルが決まるので、今週のジャンルを選んでください。週末備蓄は「週の初めに持っている食材の総数」で、組み合わせはツールがエナジーの高くなるように決めます。</p>
 </div>
 
 <div class="pks-panel">
@@ -557,10 +552,13 @@
   ・ 料理チャンスSは大成功が出るまで積み上がります（合計の上限は月〜土が80%、日曜が100%）。大成功が出ると基本の率（月〜土10%、日曜30%）に戻ります。日曜は大成功が3倍です<br>
   ・ なべ容量を超える食材数のレシピは作れません。日曜は容量が2倍、いいキャンプチケットで1.5倍、料理パワーアップSで次の料理だけ増えます<br>
   ・ 余った食材は、なべの余り枠に追加食材として入れます（基礎エナジーのみで、食材の数ボーナスとレシピレベルはかかりません）<br>
+  ・ きのみバースト系のスキルは計算に含めています。ミミッキュは大成功（3倍）が18%で起きる前提の期待値、ラティオスはチームのドラゴンタイプの種類数とラティアスの編成、クレセリアはチームのエスパータイプの種類数で、獲得できるきのみが増えます<br>
+  ・ <b style="color:var(--pks-star);">エナジー計算に含まれないスキル</b>があります。次のスキルを持つポケモンは、実際よりも弱く評価されます。今後、すべてのスキルを順次反映する予定です<br>
+  <div id="unsupportedSkills" style="margin:6px 0 8px 12px;"></div>
   ・ 結果は目安です。実際のゲームとは差が出る場合があります
 </div>
 
-<p class="pks-footnote">豆腐メンタルパパのポケモンスリープ攻略ツール<br><span id="verStamp">ver. 2026-11-21 エナジー最適化ツール v3.3</span></p>
+<p class="pks-footnote">豆腐メンタルパパのポケモンスリープ攻略ツール<br><span id="verStamp">ver. 2026-11-24 エナジー最適化ツール v3.4</span></p>
 
 <script>
 /* ===== 定数 ===== */
@@ -580,13 +578,15 @@ const WEEK_SECONDS   = 7 * 86400;
 const LEVEL_TIME_COEF= 0.002;
 const BASE_DIVISOR   = 2.222;
 
+const TEAM_SIZE = 5;               // 編成枠は5固定
+
 
 
 /* ===== エナジー最適化の計算コア ===== */
-// 前提：週の始まり=月曜。1日=起床15.5時間+睡眠8.5時間。編成は5枠（いいキャンプチケットで6枠にもできる）で、時間帯ごとに入れ替え可能。
+// 前提：週の始まり=月曜。1日=起床15.5時間+睡眠8.5時間。編成は5枠で、時間帯ごとに入れ替え可能。
 //  ・チームにいる間はげんきが10分ごとに1減る（ボックス内は減らない）
 //  ・起床時に回復するのは「睡眠中にチームにいたポケモン」だけ（睡眠スコア100→げんき100）
-//  ・げんきの帯でお手伝い時間が変わる。回復スキル・料理チャンスS・料理パワーアップS・エナジーチャージ・食材セレクトを反映
+//  ・げんきの帯でお手伝い時間が変わる。回復スキル・料理チャンスS・料理パワーアップS・エナジーチャージ・食材セレクト・きのみバースト系を反映
 const ENERGY_JSON_URL = "https://simulator.tofumentalpapa.com/energy_data.json";
 const LANG = "jp";                 // 英語版は "en"
 let ENERGY = null;
@@ -594,7 +594,42 @@ let ING_NAMES = [], ING_BASE = [], ING_BY_LANG = {}, ING_BY_JP = {}, KN = 0, TYP
 let RECIPES = [];
 let MULT_TABLE = [];
 
+/* energy_data.json が古い場合の保険（新しいJSONならそちらの値を優先） */
+const DEFAULT_RECIPE_LV_EXTRA = [177,183,190,197,203,209,215,221,227,234,239,243,248,252,258];   // Lv56〜70
+const DEFAULT_BB = {
+  disguise: {
+    names: { jp: ["ミミッキュ"], en: ["Mimikyu"] },
+    own: [8, 10, 15, 17, 19, 21], others: [1, 2, 2, 3, 4, 5],
+    greatRate: 0.18, greatMult: 3
+  },
+  meteor: {
+    jp: "りゅうせいぐん", en: "Draco Meteor",
+    typeName: { jp: "ドラゴン", en: "Dragon" }, latiasName: { jp: "ラティアス", en: "Latias" },
+    own: [[12,14,18,18,20],[21,24,29,30,33],[29,29,35,37,41],[38,39,42,45,49],[43,44,48,49,53],[48,50,55,55,58]],
+    others: [[1,1,1,2,2],[1,1,1,2,2],[1,2,2,3,3],[1,2,3,4,4],[2,3,4,5,5],[3,4,4,5,5]],
+    latias: [2, 4, 6, 8, 9, 10]
+  },
+  lunar: {
+    jp: "みかづきのいのり", en: "Lunar Blessing",
+    typeName: { jp: "エスパー", en: "Psychic" },
+    heal: [3, 4, 5, 7, 9, 11],
+    own: [[5,7,9,12,14],[9,12,15,16,19],[13,17,18,20,24],[17,19,25,28,29],[21,24,27,28,30],[25,29,30,31,32]],
+    others: [[1,1,1,1,2],[1,1,1,2,3],[1,1,2,3,4],[1,2,2,3,5],[1,2,3,5,7],[1,2,4,6,9]]
+  }
+};
+function ensureEnergyDefaults() {
+  const t = ENERGY.recipeLevelBonusPercent;
+  if (Array.isArray(t) && t.length < 70) {
+    // Lv55(+171%)まで入っている古いJSONに、Lv56〜70を補う
+    while (t.length < 55) t.push(t[t.length - 1]);
+    for (const v of DEFAULT_RECIPE_LV_EXTRA) t.push(v);
+  }
+  const BB = ENERGY.skillEnergy.berryBurst;
+  for (const k of ["disguise", "meteor", "lunar"]) if (!BB[k]) BB[k] = DEFAULT_BB[k];
+}
+
 function buildEnergyIndexes() {
+  ensureEnergyDefaults();
   const ings = ENERGY.ingredients;
   KN = ings.length;
   ING_NAMES = ings.map(x => x[LANG]);
@@ -705,6 +740,26 @@ function berryBaseOf(type) {
   return f ? f.base : 0;
 }
 
+/* ---------- スキルの種類を判定（エナジー計算に含められるスキルだけ値を返す）---------- */
+function detectSkillKind(p) {
+  const G = ENERGY.genki.skills, SE = ENERGY.skillEnergy, PW = ENERGY.pot.skills, BB = SE.berryBurst;
+  const t = p.skillType;
+  if (p.skillIngredients && p.skillIngredients.length > 0 && p.skillIngCount > 0) return "ingsel";
+  if (t === G.charge[LANG]) return "charge";
+  if (BB.lunar && t === BB.lunar[LANG]) return "lunar";                         // クレセリア（げんきオール＋きのみバースト）
+  if (t === G.all[LANG] || (G.all.aliases && G.all.aliases[LANG].includes(t))) return "all";
+  if (BB.meteor && t === BB.meteor[LANG]) return "meteor";                      // ラティオス
+  if (BB.disguise && BB.disguise.names[LANG].includes(p.name)) return "bbDisguise";   // ミミッキュ
+  if (t === BB[LANG]) return "bb";                                              // ジュカイン・ウォーグル・ゴウカザル
+  if (t === G.cheer[LANG]) return "cheer";
+  if (t === ENERGY.cookingChance[LANG]) return "cc";
+  if (t === PW.powerup[LANG]) return "pot";
+  if (t === SE.names[LANG].S) return "eS";
+  if (t === SE.names[LANG].M) return "eM";
+  if (t === SE.names[LANG].S_random) return "eSR";
+  return null;
+}
+
 function prepCandidate(saved, set) {
   const pokemon = pokemonDB.find(p => p.name === saved.p);
   if (!pokemon) return null;
@@ -767,32 +822,52 @@ function prepCandidate(saved, set) {
   const helpsUntilFull = (maxInv && maxInv > 0 && avgPerHelp > 0) ? maxInv / avgPerHelp : Infinity;
 
   // スキル
-  const G = ENERGY.genki.skills, SE = ENERGY.skillEnergy, PW = ENERGY.pot.skills;
+  const G = ENERGY.genki.skills, SE = ENERGY.skillEnergy, PW = ENERGY.pot.skills, BB = SE.berryBurst;
   const Lraw = Math.min(7, Math.max(1, Math.round(Number(saved.sl)) || 6));
   const L = Math.min(7, Lraw + m.lvPlus);
   const t = pokemon.skillType;
-  let kind = null, val = 0, ingSel = null, heal2 = 0, bbOwn = 0, bbOther = 0, approx = false;
+  let val = 0, ingSel = null, heal2 = 0, bbOwn = 0, bbOther = 0, bbGreat = 1, approx = false, grp = null;
   const lv6 = Math.min(6, L), lv7 = L;
   const minus = PW.minus.names[LANG].includes(pokemon.name);
-  if (pokemon.skillIngredients && pokemon.skillIngredients.length > 0 && pokemon.skillIngCount > 0) {
-    kind = "ingsel";
-    ingSel = [];
-    const per = pokemon.skillIngCount * m.ingSel / pokemon.skillIngredients.length;
-    for (const nm of pokemon.skillIngredients) { const idx = ING_BY_LANG[nm]; if (idx !== undefined) ingSel.push([idx, per]); }
+  const kind0 = detectSkillKind(pokemon);
+  let kind = kind0;
+  switch (kind0) {
+    case "ingsel": {
+      ingSel = [];
+      const per = pokemon.skillIngCount * m.ingSel / pokemon.skillIngredients.length;
+      for (const nm of pokemon.skillIngredients) { const idx = ING_BY_LANG[nm]; if (idx !== undefined) ingSel.push([idx, per]); }
+      break;
+    }
+    case "charge": val = G.charge.values[lv6 - 1]; break;
+    case "all": val = G.all.values[lv6 - 1]; approx = t !== G.all[LANG]; break;
+    case "lunar": {   // クレセリア：チーム全員のげんき回復＋きのみバースト（エスパータイプの種類数で増える）
+      const D = BB.lunar;
+      val = D.heal[lv6 - 1];
+      grp = { type: D.typeName[LANG], own: D.own[lv6 - 1], others: D.others[lv6 - 1], latias: 0, latiasName: null };
+      kind = "bbGroup"; break;
+    }
+    case "meteor": {  // ラティオス：ドラゴンタイプの種類数・ラティアスの編成で増える
+      const D = BB.meteor;
+      grp = { type: D.typeName[LANG], own: D.own[lv6 - 1], others: D.others[lv6 - 1], latias: D.latias[lv6 - 1], latiasName: D.latiasName[LANG] };
+      kind = "bbGroup"; break;
+    }
+    case "bbDisguise": {  // ミミッキュ：大成功(3倍)が18%で起きる前提の期待値
+      const D = BB.disguise;
+      bbOwn = D.own[lv6 - 1]; bbOther = D.others[lv6 - 1];
+      bbGreat = 1 + D.greatRate * (D.greatMult - 1);
+      kind = "bb"; break;
+    }
+    case "bb": bbOwn = BB.own[lv6 - 1]; bbOther = BB.others[lv6 - 1]; break;
+    case "cheer": val = G.cheer.values[lv6 - 1]; break;
+    case "cc": val = ENERGY.cookingChance.valuesPercent[Math.min(6, L) - 1] / 100; break;
+    case "pot":
+      val = (minus ? PW.minus.values : PW.powerup.values)[lv7 - 1];
+      if (minus) heal2 = PW.minus.heal[lv7 - 1];
+      break;
+    case "eS": val = SE.charge_S[lv7 - 1]; break;
+    case "eM": val = SE.charge_M[lv7 - 1]; break;
+    case "eSR": val = (SE.charge_S_random_min[lv7 - 1] + SE.charge_S_random_max[lv7 - 1]) / 2; break;
   }
-  else if (t === G.charge[LANG]) { kind = "charge"; val = G.charge.values[lv6 - 1]; }
-  else if (t === G.all[LANG] || (G.all.aliases && G.all.aliases[LANG].includes(t))) { kind = "all"; val = G.all.values[lv6 - 1]; approx = t !== G.all[LANG]; }
-  else if (t === SE.berryBurst[LANG]) { kind = "bb"; bbOwn = SE.berryBurst.own[lv6 - 1]; bbOther = SE.berryBurst.others[lv6 - 1]; }
-  else if (t === G.cheer[LANG]) { kind = "cheer"; val = G.cheer.values[lv6 - 1]; }
-  else if (t === ENERGY.cookingChance[LANG]) { kind = "cc"; val = ENERGY.cookingChance.valuesPercent[Math.min(6, L) - 1] / 100; }
-  else if (t === PW.powerup[LANG]) {
-    kind = "pot";
-    val = (minus ? PW.minus.values : PW.powerup.values)[lv7 - 1];
-    if (minus) heal2 = PW.minus.heal[lv7 - 1];
-  }
-  else if (t === SE.names[LANG].S) { kind = "eS"; val = SE.charge_S[lv7 - 1]; }
-  else if (t === SE.names[LANG].M) { kind = "eM"; val = SE.charge_M[lv7 - 1]; }
-  else if (t === SE.names[LANG].S_random) { kind = "eSR"; val = (SE.charge_S_random_min[lv7 - 1] + SE.charge_S_random_max[lv7 - 1]) / 2; }
   const capNight = (pokemon.category === "スキル") ? 2 : 1;
 
   const bBase = berryBaseOf(pokemon.type);
@@ -800,7 +875,7 @@ function prepCandidate(saved, set) {
   return {
     name: pokemon.name, label: saved.label, pokemon, level,
     base0, ownSpeed: cnt("おてスピM") * 0.14 + cnt("おてスピS") * 0.07, otebo: cnt("おてぼ") * 0.05,
-    fr, bp, ingList, extraList, helpsUntilFull, skillRate, kind, val, heal2, bbOwn, bbOther, approx, ingSel, capNight, perBerry,
+    fr, bp, ingList, extraList, helpsUntilFull, skillRate, kind, val, heal2, bbOwn, bbOther, bbGreat, grp, approx, ingSel, capNight, perBerry,
     category: pokemon.category, skillType: t, sl: Lraw, slEff: L,
     plusMinus: PW.plusMinusGroup[LANG].includes(pokemon.name), isFav: m.isFav, isMain: m.isMain
   };
@@ -862,10 +937,27 @@ function simulate(sched, C, set) {
             if (c.heal2 > 0 && c.plusMinus && hasPM > 1 && T.length > 1)
               for (let r = 0; r < T.length; r++) if (T[r] !== i) add[T[r]] += trig * c.heal2 / (T.length - 1);
             break;
-          case "bb":   // きのみバースト：自分のきのみ＋チームの他のポケモンのきのみを獲得
-            berryE += trig * c.bbOwn * c.perBerry;
-            for (let r = 0; r < T.length; r++) if (T[r] !== i) berryE += trig * c.bbOther * C[T[r]].perBerry;
+          case "bb": {   // きのみバースト：自分のきのみ＋チームの他のポケモンのきのみ（ミミッキュはbbGreat=大成功込みの期待倍率）
+            let g = c.bbOwn * c.perBerry;
+            for (let r = 0; r < T.length; r++) if (T[r] !== i) g += c.bbOther * C[T[r]].perBerry;
+            berryE += trig * c.bbGreat * g;
             break;
+          }
+          case "bbGroup": {   // りゅうせいぐん（ラティオス）・みかづきのいのり（クレセリア）
+            const G2 = c.grp, seen = new Set();
+            let hasLatias = false;
+            for (let r = 0; r < T.length; r++) {
+              const o = C[T[r]];
+              if (o.pokemon.type === G2.type) seen.add(o.name);
+              if (G2.latiasName && o.name === G2.latiasName) hasLatias = true;
+            }
+            const nTypes = Math.min(5, Math.max(1, seen.size));
+            let g = (G2.own[nTypes - 1] + (hasLatias ? G2.latias : 0)) * c.perBerry;
+            for (let r = 0; r < T.length; r++) if (T[r] !== i) g += G2.others[nTypes - 1] * C[T[r]].perBerry;
+            berryE += trig * g;
+            if (c.val > 0) for (let r = 0; r < T.length; r++) add[T[r]] += trig * c.val;   // クレセリアのげんき回復（全員）
+            break;
+          }
           case "eS": case "eM": case "eSR": skillE += trig * c.val * (1 + set.field); break;
           case "ingsel": for (let z = 0; z < c.ingSel.length; z++) supply[c.ingSel[z][0]] += trig * c.ingSel[z][1]; break;
         }
@@ -1092,7 +1184,7 @@ function changeCount(sched) {
 const SWAP_PENALTY = 0.0003;   // 入れ替え1回あたり、合計エナジーの0.03%
 
 function createSearch(C, set, R, opts) {
-  const n = C.length, size = Math.max(1, Math.min(set.teamSize || 5, n)), rnd = makeRng(opts.seed || 20261110);
+  const n = C.length, size = Math.max(1, Math.min(set.teamSize || TEAM_SIZE, n)), rnd = makeRng(opts.seed || 20261110);
   const idx = Array.from({ length: n }, (_, i) => i);
   for (let i = idx.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [idx[i], idx[j]] = [idx[j], idx[i]]; }
   const init = idx.slice(0, size);
@@ -1756,12 +1848,12 @@ function getSettings() {
   return {
     field: Math.max(0, num("enField", 0)) / 100,
     pot: Math.max(0, Math.floor(num("enPot", 15))),
-    recipeLv: Math.min(55, Math.max(1, Math.round(num("enRecipeLv", 30)))),
+    recipeLv: Math.min(70, Math.max(1, Math.round(num("enRecipeLv", 30)))),
     favs: mode === "normal" ? [...document.querySelectorAll("#enFavs input:checked")].map(x => x.value) : [ex.main, ex.sub1, ex.sub2],
     e0: Math.min(150, Math.max(0, num("enE0", 100))),
     genre: val("enGenre"),
     stockN: Math.max(0, Math.floor(num("enStock", 0))),
-    teamSize: Math.min(6, Math.max(1, Math.round(num("enTeam", 5)))),
+    teamSize: TEAM_SIZE,
     ex, effects: list,
     dishMul: prod("dishMult"), potAdd: sum("potAdd"), potMult: prod("potMult"), cookHeal: sum("cookHeal"),
     ingBoost: list.filter(e => e.kind === "ingBoost" && e.ing).map(e => ({ ing: e.ing, m: e.value > 0 ? e.value : 1 }))
@@ -1790,6 +1882,24 @@ function renderEnergySettings() {
   onModeChange();
   loadEvents();
   renderEventList();
+}
+
+/* ===== エナジー計算に含まれないスキルの一覧（pokemon_data.json から自動生成）===== */
+function renderUnsupportedSkills() {
+  const el = document.getElementById("unsupportedSkills");
+  if (!el) return;
+  if (!ENERGY || !pokemonDB.length) { el.textContent = ""; return; }
+  const energyGroups = new Map(), shardGroups = new Map();
+  for (const p of pokemonDB) {
+    if (!p.skillType || detectSkillKind(p)) continue;
+    const g = p.skillType.includes("ゆめのかけら") ? shardGroups : energyGroups;
+    if (!g.has(p.skillType)) g.set(p.skillType, []);
+    g.get(p.skillType).push(p.name);
+  }
+  const line = ([s, names]) => `<div style="margin-bottom:5px;"><b style="color:var(--pks-text);">${esc(s)}</b>：${names.map(esc).join("、")}</div>`;
+  let html = [...energyGroups].map(line).join("");
+  if (shardGroups.size) html += `<div style="margin:8px 0 3px;">▼ ゆめのかけらを増やすスキル（エナジーに直結しないため計算対象外）</div>` + [...shardGroups].map(line).join("");
+  el.innerHTML = html;
 }
 
 /* ===== 候補ポケモン ===== */
@@ -1872,7 +1982,8 @@ function roleTags(c) {
   if (c.kind) t.push("スキルLv" + c.slEff);
   if (c.kind === "charge") t.push("自己回復");
   if (c.kind === "all") t.push(c.approx ? "全体回復（近似）" : "全体回復");
-  if (c.kind === "bb") t.push("きのみバースト");
+  if (c.kind === "bb") t.push(c.bbGreat > 1 ? "きのみバースト（大成功の期待値込み）" : "きのみバースト");
+  if (c.kind === "bbGroup") t.push(c.skillType + "（きのみバースト" + (c.val > 0 ? "＋全体回復" : "") + "）");
   if (c.kind === "cheer") t.push("味方回復");
   if (c.kind === "cc") t.push("料理チャンス");
   if (c.kind === "pot") t.push("鍋容量アップ");
@@ -1966,7 +2077,7 @@ function renderOptResult(search, C, set, R, warnings) {
     "げんきの帯ごとの速度倍率は、設定した値（0.45／0.52／0.58／0.66／0で1.0）を使っています",
     "なべ容量は「(基本容量×日曜2倍＋料理パワーアップS)×キャンプチケット1.5倍」で計算し、容量を超える食材数のレシピは作れません。料理パワーアップSは次の料理だけに効き、料理のたびにリセットされます（期待値で計算）",
     "最終エナジーは「(レシピ画面のエナジー＋追加食材の基礎エナジー)×フィールドボーナス×イベントボーナス」で、大成功は2倍（日曜3倍）がかかります。食材の数ボーナスとレシピレベルは、レシピ食材だけにかかります",
-    "回復スキル・料理チャンスS・料理パワーアップS・エナジーチャージ・食材セレクト・きのみバーストを反映しています。それ以外のスキルは含めていません",
+    "回復スキル・料理チャンスS・料理パワーアップS・エナジーチャージ・食材セレクト・きのみバースト系（ばけのかわ・りゅうせいぐん・みかづきのいのり含む）を反映しています。ミミッキュは大成功（3倍）が18%で起きる前提の期待値、ラティオスはドラゴンタイプの種類数とラティアスの編成、クレセリアはエスパータイプの種類数で獲得数が増えます。それ以外のスキルは含めていません（ページ下部の一覧を参照）",
     "週の食材は、1週間のどの食事にも使える前提です。料理の割り当ては概算です",
     "探索は近似解法です。実行するたびに同じ結果になりますが、最適とは限りません",
     "結果は目安です。実際のゲームとは差が出る場合があります"
@@ -2002,12 +2113,8 @@ function runOptimizer() {
   if (!C.length) { setOptMsg("候補のポケモンがデータにありません", false); return; }
   if (C.length < set.teamSize) warnings.push(`候補が${C.length}体のため、${C.length}体で編成します（${set.teamSize}体以上を登録すると提案の幅が広がります）`);
   const unsupported = C.filter(c => !c.kind && c.skillType).map(c => `${c.label}（${c.skillType}）`);
-  if (unsupported.length) warnings.push("スキル効果を反映していない候補：" + unsupported.join("、"));
-  const useEst = !!document.getElementById("enEst")?.checked;
-  const inGenre = RECIPES.filter(r => !set.genre || r.genre === set.genre);
-  const R = inGenre.filter(r => useEst || !r.estimated);
-  const excluded = inGenre.filter(r => r.estimated && !useEst).map(r => r.label);
-  if (excluded.length) warnings.push("概算値のレシピは候補から外しています：" + excluded.join("、"));
+  if (unsupported.length) warnings.push("スキル効果を反映していない候補（実際より弱く評価されます）：" + unsupported.join("、"));
+  const R = RECIPES.filter(r => !set.genre || r.genre === set.genre);   // 概算値のレシピも常に候補に入れる
   if (R.some(r => r.estimated)) warnings.push("概算値のレシピ（" + R.filter(r => r.estimated).map(r => r.label).join("、") + "）は、基本エナジーを食材数から推定した値です。ゲーム内の値と違う場合は教えてください");
   const effort = { fast: 0.4, normal: 1, deep: 3 }[document.getElementById("enEffort")?.value] || 1;
   const search = createSearch(C, set, R, { phase1Iters: Math.round(250 * effort), phase2Iters: Math.round(1500 * effort) });
@@ -2085,6 +2192,7 @@ async function loadDB() {
   try { ENERGY = await (await fetch(ENERGY_JSON_URL)).json(); buildEnergyIndexes(); }
   catch (e) { console.warn("energy_data.json読み込みエラー:", e); ENERGY = null; }
   loadSavedFromStorage();
+  renderUnsupportedSkills();
   const nb = document.getElementById("newCardBox");
   if (nb) nb.innerHTML = `<div class="pks-pokemon-card">${pokemonFormHTML("newcard", null)}</div>`;
   renderSavedManager();      // 候補の一覧も更新される
