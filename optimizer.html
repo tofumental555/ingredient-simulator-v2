@@ -2108,7 +2108,6 @@ function runOptimizer() {
   let saved = getSelectedSaved();
   const warnings = [];
   if (!saved.length) { setOptMsg("候補にするポケモンを選んでください", false); return; }
-  if (saved.length > 24) { saved = saved.slice(0, 24); warnings.push("候補が多いため、先頭の24体で計算しました"); }
   const C = saved.map(s => prepCandidate(s, set)).filter(Boolean);
   if (!C.length) { setOptMsg("候補のポケモンがデータにありません", false); return; }
   if (C.length < set.teamSize) warnings.push(`候補が${C.length}体のため、${C.length}体で編成します（${set.teamSize}体以上を登録すると提案の幅が広がります）`);
@@ -2117,7 +2116,9 @@ function runOptimizer() {
   const R = RECIPES.filter(r => !set.genre || r.genre === set.genre);   // 概算値のレシピも常に候補に入れる
   if (R.some(r => r.estimated)) warnings.push("概算値のレシピ（" + R.filter(r => r.estimated).map(r => r.label).join("、") + "）は、基本エナジーを食材数から推定した値です。ゲーム内の値と違う場合は教えてください");
   const effort = { fast: 0.4, normal: 1, deep: 3 }[document.getElementById("enEffort")?.value] || 1;
-  const search = createSearch(C, set, R, { phase1Iters: Math.round(250 * effort), phase2Iters: Math.round(1500 * effort) });
+  // 候補が増えるほど探す組み合わせが増えるので、24体を超えた分は探索回数を比例して増やす（上限なし）
+  const nScale = Math.max(1, C.length / 24);
+  const search = createSearch(C, set, R, { phase1Iters: Math.round(250 * effort * nScale), phase2Iters: Math.round(1500 * effort * nScale) });
   optRunning = true;
   const btn = document.getElementById("btnRun"), bar = document.getElementById("optBar"), wrap = document.getElementById("optProgress");
   btn.disabled = true; wrap.classList.remove("pks-hidden"); bar.style.width = "0%";
