@@ -554,13 +554,14 @@
   ・ 余った食材は、なべの余り枠に追加食材として入れます（基礎エナジーのみで、食材の数ボーナスとレシピレベルはかかりません）<br>
   ・ きのみバースト系のスキルは計算に含めています。ミミッキュは大成功（3倍）が18%で起きる前提の期待値、ラティオスはチームのドラゴンタイプの種類数とラティアスの編成、クレセリアはチームのエスパータイプの種類数で、獲得できるきのみが増えます<br>
   ・ 食材ゲットS（標準タイプ）は、ランダムな食材を全食材に均等に配分する近似です。いやしのはどう（ラティアス）は、自分以外のランダムな2匹がげんき回復とおてつだい即完了（きのみ・食材の獲得）を受ける想定です（ラティオスがいると即完了の回数が増えます）<br>
+  ・ プラス（プラスル・ストリンダー）は、ほかのプラス／マイナス持ちがチームにいると自分のLv1食材が追加で増えます。ビルドアップ（ヘラクロス）は、ランダムな食材と、料理の大成功率アップ（大成功まで積み上がる）を反映しています。おてつだいサポートSは、チームのランダムな1匹（自分を含む）のおてつだいを即完了する想定です（即完了分は、きのみと食材の獲得のみ数えます）<br>
   ・ バリヤード・メタモンは、チームの他のポケモンからランダムに1体のスキルをコピーする期待値で計算します（効果はバリヤード・メタモン自身のスキルレベルで計算）。コピー元が下の「含まれないスキル」だった場合は、効果なしとして扱います<br>
   ・ <b style="color:var(--pks-star);">エナジー計算に含まれないスキル</b>があります。次のスキルを持つポケモンは、実際よりも弱く評価されます。今後、すべてのスキルを順次反映する予定です<br>
   <div id="unsupportedSkills" style="margin:6px 0 8px 12px;"></div>
   ・ 結果は目安です。実際のゲームとは差が出る場合があります
 </div>
 
-<p class="pks-footnote">豆腐メンタルパパのポケモンスリープ攻略ツール<br><span id="verStamp">ver. 2026-11-24 エナジー最適化ツール v3.6</span></p>
+<p class="pks-footnote">豆腐メンタルパパのポケモンスリープ攻略ツール<br><span id="verStamp">ver. 2026-11-24 エナジー最適化ツール v3.7</span></p>
 
 <script>
 /* ===== 定数 ===== */
@@ -622,7 +623,19 @@ const DEFAULT_BB = {
 const DEFAULT_INGGET = {   // 食材ゲットS：ランダムな食材を獲得（リサーチノートに記録済みの食材から）
   jp: "食材ゲットS", en: "Ingredient Magnet S",
   values: [6, 8, 11, 14, 17, 21, 24],
-  exclude: { jp: ["プラスル", "ストリンダー（ハイなすがた）", "デリバード"], en: [] }   // プラス／プレゼントなど、効果が違う派生は未対応
+  // 派生スキル（スキル名は同じ「食材ゲットS」なので、ポケモン名で見分ける）
+  plusNames: { jp: ["プラスル", "ストリンダー（ハイなすがた）"], en: [] },   // プラス：ほかのプラス/マイナス持ちがいると、自分のLv1食材が追加
+  plusBase: [5, 7, 9, 11, 13, 16, 18], plusExtra: [6, 7, 8, 9, 10, 11, 12],
+  giftNames: { jp: ["デリバード"], en: [] },                                    // プレゼント（アメの追加効果はエナジーに無関係なので無視）
+  giftValues: [4, 6, 8, 10, 12, 15, 16]
+};
+const DEFAULT_COOKASSIST = {   // ビルドアップ（料理アシストS・ヘラクロス）：ランダムな食材＋料理の大成功率アップ（大成功まで持続）
+  jp: "ビルドアップ", en: "Cooking Assist S",
+  ing: [6, 8, 11, 14, 17, 21, 24], greatPercent: [1, 2, 2, 3, 3, 4, 5]
+};
+const DEFAULT_HELPSUPPORT = {  // おてつだいサポートS：チームのランダムな1匹のおてつだいをN回すぐに完了
+  jp: "おてつだいサポートS", en: "Helper Boost S",
+  values: [6, 7, 8, 9, 10, 11, 12]
 };
 const DEFAULT_HEALPULSE = {   // いやしのはどう（ラティアス）：ランダムな2匹のげんき回復＋おてつだい即完了
   jp: "いやしのはどう", en: "Healing Pulse",
@@ -640,7 +653,9 @@ function ensureEnergyDefaults() {
   }
   const BB = ENERGY.skillEnergy.berryBurst;
   for (const k of ["disguise", "meteor", "lunar"]) if (!BB[k]) BB[k] = DEFAULT_BB[k];
-  if (!ENERGY.skillEnergy.ingGet) ENERGY.skillEnergy.ingGet = DEFAULT_INGGET;
+  ENERGY.skillEnergy.ingGet = Object.assign({}, DEFAULT_INGGET, ENERGY.skillEnergy.ingGet || {});
+  if (!ENERGY.skillEnergy.cookAssist) ENERGY.skillEnergy.cookAssist = DEFAULT_COOKASSIST;
+  if (!ENERGY.skillEnergy.helpSupport) ENERGY.skillEnergy.helpSupport = DEFAULT_HELPSUPPORT;
   if (!ENERGY.genki.skills.healingPulse) ENERGY.genki.skills.healingPulse = DEFAULT_HEALPULSE;
 }
 
@@ -764,7 +779,13 @@ function detectSkillKind(p) {
   if (p.skillIngredients && p.skillIngredients.length > 0 && p.skillIngCount > 0) return "ingsel";
   const HP = G.healingPulse, IG = SE.ingGet;
   if (HP && t === HP[LANG]) return "heal2";                                     // ラティアス
-  if (IG && t === IG[LANG] && !IG.exclude[LANG].includes(p.name)) return "ingGet";   // 食材ゲットS（標準タイプ）
+  if (IG && t === IG[LANG]) {                                                   // 食材ゲットS（標準／プラス／プレゼント）
+    if (IG.plusNames[LANG].includes(p.name)) return "plus";
+    if (IG.giftNames[LANG].includes(p.name)) return "gift";
+    return "ingGet";
+  }
+  if (SE.cookAssist && t === SE.cookAssist[LANG]) return "assist";              // ヘラクロス
+  if (SE.helpSupport && t === SE.helpSupport[LANG]) return "helpSup";           // ウインディ・エルレイドなど
   if (t === G.charge[LANG]) return "charge";
   if (BB.lunar && t === BB.lunar[LANG]) return "lunar";                         // クレセリア（げんきオール＋きのみバースト）
   if (t === G.all[LANG] || (G.all.aliases && G.all.aliases[LANG].includes(t))) return "all";
@@ -786,7 +807,7 @@ function skillParams(pokemon, kind0, L, m) {
   const t = pokemon.skillType;
   const lv6 = Math.min(6, L), lv7 = L;
   const minus = PW.minus.names[LANG].includes(pokemon.name);
-  const P = { kind: kind0, val: 0, ingSel: null, heal2: 0, bbOwn: 0, bbOther: 0, bbGreat: 1, grp: null, approx: false, helps: 0, helpsL: 0, latiosName: null };
+  const P = { kind: kind0, val: 0, ingSel: null, heal2: 0, bbOwn: 0, bbOther: 0, bbGreat: 1, grp: null, approx: false, helps: 0, helpsL: 0, latiosName: null, extra: 0, firstIng: -1, great: 0 };
   switch (kind0) {
     case "ingsel": {
       P.ingSel = [];
@@ -795,6 +816,14 @@ function skillParams(pokemon, kind0, L, m) {
       break;
     }
     case "ingGet": P.val = SE.ingGet.values[lv7 - 1]; break;
+    case "gift": P.val = SE.ingGet.giftValues[lv7 - 1]; break;
+    case "plus": {
+      P.val = SE.ingGet.plusBase[lv7 - 1]; P.extra = SE.ingGet.plusExtra[lv7 - 1];
+      const fi = ING_BY_LANG[pokemon.ingredientA]; P.firstIng = fi === undefined ? -1 : fi;
+      break;
+    }
+    case "assist": P.val = SE.cookAssist.ing[lv7 - 1]; P.great = SE.cookAssist.greatPercent[lv7 - 1] / 100; break;
+    case "helpSup": P.val = SE.helpSupport.values[lv7 - 1]; break;
     case "heal2": {
       const H = G.healingPulse;
       P.val = H.heal[lv6 - 1]; P.helps = H.helps[lv6 - 1]; P.helpsL = H.helpsLatios[lv6 - 1]; P.latiosName = H.latiosName[LANG];
@@ -906,9 +935,9 @@ function prepCandidate(saved, set) {
     for (let l = 1; l <= 7; l++) skTab.push(skillParams(pokemon, kind0, l, m));
     P0 = skTab[L];
   } else {
-    P0 = { kind: kind0, val: 0, ingSel: null, heal2: 0, bbOwn: 0, bbOther: 0, bbGreat: 1, grp: null, approx: false, helps: 0, helpsL: 0, latiosName: null };
+    P0 = { kind: kind0, val: 0, ingSel: null, heal2: 0, bbOwn: 0, bbOther: 0, bbGreat: 1, grp: null, approx: false, helps: 0, helpsL: 0, latiosName: null, extra: 0, firstIng: -1, great: 0 };
   }
-  const { kind, val, ingSel, heal2, bbOwn, bbOther, bbGreat, grp, approx, helps, helpsL, latiosName } = P0;
+  const { kind, val, ingSel, heal2, bbOwn, bbOther, bbGreat, grp, approx, helps, helpsL, latiosName, extra, firstIng, great } = P0;
   const capNight = (pokemon.category === "スキル") ? 2 : 1;
 
   const bBase = berryBaseOf(pokemon.type);
@@ -916,7 +945,7 @@ function prepCandidate(saved, set) {
   return {
     name: pokemon.name, label: saved.label, pokemon, level,
     base0, ownSpeed: cnt("おてスピM") * 0.14 + cnt("おてスピS") * 0.07, otebo: cnt("おてぼ") * 0.05,
-    fr, bp, ingList, extraList, helpsUntilFull, skillRate, kind, val, heal2, bbOwn, bbOther, bbGreat, grp, approx, helps, helpsL, latiosName, ingSel, skTab, capNight, perBerry,
+    fr, bp, ingList, extraList, helpsUntilFull, skillRate, kind, val, heal2, bbOwn, bbOther, bbGreat, grp, approx, helps, helpsL, latiosName, extra, firstIng, great, ingSel, skTab, capNight, perBerry,
     category: pokemon.category, skillType: t, sl: Lraw, slEff: L,
     plusMinus: PW.plusMinusGroup[LANG].includes(pokemon.name), isFav: m.isFav, isMain: m.isMain
   };
@@ -930,6 +959,20 @@ function applySkill(P, trig, i, T, C, st, set, X) {
     case "charge": X.add[i] += trig * P.val; break;
     case "all": for (let r = 0; r < T.length; r++) X.add[T[r]] += trig * P.val; break;
     case "cheer": if (T.length > 1) for (let r = 0; r < T.length; r++) if (T[r] !== i) X.add[T[r]] += trig * P.val / (T.length - 1); break;
+    case "gift":     // プレゼント（デリバード）：ランダムな食材N個（全食材に均等配分）
+      for (let k = 0; k < KN; k++) X.supply[k] += trig * P.val / KN;
+      break;
+    case "plus":     // プラス：ランダムな食材＋（ほかのプラス/マイナス持ちがチームにいれば）自分のLv1食材を追加
+      for (let k = 0; k < KN; k++) X.supply[k] += trig * P.val / KN;
+      if (X.hasPM > 1 && P.firstIng >= 0) X.supply[P.firstIng] += trig * P.extra;
+      break;
+    case "assist":   // ビルドアップ（料理アシストS）：ランダムな食材＋料理の大成功率アップ
+      for (let k = 0; k < KN; k++) X.supply[k] += trig * P.val / KN;
+      if (st.meal >= 0) X.acc[st.meal] += trig * P.great;
+      break;
+    case "helpSup":  // おてつだいサポートS：チームのランダムな1匹（自分を含む）のおてつだいをN回すぐに完了
+      for (let r = 0; r < T.length; r++) X.extraH[T[r]] += trig * P.val / T.length;
+      break;
     case "ingGet":   // 食材ゲットS：ランダムな食材N個。全食材に均等に配分する近似
       for (let k = 0; k < KN; k++) X.supply[k] += trig * P.val / KN;
       break;
@@ -2077,7 +2120,9 @@ function roleTags(c) {
   if (c.kind === "bb") t.push(c.bbGreat > 1 ? "きのみバースト（大成功の期待値込み）" : "きのみバースト");
   if (c.kind === "bbGroup") t.push(c.skillType + "（きのみバースト" + (c.val > 0 ? "＋全体回復" : "") + "）");
   if (c.kind === "copy") t.push("スキルコピー");
-  if (c.kind === "ingGet") t.push("食材ゲット");
+  if (c.kind === "ingGet" || c.kind === "gift" || c.kind === "plus") t.push("食材ゲット");
+  if (c.kind === "assist") t.push("食材ゲット＋大成功率");
+  if (c.kind === "helpSup") t.push("おてつだい即完了");
   if (c.kind === "heal2") t.push("2匹回復＋おてつだい完了");
   if (c.kind === "cheer") t.push("味方回復");
   if (c.kind === "cc") t.push("料理チャンス");
