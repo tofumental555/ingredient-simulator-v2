@@ -553,12 +553,14 @@
   ・ なべ容量を超える食材数のレシピは作れません。日曜は容量が2倍、いいキャンプチケットで1.5倍、料理パワーアップSで次の料理だけ増えます<br>
   ・ 余った食材は、なべの余り枠に追加食材として入れます（基礎エナジーのみで、食材の数ボーナスとレシピレベルはかかりません）<br>
   ・ きのみバースト系のスキルは計算に含めています。ミミッキュは大成功（3倍）が18%で起きる前提の期待値、ラティオスはチームのドラゴンタイプの種類数とラティアスの編成、クレセリアはチームのエスパータイプの種類数で、獲得できるきのみが増えます<br>
+  ・ 食材ゲットS（標準タイプ）は、ランダムな食材を全食材に均等に配分する近似です。いやしのはどう（ラティアス）は、自分以外のランダムな2匹がげんき回復とおてつだい即完了（きのみ・食材の獲得）を受ける想定です（ラティオスがいると即完了の回数が増えます）<br>
+  ・ バリヤード・メタモンは、チームの他のポケモンからランダムに1体のスキルをコピーする期待値で計算します（効果はバリヤード・メタモン自身のスキルレベルで計算）。コピー元が下の「含まれないスキル」だった場合は、効果なしとして扱います<br>
   ・ <b style="color:var(--pks-star);">エナジー計算に含まれないスキル</b>があります。次のスキルを持つポケモンは、実際よりも弱く評価されます。今後、すべてのスキルを順次反映する予定です<br>
   <div id="unsupportedSkills" style="margin:6px 0 8px 12px;"></div>
   ・ 結果は目安です。実際のゲームとは差が出る場合があります
 </div>
 
-<p class="pks-footnote">豆腐メンタルパパのポケモンスリープ攻略ツール<br><span id="verStamp">ver. 2026-11-24 エナジー最適化ツール v3.4</span></p>
+<p class="pks-footnote">豆腐メンタルパパのポケモンスリープ攻略ツール<br><span id="verStamp">ver. 2026-11-24 エナジー最適化ツール v3.6</span></p>
 
 <script>
 /* ===== 定数 ===== */
@@ -617,6 +619,18 @@ const DEFAULT_BB = {
     others: [[1,1,1,1,2],[1,1,1,2,3],[1,1,2,3,4],[1,2,2,3,5],[1,2,3,5,7],[1,2,4,6,9]]
   }
 };
+const DEFAULT_INGGET = {   // 食材ゲットS：ランダムな食材を獲得（リサーチノートに記録済みの食材から）
+  jp: "食材ゲットS", en: "Ingredient Magnet S",
+  values: [6, 8, 11, 14, 17, 21, 24],
+  exclude: { jp: ["プラスル", "ストリンダー（ハイなすがた）", "デリバード"], en: [] }   // プラス／プレゼントなど、効果が違う派生は未対応
+};
+const DEFAULT_HEALPULSE = {   // いやしのはどう（ラティアス）：ランダムな2匹のげんき回復＋おてつだい即完了
+  jp: "いやしのはどう", en: "Healing Pulse",
+  heal: [6, 8, 10, 13, 17, 22],
+  helps: [1, 2, 2, 3, 4, 4],
+  helpsLatios: [2, 3, 4, 5, 6, 7],
+  latiosName: { jp: "ラティオス", en: "Latios" }
+};
 function ensureEnergyDefaults() {
   const t = ENERGY.recipeLevelBonusPercent;
   if (Array.isArray(t) && t.length < 70) {
@@ -626,6 +640,8 @@ function ensureEnergyDefaults() {
   }
   const BB = ENERGY.skillEnergy.berryBurst;
   for (const k of ["disguise", "meteor", "lunar"]) if (!BB[k]) BB[k] = DEFAULT_BB[k];
+  if (!ENERGY.skillEnergy.ingGet) ENERGY.skillEnergy.ingGet = DEFAULT_INGGET;
+  if (!ENERGY.genki.skills.healingPulse) ENERGY.genki.skills.healingPulse = DEFAULT_HEALPULSE;
 }
 
 function buildEnergyIndexes() {
@@ -744,7 +760,11 @@ function berryBaseOf(type) {
 function detectSkillKind(p) {
   const G = ENERGY.genki.skills, SE = ENERGY.skillEnergy, PW = ENERGY.pot.skills, BB = SE.berryBurst;
   const t = p.skillType;
+  if (t && t.includes("スキルコピー")) return "copy";                            // バリヤード（ものまね）・メタモン（へんしん）
   if (p.skillIngredients && p.skillIngredients.length > 0 && p.skillIngCount > 0) return "ingsel";
+  const HP = G.healingPulse, IG = SE.ingGet;
+  if (HP && t === HP[LANG]) return "heal2";                                     // ラティアス
+  if (IG && t === IG[LANG] && !IG.exclude[LANG].includes(p.name)) return "ingGet";   // 食材ゲットS（標準タイプ）
   if (t === G.charge[LANG]) return "charge";
   if (BB.lunar && t === BB.lunar[LANG]) return "lunar";                         // クレセリア（げんきオール＋きのみバースト）
   if (t === G.all[LANG] || (G.all.aliases && G.all.aliases[LANG].includes(t))) return "all";
@@ -758,6 +778,59 @@ function detectSkillKind(p) {
   if (t === SE.names[LANG].M) return "eM";
   if (t === SE.names[LANG].S_random) return "eSR";
   return null;
+}
+
+/* ---------- スキルのレベル別の効果（コピーでは、コピー役のレベルで他のポケモンのスキルを使うため、全レベル分を用意する）---------- */
+function skillParams(pokemon, kind0, L, m) {
+  const G = ENERGY.genki.skills, SE = ENERGY.skillEnergy, PW = ENERGY.pot.skills, BB = SE.berryBurst;
+  const t = pokemon.skillType;
+  const lv6 = Math.min(6, L), lv7 = L;
+  const minus = PW.minus.names[LANG].includes(pokemon.name);
+  const P = { kind: kind0, val: 0, ingSel: null, heal2: 0, bbOwn: 0, bbOther: 0, bbGreat: 1, grp: null, approx: false, helps: 0, helpsL: 0, latiosName: null };
+  switch (kind0) {
+    case "ingsel": {
+      P.ingSel = [];
+      const per = pokemon.skillIngCount * m.ingSel / pokemon.skillIngredients.length;
+      for (const nm of pokemon.skillIngredients) { const idx = ING_BY_LANG[nm]; if (idx !== undefined) P.ingSel.push([idx, per]); }
+      break;
+    }
+    case "ingGet": P.val = SE.ingGet.values[lv7 - 1]; break;
+    case "heal2": {
+      const H = G.healingPulse;
+      P.val = H.heal[lv6 - 1]; P.helps = H.helps[lv6 - 1]; P.helpsL = H.helpsLatios[lv6 - 1]; P.latiosName = H.latiosName[LANG];
+      break;
+    }
+    case "charge": P.val = G.charge.values[lv6 - 1]; break;
+    case "all": P.val = G.all.values[lv6 - 1]; P.approx = t !== G.all[LANG]; break;
+    case "lunar": {   // クレセリア：チーム全員のげんき回復＋きのみバースト（エスパータイプの種類数で増える）
+      const D = BB.lunar;
+      P.val = D.heal[lv6 - 1];
+      P.grp = { type: D.typeName[LANG], own: D.own[lv6 - 1], others: D.others[lv6 - 1], latias: 0, latiasName: null };
+      P.kind = "bbGroup"; break;
+    }
+    case "meteor": {  // ラティオス：ドラゴンタイプの種類数・ラティアスの編成で増える
+      const D = BB.meteor;
+      P.grp = { type: D.typeName[LANG], own: D.own[lv6 - 1], others: D.others[lv6 - 1], latias: D.latias[lv6 - 1], latiasName: D.latiasName[LANG] };
+      P.kind = "bbGroup"; break;
+    }
+    case "bbDisguise": {  // ミミッキュ：大成功(3倍)が18%で起きる前提の期待値
+      const D = BB.disguise;
+      P.bbOwn = D.own[lv6 - 1]; P.bbOther = D.others[lv6 - 1];
+      P.bbGreat = 1 + D.greatRate * (D.greatMult - 1);
+      P.kind = "bb"; break;
+    }
+    case "bb": P.bbOwn = BB.own[lv6 - 1]; P.bbOther = BB.others[lv6 - 1]; break;
+    case "cheer": P.val = G.cheer.values[lv6 - 1]; break;
+    case "cc": P.val = ENERGY.cookingChance.valuesPercent[lv6 - 1] / 100; break;
+    case "pot":
+      P.val = (minus ? PW.minus.values : PW.powerup.values)[lv7 - 1];
+      if (minus) P.heal2 = PW.minus.heal[lv7 - 1];
+      break;
+    case "eS": P.val = SE.charge_S[lv7 - 1]; break;
+    case "eM": P.val = SE.charge_M[lv7 - 1]; break;
+    case "eSR": P.val = (SE.charge_S_random_min[lv7 - 1] + SE.charge_S_random_max[lv7 - 1]) / 2; break;
+  }
+  return P;
 }
 
 function prepCandidate(saved, set) {
@@ -821,53 +894,21 @@ function prepCandidate(saved, set) {
   const avgPerHelp = (1 - fr) * bp + fr * avgIng + extraTotal;
   const helpsUntilFull = (maxInv && maxInv > 0 && avgPerHelp > 0) ? maxInv / avgPerHelp : Infinity;
 
-  // スキル
-  const G = ENERGY.genki.skills, SE = ENERGY.skillEnergy, PW = ENERGY.pot.skills, BB = SE.berryBurst;
+  // スキル（コピー役以外は、レベル1〜7それぞれの効果を用意しておく）
+  const PW = ENERGY.pot.skills;
   const Lraw = Math.min(7, Math.max(1, Math.round(Number(saved.sl)) || 6));
   const L = Math.min(7, Lraw + m.lvPlus);
   const t = pokemon.skillType;
-  let val = 0, ingSel = null, heal2 = 0, bbOwn = 0, bbOther = 0, bbGreat = 1, approx = false, grp = null;
-  const lv6 = Math.min(6, L), lv7 = L;
-  const minus = PW.minus.names[LANG].includes(pokemon.name);
   const kind0 = detectSkillKind(pokemon);
-  let kind = kind0;
-  switch (kind0) {
-    case "ingsel": {
-      ingSel = [];
-      const per = pokemon.skillIngCount * m.ingSel / pokemon.skillIngredients.length;
-      for (const nm of pokemon.skillIngredients) { const idx = ING_BY_LANG[nm]; if (idx !== undefined) ingSel.push([idx, per]); }
-      break;
-    }
-    case "charge": val = G.charge.values[lv6 - 1]; break;
-    case "all": val = G.all.values[lv6 - 1]; approx = t !== G.all[LANG]; break;
-    case "lunar": {   // クレセリア：チーム全員のげんき回復＋きのみバースト（エスパータイプの種類数で増える）
-      const D = BB.lunar;
-      val = D.heal[lv6 - 1];
-      grp = { type: D.typeName[LANG], own: D.own[lv6 - 1], others: D.others[lv6 - 1], latias: 0, latiasName: null };
-      kind = "bbGroup"; break;
-    }
-    case "meteor": {  // ラティオス：ドラゴンタイプの種類数・ラティアスの編成で増える
-      const D = BB.meteor;
-      grp = { type: D.typeName[LANG], own: D.own[lv6 - 1], others: D.others[lv6 - 1], latias: D.latias[lv6 - 1], latiasName: D.latiasName[LANG] };
-      kind = "bbGroup"; break;
-    }
-    case "bbDisguise": {  // ミミッキュ：大成功(3倍)が18%で起きる前提の期待値
-      const D = BB.disguise;
-      bbOwn = D.own[lv6 - 1]; bbOther = D.others[lv6 - 1];
-      bbGreat = 1 + D.greatRate * (D.greatMult - 1);
-      kind = "bb"; break;
-    }
-    case "bb": bbOwn = BB.own[lv6 - 1]; bbOther = BB.others[lv6 - 1]; break;
-    case "cheer": val = G.cheer.values[lv6 - 1]; break;
-    case "cc": val = ENERGY.cookingChance.valuesPercent[Math.min(6, L) - 1] / 100; break;
-    case "pot":
-      val = (minus ? PW.minus.values : PW.powerup.values)[lv7 - 1];
-      if (minus) heal2 = PW.minus.heal[lv7 - 1];
-      break;
-    case "eS": val = SE.charge_S[lv7 - 1]; break;
-    case "eM": val = SE.charge_M[lv7 - 1]; break;
-    case "eSR": val = (SE.charge_S_random_min[lv7 - 1] + SE.charge_S_random_max[lv7 - 1]) / 2; break;
+  let skTab = null, P0;
+  if (kind0 && kind0 !== "copy") {
+    skTab = [null];
+    for (let l = 1; l <= 7; l++) skTab.push(skillParams(pokemon, kind0, l, m));
+    P0 = skTab[L];
+  } else {
+    P0 = { kind: kind0, val: 0, ingSel: null, heal2: 0, bbOwn: 0, bbOther: 0, bbGreat: 1, grp: null, approx: false, helps: 0, helpsL: 0, latiosName: null };
   }
+  const { kind, val, ingSel, heal2, bbOwn, bbOther, bbGreat, grp, approx, helps, helpsL, latiosName } = P0;
   const capNight = (pokemon.category === "スキル") ? 2 : 1;
 
   const bBase = berryBaseOf(pokemon.type);
@@ -875,10 +916,68 @@ function prepCandidate(saved, set) {
   return {
     name: pokemon.name, label: saved.label, pokemon, level,
     base0, ownSpeed: cnt("おてスピM") * 0.14 + cnt("おてスピS") * 0.07, otebo: cnt("おてぼ") * 0.05,
-    fr, bp, ingList, extraList, helpsUntilFull, skillRate, kind, val, heal2, bbOwn, bbOther, bbGreat, grp, approx, ingSel, capNight, perBerry,
+    fr, bp, ingList, extraList, helpsUntilFull, skillRate, kind, val, heal2, bbOwn, bbOther, bbGreat, grp, approx, helps, helpsL, latiosName, ingSel, skTab, capNight, perBerry,
     category: pokemon.category, skillType: t, sl: Lraw, slEff: L,
     plusMinus: PW.plusMinusGroup[LANG].includes(pokemon.name), isFav: m.isFav, isMain: m.isMain
   };
+}
+
+/* ---------- スキル効果の適用（直接の発動と、コピーの両方で使う）---------- */
+// P=スキルの効果、trig=発動回数（コピーでは確率で按分済み）、i=発動したポケモン（コピーではコピー役）
+function applySkill(P, trig, i, T, C, st, set, X) {
+  const c = C[i];
+  switch (P.kind) {
+    case "charge": X.add[i] += trig * P.val; break;
+    case "all": for (let r = 0; r < T.length; r++) X.add[T[r]] += trig * P.val; break;
+    case "cheer": if (T.length > 1) for (let r = 0; r < T.length; r++) if (T[r] !== i) X.add[T[r]] += trig * P.val / (T.length - 1); break;
+    case "ingGet":   // 食材ゲットS：ランダムな食材N個。全食材に均等に配分する近似
+      for (let k = 0; k < KN; k++) X.supply[k] += trig * P.val / KN;
+      break;
+    case "heal2": {  // いやしのはどう：ランダムな2匹（自分以外）のげんき回復＋おてつだい即完了
+      const others = T.length - 1;
+      if (others <= 0) break;
+      const share = Math.min(2, others) / others;
+      let hasLatios = false;
+      for (let r = 0; r < T.length; r++) if (C[T[r]].name === P.latiosName) hasLatios = true;
+      const nH = hasLatios ? P.helpsL : P.helps;
+      for (let r = 0; r < T.length; r++) {
+        const j = T[r];
+        if (j === i) continue;
+        X.add[j] += trig * P.val * share;
+        X.extraH[j] += trig * nH * share;
+      }
+      break;
+    }
+    case "cc": if (st.meal >= 0) X.acc[st.meal] += trig * P.val; break;
+    case "pot":
+      if (st.meal >= 0) X.accPot[st.meal] += trig * P.val;
+      if (P.heal2 > 0 && c.plusMinus && X.hasPM > 1 && T.length > 1)
+        for (let r = 0; r < T.length; r++) if (T[r] !== i) X.add[T[r]] += trig * P.heal2 / (T.length - 1);
+      break;
+    case "bb": {   // きのみバースト：自分のきのみ＋チームの他のポケモンのきのみ（ミミッキュはbbGreat=大成功込みの期待倍率）
+      let g = P.bbOwn * c.perBerry;
+      for (let r = 0; r < T.length; r++) if (T[r] !== i) g += P.bbOther * C[T[r]].perBerry;
+      X.berryE += trig * P.bbGreat * g;
+      break;
+    }
+    case "bbGroup": {   // りゅうせいぐん（ラティオス）・みかづきのいのり（クレセリア）
+      const G2 = P.grp, seen = new Set();
+      let hasLatias = false;
+      for (let r = 0; r < T.length; r++) {
+        const o = C[T[r]];
+        if (o.pokemon.type === G2.type) seen.add(o.name);
+        if (G2.latiasName && o.name === G2.latiasName) hasLatias = true;
+      }
+      const nTypes = Math.min(5, Math.max(1, seen.size));
+      let g = (G2.own[nTypes - 1] + (hasLatias ? G2.latias : 0)) * c.perBerry;
+      for (let r = 0; r < T.length; r++) if (T[r] !== i) g += G2.others[nTypes - 1] * C[T[r]].perBerry;
+      X.berryE += trig * g;
+      if (P.val > 0) for (let r = 0; r < T.length; r++) X.add[T[r]] += trig * P.val;   // クレセリアのげんき回復（全員）
+      break;
+    }
+    case "eS": case "eM": case "eSR": X.skillE += trig * P.val * (1 + set.field); break;
+    case "ingsel": for (let z = 0; z < P.ingSel.length; z++) X.supply[P.ingSel[z][0]] += trig * P.ingSel[z][1]; break;
+  }
 }
 
 /* ---------- 1週間のシミュレーション ---------- */
@@ -890,7 +989,9 @@ function simulate(sched, C, set) {
   const onHours = new Float64Array(n), eSum = new Float64Array(n), helpsTot = new Float64Array(n);
   const nightHelps = new Float64Array(n), nightTrig = new Float64Array(n);
   const add = new Float64Array(n);
-  let berryE = 0, skillE = 0;
+  let berryE = 0;
+  const extraH = new Float64Array(n);
+  const X = { berryE: 0, skillE: 0, add, acc, accPot, supply, hasPM: 0, extraH };
   for (const st of STEP_LIST) {
     const T = sched[st.d * 3 + st.bi];
     if (st.first) {
@@ -902,6 +1003,7 @@ function simulate(sched, C, set) {
     }
     let tb = 0, hasPM = 0;
     for (let q = 0; q < T.length; q++) { tb += C[T[q]].otebo; if (C[T[q]].plusMinus) hasPM++; }
+    X.hasPM = hasPM;
     for (let q = 0; q < T.length; q++) add[T[q]] = 0;
     if (st.cookK >= 0 && set.cookHeal > 0) for (let q = 0; q < T.length; q++) add[T[q]] += set.cookHeal;
     for (let q = 0; q < T.length; q++) {
@@ -927,48 +1029,38 @@ function simulate(sched, C, set) {
           const room = Math.max(0, c.capNight - nightTrig[i]);
           trig = Math.min(trig, room); nightTrig[i] += trig;
         }
-        switch (c.kind) {
-          case "charge": add[i] += trig * c.val; break;
-          case "all": for (let r = 0; r < T.length; r++) add[T[r]] += trig * c.val; break;
-          case "cheer": if (T.length > 1) for (let r = 0; r < T.length; r++) if (T[r] !== i) add[T[r]] += trig * c.val / (T.length - 1); break;
-          case "cc": if (st.meal >= 0) acc[st.meal] += trig * c.val; break;
-          case "pot":
-            if (st.meal >= 0) accPot[st.meal] += trig * c.val;
-            if (c.heal2 > 0 && c.plusMinus && hasPM > 1 && T.length > 1)
-              for (let r = 0; r < T.length; r++) if (T[r] !== i) add[T[r]] += trig * c.heal2 / (T.length - 1);
-            break;
-          case "bb": {   // きのみバースト：自分のきのみ＋チームの他のポケモンのきのみ（ミミッキュはbbGreat=大成功込みの期待倍率）
-            let g = c.bbOwn * c.perBerry;
-            for (let r = 0; r < T.length; r++) if (T[r] !== i) g += c.bbOther * C[T[r]].perBerry;
-            berryE += trig * c.bbGreat * g;
-            break;
-          }
-          case "bbGroup": {   // りゅうせいぐん（ラティオス）・みかづきのいのり（クレセリア）
-            const G2 = c.grp, seen = new Set();
-            let hasLatias = false;
+        if (c.kind === "copy") {
+          // バリヤード・メタモン：チームの他のポケモンからランダムに1体のスキルをコピー（期待値）。
+          // 効果はコピー役自身のスキルレベルで計算。計算に含まれないスキルやコピー系の仲間は効果なし
+          if (T.length > 1) {
+            const w = trig / (T.length - 1);
             for (let r = 0; r < T.length; r++) {
-              const o = C[T[r]];
-              if (o.pokemon.type === G2.type) seen.add(o.name);
-              if (G2.latiasName && o.name === G2.latiasName) hasLatias = true;
+              const j = T[r];
+              if (j === i) continue;
+              const tab = C[j].skTab;
+              if (tab) applySkill(tab[c.slEff], w, i, T, C, st, set, X);
             }
-            const nTypes = Math.min(5, Math.max(1, seen.size));
-            let g = (G2.own[nTypes - 1] + (hasLatias ? G2.latias : 0)) * c.perBerry;
-            for (let r = 0; r < T.length; r++) if (T[r] !== i) g += G2.others[nTypes - 1] * C[T[r]].perBerry;
-            berryE += trig * g;
-            if (c.val > 0) for (let r = 0; r < T.length; r++) add[T[r]] += trig * c.val;   // クレセリアのげんき回復（全員）
-            break;
           }
-          case "eS": case "eM": case "eSR": skillE += trig * c.val * (1 + set.field); break;
-          case "ingsel": for (let z = 0; z < c.ingSel.length; z++) supply[c.ingSel[z][0]] += trig * c.ingSel[z][1]; break;
-        }
+        } else applySkill(c, trig, i, T, C, st, set, X);
       }
+    }
+    // いやしのはどうで即完了したおてつだい（きのみ・食材のみ。そこでのスキル発動は数えない）
+    for (let q = 0; q < T.length; q++) {
+      const i = T[q], x = extraH[i];
+      if (x <= 0) continue;
+      const c = C[i];
+      berryE += x * (1 - c.fr) * c.bp * c.perBerry;
+      const f = x * c.fr;
+      for (let z = 0; z < c.ingList.length; z++) supply[c.ingList[z][0]] += f * c.ingList[z][1];
+      for (let z = 0; z < c.extraList.length; z++) supply[c.extraList[z][0]] += x * c.extraList[z][1];
+      extraH[i] = 0;
     }
     for (let q = 0; q < T.length; q++) {
       const i = T[q];
       e[i] = Math.min(150, Math.max(0, e[i] - 6 * st.dt + add[i]));
     }
   }
-  return { berryE, skillE, supply, acc, accPot, onHours, eSum, helpsTot };
+  return { berryE: berryE + X.berryE, skillE: X.skillE, supply, acc, accPot, onHours, eSum, helpsTot };
 }
 
 /* ---------- 料理チャンス＋大成功（21食）---------- */
@@ -1984,6 +2076,9 @@ function roleTags(c) {
   if (c.kind === "all") t.push(c.approx ? "全体回復（近似）" : "全体回復");
   if (c.kind === "bb") t.push(c.bbGreat > 1 ? "きのみバースト（大成功の期待値込み）" : "きのみバースト");
   if (c.kind === "bbGroup") t.push(c.skillType + "（きのみバースト" + (c.val > 0 ? "＋全体回復" : "") + "）");
+  if (c.kind === "copy") t.push("スキルコピー");
+  if (c.kind === "ingGet") t.push("食材ゲット");
+  if (c.kind === "heal2") t.push("2匹回復＋おてつだい完了");
   if (c.kind === "cheer") t.push("味方回復");
   if (c.kind === "cc") t.push("料理チャンス");
   if (c.kind === "pot") t.push("鍋容量アップ");
@@ -2077,7 +2172,7 @@ function renderOptResult(search, C, set, R, warnings) {
     "げんきの帯ごとの速度倍率は、設定した値（0.45／0.52／0.58／0.66／0で1.0）を使っています",
     "なべ容量は「(基本容量×日曜2倍＋料理パワーアップS)×キャンプチケット1.5倍」で計算し、容量を超える食材数のレシピは作れません。料理パワーアップSは次の料理だけに効き、料理のたびにリセットされます（期待値で計算）",
     "最終エナジーは「(レシピ画面のエナジー＋追加食材の基礎エナジー)×フィールドボーナス×イベントボーナス」で、大成功は2倍（日曜3倍）がかかります。食材の数ボーナスとレシピレベルは、レシピ食材だけにかかります",
-    "回復スキル・料理チャンスS・料理パワーアップS・エナジーチャージ・食材セレクト・きのみバースト系（ばけのかわ・りゅうせいぐん・みかづきのいのり含む）を反映しています。ミミッキュは大成功（3倍）が18%で起きる前提の期待値、ラティオスはドラゴンタイプの種類数とラティアスの編成、クレセリアはエスパータイプの種類数で獲得数が増えます。それ以外のスキルは含めていません（ページ下部の一覧を参照）",
+    "回復スキル・料理チャンスS・料理パワーアップS・エナジーチャージ・食材セレクト・きのみバースト系（ばけのかわ・りゅうせいぐん・みかづきのいのり含む）を反映しています。ミミッキュは大成功（3倍）が18%で起きる前提の期待値、ラティオスはドラゴンタイプの種類数とラティアスの編成、クレセリアはエスパータイプの種類数で獲得数が増えます。それ以外のスキルは含めていません（ページ下部の一覧を参照）。バリヤード・メタモンは、チームの他のポケモンからランダムにコピーする期待値（スキルレベルは自身の値）で計算しています",
     "週の食材は、1週間のどの食事にも使える前提です。料理の割り当ては概算です",
     "探索は近似解法です。実行するたびに同じ結果になりますが、最適とは限りません",
     "結果は目安です。実際のゲームとは差が出る場合があります"
