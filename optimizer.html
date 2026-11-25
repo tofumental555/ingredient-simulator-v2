@@ -587,7 +587,7 @@
   ・ 結果は目安です。実際のゲームとは差が出る場合があります
 </div>
 
-<p class="pks-footnote">豆腐メンタルパパのポケモンスリープ攻略ツール<br><span id="verStamp">ver. 2026-11-24 エナジー最適化ツール v4.1</span></p>
+<p class="pks-footnote">豆腐メンタルパパのポケモンスリープ攻略ツール<br><span id="verStamp">ver. 2026-11-24 エナジー最適化ツール v4.2</span></p>
 
 <script>
 /* ===== 定数 ===== */
@@ -1101,7 +1101,7 @@ function applySkill(P, trig, i, T, C, st, set, X) {
 }
 
 /* ---------- 1週間のシミュレーション ---------- */
-function simulate(sched, C, set) {
+function simulate(sched, C, set, track) {
   const n = C.length;
   const e = new Float64Array(n).fill(set.e0);
   const acc = new Float64Array(21), accPot = new Float64Array(21);
@@ -1111,6 +1111,8 @@ function simulate(sched, C, set) {
   const add = new Float64Array(n);
   let berryE = 0;
   const extraH = new Float64Array(n);
+  const by = track ? Array.from({ length: n }, () => new Float64Array(KN)) : null;   // 個体ごとの食材獲得量（結果の集計表用）
+  const snap = track ? new Float64Array(KN) : null;
   const X = { berryE: 0, skillE: 0, add, acc, accPot, supply, hasPM: 0, extraH };
   for (const st of STEP_LIST) {
     const T = sched[st.d * 3 + st.bi];
@@ -1128,6 +1130,7 @@ function simulate(sched, C, set) {
     if (st.cookK >= 0 && set.cookHeal > 0) for (let q = 0; q < T.length; q++) add[T[q]] += set.cookHeal;
     for (let q = 0; q < T.length; q++) {
       const i = T[q], c = C[i];
+      if (track) snap.set(supply);
       const bonus = Math.min(c.ownSpeed + tb, 0.35);
       const interval = c.base0 * (1 - bonus) * genkiMult(e[i]);
       const helps = st.dt * 3600 / interval;
@@ -1163,24 +1166,27 @@ function simulate(sched, C, set) {
           }
         } else applySkill(c, trig, i, T, C, st, set, X);
       }
+      if (track) for (let k = 0; k < KN; k++) by[i][k] += supply[k] - snap[k];
     }
     // いやしのはどうで即完了したおてつだい（きのみ・食材のみ。そこでのスキル発動は数えない）
     for (let q = 0; q < T.length; q++) {
       const i = T[q], x = extraH[i];
       if (x <= 0) continue;
       const c = C[i];
+      if (track) snap.set(supply);
       berryE += x * (1 - c.fr) * c.bp * c.perBerry;
       const f = x * c.fr;
       for (let z = 0; z < c.ingList.length; z++) supply[c.ingList[z][0]] += f * c.ingList[z][1];
       for (let z = 0; z < c.extraList.length; z++) supply[c.extraList[z][0]] += x * c.extraList[z][1];
       extraH[i] = 0;
+      if (track) for (let k = 0; k < KN; k++) by[i][k] += supply[k] - snap[k];
     }
     for (let q = 0; q < T.length; q++) {
       const i = T[q];
       e[i] = Math.min(150, Math.max(0, e[i] - 6 * st.dt + add[i]));
     }
   }
-  return { berryE: berryE + X.berryE, skillE: X.skillE, supply, acc, accPot, onHours, eSum, helpsTot };
+  return { berryE: berryE + X.berryE, skillE: X.skillE, supply, acc, accPot, onHours, eSum, helpsTot, by };
 }
 
 /* ---------- 料理チャンス＋大成功（21食）---------- */
@@ -2280,6 +2286,42 @@ function scheduleHtml(sched, C) {
   }).join("");
 }
 
+/* ===== 食材の集計表（どの個体が、どの食材を1週間で何個集めるか）===== */
+function ingTableHtml(search, C, set, dish) {
+  if (dish.status !== "optimal") return "";
+  const simT = simulate(search.best, C, set, true);
+  const cols = C.map((c, i) => i).filter(i => simT.onHours[i] > 0);
+  const useStock = set.stockN > 0 && dish.stock;
+  const used = new Float64Array(KN);
+  for (const x of dish.xs) for (let k = 0; k < KN; k++) used[k] += x.v * dish.R[x.j].need[k];
+  for (let k = 0; k < KN; k++) used[k] += dish.extra[k];
+  const rows = [];
+  for (let k = 0; k < KN; k++) {
+    const per = cols.map(i => simT.by[i][k]);
+    const st = useStock ? dish.stock[k] : 0;
+    const total = per.reduce((a, b) => a + b, 0) + st;
+    if (total < 0.5 && used[k] < 0.5) continue;
+    rows.push({ k, per, st, total, used: used[k] });
+  }
+  if (!rows.length) return "";
+  rows.sort((a, b) => b.total - a.total);
+  const f = v => v < 0.5 ? "–" : Math.round(v).toLocaleString("ja-JP");
+  const th = "padding:4px 6px;text-align:right;font-weight:700;color:var(--pks-text-dim);border-bottom:1px solid var(--pks-border);white-space:nowrap;vertical-align:bottom;";
+  const td = "padding:4px 6px;text-align:right;color:var(--pks-text);border-bottom:1px solid rgba(169,142,232,0.12);white-space:nowrap;";
+  const colTot = cols.map((i, ci) => rows.reduce((a, r) => a + r.per[ci], 0));
+  const stTot = rows.reduce((a, r) => a + r.st, 0);
+  let h = `<div class="pks-result-section-title">食材の集計（1週間・個）</div>
+    <div style="overflow-x:auto;"><table style="border-collapse:collapse;font-size:11px;min-width:100%;">
+    <thead><tr><th style="${th}text-align:left;">食材</th>${cols.map(i => `<th style="${th}max-width:84px;white-space:normal;">${esc(C[i].label)}</th>`).join("")}${useStock ? `<th style="${th}">備蓄</th>` : ""}<th style="${th}">合計</th><th style="${th}">使用</th></tr></thead><tbody>`;
+  for (const r of rows) {
+    h += `<tr><td style="${td}text-align:left;">${esc(ING_NAMES[r.k])}</td>${r.per.map(v => `<td style="${td}">${f(v)}</td>`).join("")}${useStock ? `<td style="${td}color:var(--pks-purple);">${f(r.st)}</td>` : ""}<td style="${td}color:var(--pks-green);font-weight:700;">${f(r.total)}</td><td style="${td}color:var(--pks-text-dim);">${f(r.used)}</td></tr>`;
+  }
+  h += `<tr><td style="${td}text-align:left;font-weight:700;">計</td>${colTot.map(v => `<td style="${td}font-weight:700;">${f(v)}</td>`).join("")}${useStock ? `<td style="${td}font-weight:700;color:var(--pks-purple);">${f(stTot)}</td>` : ""}<td style="${td}font-weight:700;color:var(--pks-green);">${f(rows.reduce((a, r) => a + r.total, 0))}</td><td style="${td}font-weight:700;color:var(--pks-text-dim);">${f(rows.reduce((a, r) => a + r.used, 0))}</td></tr>`;
+  h += `</tbody></table></div>
+    <p class="pks-note" style="margin:6px 0 0;">「使用」は、作る料理のレシピ食材と、追加食材（すきま食材）で使う数です。「合計」より少ない分は余ります。おてつだいの即完了で得た食材は、おてつだいを受けたポケモンの欄に入れています。食材ゲットSなどのランダムな食材は、全食材に均等に配分する近似です。</p>`;
+  return h;
+}
+
 function renderOptResult(search, C, set, R, warnings) {
   const host = document.getElementById("optResult");
   const best = search.bestEv, base = search.baseline || search.bestEv;
@@ -2328,6 +2370,7 @@ function renderOptResult(search, C, set, R, warnings) {
         <div style="font-size:12px;line-height:1.8;color:var(--pks-text);">${lines.length ? lines.join("<br>") : "作れる料理がありません（なべ容量や食材が不足）"}</div></div>`;
     }
     html += `<div class="pks-result-section-title">作る料理（21食）</div>${dhtml}`;
+    html += ingTableHtml(search, C, set, dish);
     const fmtList = arr => arr.map((v, k) => [v, k]).filter(x => x[0] >= 0.5).sort((a, b) => b[0] - a[0]).map(x => `${esc(ING_NAMES[x[1]])} ${Math.round(x[0])}個`).join("、");
     const exList = fmtList(dish.extra), stList = fmtList(dish.stock);
     if (exList) html += `<div class="pks-result-section-title">追加食材として入れる食材（なべの余り枠）</div><div class="pks-extra-item">${exList}</div>`;
