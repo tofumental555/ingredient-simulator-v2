@@ -587,7 +587,7 @@
   ・ 結果は目安です。実際のゲームとは差が出る場合があります
 </div>
 
-<p class="pks-footnote">豆腐メンタルパパのポケモンスリープ攻略ツール<br><span id="verStamp">ver. 2026-11-24 エナジー最適化ツール v4.2</span></p>
+<p class="pks-footnote">豆腐メンタルパパのポケモンスリープ攻略ツール<br><span id="verStamp">ver. 2026-11-24 エナジー最適化ツール v4.3</span></p>
 
 <script>
 /* ===== 定数 ===== */
@@ -2292,16 +2292,16 @@ function ingTableHtml(search, C, set, dish) {
   const simT = simulate(search.best, C, set, true);
   const cols = C.map((c, i) => i).filter(i => simT.onHours[i] > 0);
   const useStock = set.stockN > 0 && dish.stock;
-  const used = new Float64Array(KN);
-  for (const x of dish.xs) for (let k = 0; k < KN; k++) used[k] += x.v * dish.R[x.j].need[k];
-  for (let k = 0; k < KN; k++) used[k] += dish.extra[k];
+  const usedR = new Float64Array(KN), usedE = new Float64Array(KN);   // 使用：レシピ食材（必須）／すきま食材（なべの余り枠）
+  for (const x of dish.xs) for (let k = 0; k < KN; k++) usedR[k] += x.v * dish.R[x.j].need[k];
+  for (let k = 0; k < KN; k++) usedE[k] += dish.extra[k];
   const rows = [];
   for (let k = 0; k < KN; k++) {
     const per = cols.map(i => simT.by[i][k]);
     const st = useStock ? dish.stock[k] : 0;
     const total = per.reduce((a, b) => a + b, 0) + st;
-    if (total < 0.5 && used[k] < 0.5) continue;
-    rows.push({ k, per, st, total, used: used[k] });
+    if (total < 0.5 && usedR[k] + usedE[k] < 0.5) continue;
+    rows.push({ k, per, st, total, usedR: usedR[k], usedE: usedE[k] });
   }
   if (!rows.length) return "";
   rows.sort((a, b) => b.total - a.total);
@@ -2312,13 +2312,13 @@ function ingTableHtml(search, C, set, dish) {
   const stTot = rows.reduce((a, r) => a + r.st, 0);
   let h = `<div class="pks-result-section-title">食材の集計（1週間・個）</div>
     <div style="overflow-x:auto;"><table style="border-collapse:collapse;font-size:11px;min-width:100%;">
-    <thead><tr><th style="${th}text-align:left;">食材</th>${cols.map(i => `<th style="${th}max-width:84px;white-space:normal;">${esc(C[i].label)}</th>`).join("")}${useStock ? `<th style="${th}">備蓄</th>` : ""}<th style="${th}">合計</th><th style="${th}">使用</th></tr></thead><tbody>`;
+    <thead><tr><th style="${th}text-align:left;">食材</th>${cols.map(i => `<th style="${th}max-width:84px;white-space:normal;">${esc(C[i].label)}</th>`).join("")}${useStock ? `<th style="${th}">備蓄</th>` : ""}<th style="${th}">合計</th><th style="${th}">使用<br>必須</th><th style="${th}">使用<br>すきま</th></tr></thead><tbody>`;
   for (const r of rows) {
-    h += `<tr><td style="${td}text-align:left;">${esc(ING_NAMES[r.k])}</td>${r.per.map(v => `<td style="${td}">${f(v)}</td>`).join("")}${useStock ? `<td style="${td}color:var(--pks-purple);">${f(r.st)}</td>` : ""}<td style="${td}color:var(--pks-green);font-weight:700;">${f(r.total)}</td><td style="${td}color:var(--pks-text-dim);">${f(r.used)}</td></tr>`;
+    h += `<tr><td style="${td}text-align:left;">${esc(ING_NAMES[r.k])}</td>${r.per.map(v => `<td style="${td}">${f(v)}</td>`).join("")}${useStock ? `<td style="${td}color:var(--pks-purple);">${f(r.st)}</td>` : ""}<td style="${td}color:var(--pks-green);font-weight:700;">${f(r.total)}</td><td style="${td}color:var(--pks-text-dim);">${f(r.usedR)}</td><td style="${td}color:var(--pks-text-dim);">${f(r.usedE)}</td></tr>`;
   }
-  h += `<tr><td style="${td}text-align:left;font-weight:700;">計</td>${colTot.map(v => `<td style="${td}font-weight:700;">${f(v)}</td>`).join("")}${useStock ? `<td style="${td}font-weight:700;color:var(--pks-purple);">${f(stTot)}</td>` : ""}<td style="${td}font-weight:700;color:var(--pks-green);">${f(rows.reduce((a, r) => a + r.total, 0))}</td><td style="${td}font-weight:700;color:var(--pks-text-dim);">${f(rows.reduce((a, r) => a + r.used, 0))}</td></tr>`;
+  h += `<tr><td style="${td}text-align:left;font-weight:700;">計</td>${colTot.map(v => `<td style="${td}font-weight:700;">${f(v)}</td>`).join("")}${useStock ? `<td style="${td}font-weight:700;color:var(--pks-purple);">${f(stTot)}</td>` : ""}<td style="${td}font-weight:700;color:var(--pks-green);">${f(rows.reduce((a, r) => a + r.total, 0))}</td><td style="${td}font-weight:700;color:var(--pks-text-dim);">${f(rows.reduce((a, r) => a + r.usedR, 0))}</td><td style="${td}font-weight:700;color:var(--pks-text-dim);">${f(rows.reduce((a, r) => a + r.usedE, 0))}</td></tr>`;
   h += `</tbody></table></div>
-    <p class="pks-note" style="margin:6px 0 0;">「使用」は、作る料理のレシピ食材と、追加食材（すきま食材）で使う数です。「合計」より少ない分は余ります。おてつだいの即完了で得た食材は、おてつだいを受けたポケモンの欄に入れています。食材ゲットSなどのランダムな食材は、全食材に均等に配分する近似です。</p>`;
+    <p class="pks-note" style="margin:6px 0 0;">「使用 必須」は、作る料理のレシピ食材として使う数、「使用 すきま」は、なべの余り枠に追加食材（すきま食材）として入れる数です。「合計」より使用の合計が少ない分は余ります。おてつだいの即完了で得た食材は、おてつだいを受けたポケモンの欄に入れています。食材ゲットSなどのランダムな食材は、全食材に均等に配分する近似です。</p>`;
   return h;
 }
 
