@@ -771,7 +771,7 @@
     "helpTime": 2800,
     "ingredientFindRate": 17.44,
     "skillRate": 4.6,
-    "skillType": "きのみの数S",
+    "skillType": "エナジーチャージS(ランダム)",
     "type": "くさ",
     "category": "きのみ",
     "ingredientA": "リラックスカカオ",
