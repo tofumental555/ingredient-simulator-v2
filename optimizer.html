@@ -563,6 +563,14 @@
     <textarea id="importText" rows="4" placeholder='{"app":"pokesleep-ingredient-simulator", ...}'></textarea></div>
   <button class="pks-btn-secondary" type="button" onclick="importFromTextarea()" style="margin-top:0">貼り付けた内容を読み込む</button>
   <p class="pks-note" style="margin-top:8px;margin-bottom:0;">読み込みは「追加」です。すでに保存済みのデータは消えず、同じ内容のものはスキップされます。</p>
+  <hr class="pks-divider">
+  <div class="pks-panel-title" style="font-size:12px;margin-bottom:8px;">📥 にとよんツールのCSVから読み込む</div>
+  <p class="pks-note">にとよんツールで書き出したCSV（「ニックネーム,ポケモン,レベル,スキルレベル,食材1,…」の形式）から、ポケモンを登録します。ポケモン・レベル・スキルレベル・食材の並び・せいかく・サブスキルを読み込みます。</p>
+  <div class="field"><label for="csvFile">CSVファイルを選ぶ</label>
+    <input type="file" id="csvFile" accept=".csv,text/csv,text/plain" onchange="importCsvFromFile(this)" style="width:100%;font-size:12px;color:var(--pks-text-dim);"></div>
+  <div class="field"><label for="csvText">またはCSVを貼り付ける</label>
+    <textarea id="csvText" rows="4" placeholder="ニックネーム,ポケモン,レベル,スキルレベル,食材1,食材2,食材3,メインスキル,せいかく,..."></textarea></div>
+  <button class="pks-btn-secondary" type="button" onclick="importCsvFromTextarea()" style="margin-top:0">貼り付けたCSVを読み込む</button>
   <div id="savedMsg" class="pks-save-msg"></div>
   <div id="savedDeleteAllBox"></div>
 </div>
@@ -587,7 +595,7 @@
   ・ 結果は目安です。実際のゲームとは差が出る場合があります
 </div>
 
-<p class="pks-footnote">豆腐メンタルパパのポケモンスリープ攻略ツール<br><span id="verStamp">ver. 2026-11-24 エナジー最適化ツール v4.3</span></p>
+<p class="pks-footnote">豆腐メンタルパパのポケモンスリープ攻略ツール<br><span id="verStamp">ver. 2026-11-24 エナジー最適化ツール v4.4</span></p>
 
 <script>
 /* ===== 定数 ===== */
@@ -1946,6 +1954,125 @@ function importFromTextarea() {
 }
 
 
+
+/* --- にとよんツールのCSV読み込み --- */
+// せいかく → [上昇, 下降]（s=おてスピ, e=げんき回復, f=食材確率, k=スキル確率, x=EXP）。本編と同じ並びで、こうげき=s／ぼうぎょ=e／とくこう=f／とくぼう=k／すばやさ=x
+const NATURE_EFFECT = {
+  "さみしがり":["s","e"],"いじっぱり":["s","f"],"やんちゃ":["s","k"],"ゆうかん":["s","x"],
+  "ずぶとい":["e","s"],"わんぱく":["e","f"],"のうてんき":["e","k"],"のんき":["e","x"],
+  "ひかえめ":["f","s"],"おっとり":["f","e"],"おおっとり":["f","e"],"うっかりや":["f","k"],"うっとりや":["f","k"],"れいせい":["f","x"],
+  "おだやか":["k","s"],"おとなしい":["k","e"],"しんちょう":["k","f"],"なまいき":["k","x"],
+  "おくびょう":["x","s"],"せっかち":["x","e"],"ようき":["x","f"],"むじゃき":["x","k"],
+  "がんばりや":[],"すなお":[],"きまぐれ":[],"てれや":[],"まじめ":[]
+};
+const SUB_NAME_MAP = {
+  "おてつだいスピードM":"おてスピM","おてつだいスピードS":"おてスピS","おてつだいボーナス":"おてぼ",
+  "食材確率アップM":"食材確率M","食材確率アップS":"食材確率S","スキル確率アップM":"スキル確率M","スキル確率アップS":"スキル確率S"
+};
+function parseCsv(text, delim) {
+  text = text.replace(/^\uFEFF/, "");
+  const rows = []; let row = [], cur = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (q) { if (ch === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += ch; }
+    else if (ch === '"') q = true;
+    else if (ch === delim) { row.push(cur); cur = ""; }
+    else if (ch === "\n" || ch === "\r") { if (ch === "\r" && text[i + 1] === "\n") i++; row.push(cur); cur = ""; rows.push(row); row = []; }
+    else cur += ch;
+  }
+  if (cur !== "" || row.length) { row.push(cur); rows.push(row); }
+  return rows.filter(r => r.some(c => c.trim() !== ""));
+}
+function findPokemonByName(name) {
+  let p = pokemonDB.find(x => x.name === name);
+  if (p) return p;
+  const alt = name.replace(/\(/g, "（").replace(/\)/g, "）").replace(/\s+/g, "");
+  return pokemonDB.find(x => x.name.replace(/\s+/g, "") === alt) || null;
+}
+function importCsvText(text) {
+  const first = text.split(/\r?\n/)[0] || "";
+  const delim = (first.includes("\t") && !first.includes(",")) ? "\t" : ",";
+  const rows = parseCsv(text, delim);
+  if (rows.length < 2) { showMsg("savedMsg", "CSVのデータ行が見つかりません", false, 7000); return false; }
+  const head = rows[0].map(h => h.trim());
+  const col = n => head.indexOf(n);
+  if (col("ポケモン") < 0 || col("レベル") < 0) { showMsg("savedMsg", "CSVの見出し（ポケモン・レベル）が見つかりません。にとよんツールの形式か確認してください", false, 8000); return false; }
+  const getter = row => n => { const i = col(n); return i >= 0 ? String(row[i] ?? "").trim() : ""; };
+  let added = 0, dup = 0, over = 0, ingMiss = 0, lvUpSub = 0;
+  const unknownNames = [], unknownNature = new Set();
+  for (const row of rows.slice(1)) {
+    const g = getter(row);
+    const name = g("ポケモン");
+    const poke = name ? findPokemonByName(name) : null;
+    if (!poke) { if (name) unknownNames.push(name); continue; }
+    // 食材の並び：食材2・3が、そのポケモンの食材A/B/Cのどれかを見て、aab・abcなどに直す
+    const pickSlot = (ing, allowC) => {
+      if (!ing) return "a";
+      if (ing === poke.ingredientA) return "a";
+      if (ing === poke.ingredientB) return "b";
+      if (allowC && ing === poke.ingredientC) return "c";
+      ingMiss++; return "a";
+    };
+    const pat = "a" + pickSlot(g("食材2"), false) + pickSlot(g("食材3"), true);
+    // せいかく
+    const nat = g("せいかく");
+    let nu = "other", nd = "other";
+    if (nat) {
+      const eff = NATURE_EFFECT[nat];
+      if (!eff) unknownNature.add(nat);
+      else if (eff.length) {
+        const up = { s: "speedUp", f: "foodUp", k: "skillUp" }[eff[0]], dn = { s: "speedDown", f: "foodDown", k: "skillDown" }[eff[1]];
+        if (up) nu = up;
+        if (dn) nd = dn;
+      }
+    }
+    // サブスキル（Lv10・25・50・70・80）
+    const subs = ["Lv10", "Lv25", "Lv50", "Lv70", "Lv80"].map(h => {
+      const n = g(h).replace(/\s/g, "");
+      if (!n) return "その他";
+      if (n.includes("スキルレベルアップ")) lvUpSub++;
+      if (SUB_SKILLS.includes(n)) return n;
+      return SUB_NAME_MAP[n] || "その他";
+    });
+    const raw = { p: poke.name, lv: g("レベル"), sl: g("スキルレベル") || 6, pat, nu, nd, subs, label: g("ニックネーム") };
+    const entry = sanitizeSaved(raw);
+    if (!entry) continue;
+    if (savedPokemon.some(x => sameContent(x, entry))) { dup++; continue; }
+    if (savedPokemon.length >= SAVED_MAX) { over++; continue; }
+    entry.id = newSavedId();
+    entry.label = uniqueLabel(entry.label);
+    savedPokemon.push(entry);
+    added++;
+  }
+  const ok = persistSaved();
+  refreshAllSavedSelects();
+  renderSavedManager();
+  const parts = [`${added}件を追加`];
+  if (dup) parts.push(`同じ内容${dup}件はスキップ`);
+  if (over) parts.push(`上限超過${over}件はスキップ`);
+  if (unknownNames.length) parts.push(`データにないポケモン${unknownNames.length}件はスキップ（${[...new Set(unknownNames)].slice(0, 5).join("、")}${new Set(unknownNames).size > 5 ? "…" : ""}）`);
+  if (ingMiss) parts.push(`食材がデータと合わない${ingMiss}か所は「a」として登録`);
+  if (unknownNature.size) parts.push(`不明なせいかく（${[...unknownNature].join("、")}）は補正なしで登録`);
+  if (lvUpSub) parts.push(`スキルレベルアップ系のサブスキル${lvUpSub}件は未対応のため「その他」として登録（スキルレベルを確認してください）`);
+  if (!ok) parts.push("※この端末には保存できませんでした");
+  showMsg("savedMsg", parts.join("／"), ok && added > 0, 14000);
+  return true;
+}
+function importCsvFromFile(input) {
+  const f = input.files && input.files[0];
+  if (!f) return;
+  if (f.size > 2 * 1024 * 1024) { showMsg("savedMsg", "ファイルが大きすぎます（2MBまで）", false); input.value = ""; return; }
+  const reader = new FileReader();
+  reader.onload = () => { importCsvText(String(reader.result)); input.value = ""; };
+  reader.onerror = () => { showMsg("savedMsg", "ファイルを読み込めませんでした", false); input.value = ""; };
+  reader.readAsText(f);
+}
+function importCsvFromTextarea() {
+  const ta = document.getElementById("csvText");
+  const text = (ta?.value || "").trim();
+  if (!text) { showMsg("savedMsg", "CSVを貼り付けてください", false); return; }
+  if (importCsvText(text) && ta) ta.value = "";
+}
 
 /* ===== 状態 ===== */
 let pokemonDB = [];
