@@ -400,6 +400,11 @@
     .pks-rlv-row { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:3px 0; border-bottom:1px solid rgba(169,142,232,0.12); }
     .pks-rlv-row span { font-size:12px; color:var(--pks-text); min-width:0; word-break:break-all; }
     .pks-rlv-row input { width:64px; flex-shrink:0; padding:5px 8px; text-align:right; }
+    /* ===== v5 タブ ===== */
+    .pks-tabs { display:flex; gap:6px; position:sticky; top:0; z-index:20; padding:8px 0 10px; margin-bottom:12px; background:linear-gradient(180deg, rgba(22,16,41,0.96) 70%, rgba(22,16,41,0)); }
+    .pks-tabbtn { flex:1; font-family:'Zen Maru Gothic',sans-serif; font-size:12px; font-weight:800; padding:9px 2px; border-radius:11px; cursor:pointer;
+      color:var(--pks-text-dim); background:rgba(169,142,232,0.08); border:1.5px solid var(--pks-border); touch-action:manipulation; }
+    .pks-tabbtn.active { color:var(--pks-text); background:linear-gradient(135deg, var(--pks-night-panel), var(--pks-night-panel-2)); border-color:var(--pks-purple); }
 </style>
 </head>
 <body>
@@ -412,8 +417,15 @@
   </div>
   <h1>⚡ エナジー最適化ツール</h1>
   <p class="pks-sub">登録したポケモンの中から、1週間のエナジーが最大になる編成・料理・食材の使い方を提案します。げんきの増減と回復役、料理チャンス、なべ容量、EXステージ、イベントバフに対応しています。</p>
-</div>
 
+  <div class="pks-tabs" id="pksTabs">
+    <button class="pks-tabbtn" type="button" data-tab="tab_cond" onclick="showTab('tab_cond')">① 条件</button>
+    <button class="pks-tabbtn" type="button" data-tab="tab_poke" onclick="showTab('tab_poke')">② ポケモン</button>
+    <button class="pks-tabbtn" type="button" data-tab="tab_run" onclick="showTab('tab_run')">③ 最適化</button>
+    <button class="pks-tabbtn" type="button" data-tab="tab_info" onclick="showTab('tab_info')">説明</button>
+  </div>
+
+<div class="pks-tab" id="tab_cond">
 <div class="pks-panel">
   <div class="pks-panel-title">🎫 前提の設定</div>
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
@@ -454,12 +466,19 @@
   <div class="field">
     <label for="enMode">フィールド</label>
     <div class="pks-sw"><select id="enMode" onchange="onModeChange()">
-      <option value="normal">通常のフィールド</option><option value="wakakusa">ワカクサ本島EX</option><option value="cyan">シアンの砂浜EX</option></select></div>
+      <option value="normal">ワカクサ・その他（好物の3種を選ぶ）</option>
+      <option value="f_sian">シアンの砂浜（みず・ひこう・フェアリー）</option>
+      <option value="f_tope">トープ洞窟（じめん・いわ・ほのお）</option>
+      <option value="f_uno">ウノハナ雪原（こおり・あく・ノーマル）</option>
+      <option value="f_gold">ゴールド旧発電所（でんき・はがね・ゴースト）</option>
+      <option value="f_amber">アンバー渓谷（ドラゴン・どく・むし）</option>
+      <option value="wakakusa">ワカクサ本島EX</option><option value="cyan">シアンの砂浜EX</option></select></div>
   </div>
   <div id="normalFavBox" class="field">
     <label>好物のきのみ（該当するタイプにチェック）</label>
     <div id="enFavs" class="pks-favs"></div>
   </div>
+  <div id="fieldFavNote" class="pks-note pks-hidden"></div>
   <div id="exBox" class="pks-hidden">
     <div class="pks-row2">
       <div class="field"><label for="enMain">好きなきのみ：メイン</label><div class="pks-sw"><select id="enMain"></select></div></div>
@@ -516,6 +535,10 @@
   <p class="pks-note" style="margin-bottom:0;">料理は週ごとにジャンルが決まるので、今週のジャンルを選んでください。週末備蓄は「週の初めに持っている食材の総数」で、組み合わせはツールがエナジーの高くなるように決めます。</p>
 </div>
 
+<button class="pks-btn-primary" type="button" onclick="showTab('tab_poke')" style="margin-bottom:14px;">次へ：ポケモンを選ぶ →</button>
+</div>
+
+<div class="pks-tab pks-hidden" id="tab_poke">
 <div class="pks-panel">
   <div class="pks-panel-title">📋 候補にするポケモン</div>
   <p class="pks-note">チェックしたポケモンの中から、編成を提案します。「編集」を押すと、下の入力欄に読み込まれます。</p>
@@ -533,22 +556,10 @@
   <div id="newCardBox"></div>
 </div>
 
-<div class="pks-panel">
-  <div class="field" style="margin-bottom:0;">
-    <label for="enEffort">探索の細かさ</label>
-    <div class="pks-sw"><select id="enEffort">
-      <option value="fast">速い（目安）</option><option value="normal" selected>標準</option><option value="deep">じっくり（時間がかかります）</option></select></div>
-  </div>
-  <button class="pks-btn-primary" id="btnRun" onclick="runOptimizer()">最適化する →</button>
-  <div id="optProgress" class="pks-progress pks-hidden"><div id="optBar"></div></div>
-  <div id="optMsg" class="pks-save-msg"></div>
-</div>
-
-<div id="optResult"></div>
-
 <div class="pks-panel" id="savedManagerPanel">
   <div class="pks-panel-title">📚 保存したポケモン</div>
   <p class="pks-note">登録したポケモンの一覧です。データはこの端末のブラウザ内に保存されます。ブラウザのデータ削除や端末の変更で消えるため、「書き出し」でバックアップしてください。</p>
+  <div id="savedSelBar"></div>
   <div id="savedList"></div>
   <hr class="pks-divider">
   <div class="pks-panel-title" style="font-size:12px;margin-bottom:8px;">⬇ 書き出し（バックアップ）</div>
@@ -575,6 +586,26 @@
   <div id="savedDeleteAllBox"></div>
 </div>
 
+<button class="pks-btn-primary" type="button" onclick="showTab('tab_run')" style="margin-bottom:14px;">次へ：最適化する →</button>
+</div>
+
+<div class="pks-tab pks-hidden" id="tab_run">
+<div class="pks-panel">
+  <div class="field" style="margin-bottom:0;">
+    <label for="enEffort">探索の細かさ</label>
+    <div class="pks-sw"><select id="enEffort">
+      <option value="fast">速い（目安）</option><option value="normal" selected>標準</option><option value="deep">じっくり（時間がかかります）</option></select></div>
+  </div>
+  <button class="pks-btn-primary" id="btnRun" onclick="runOptimizer()">最適化する →</button>
+  <div id="optProgress" class="pks-progress pks-hidden"><div id="optBar"></div></div>
+  <div id="optMsg" class="pks-save-msg"></div>
+</div>
+
+<div id="optResult"></div>
+</div>
+
+<div class="pks-tab pks-hidden" id="tab_info">
+
 <div class="pks-panel" style="font-size:12px;color:var(--pks-text-dim);line-height:1.85;">
   <div style="font-size:12.5px;font-weight:800;color:var(--pks-star-soft);margin-bottom:8px;">📋 このツールの考え方</div>
   ・ 1週間（月曜はじまり）を、朝〜昼・昼〜夜・睡眠中の3つの時間帯に分け、時間帯ごとに編成を入れ替えられるものとして、エナジーが最大になる編成を探します<br>
@@ -595,7 +626,10 @@
   ・ 結果は目安です。実際のゲームとは差が出る場合があります
 </div>
 
-<p class="pks-footnote">豆腐メンタルパパのポケモンスリープ攻略ツール<br><span id="verStamp">ver. 2026-11-24 エナジー最適化ツール v4.4</span></p>
+</div>
+
+<p class="pks-footnote">豆腐メンタルパパのポケモンスリープ攻略ツール<br><span id="verStamp">ver. 2026-11-26 エナジー最適化ツール v5.2</span></p>
+</div>
 
 <script>
 /* ===== 定数 ===== */
@@ -941,8 +975,26 @@ function skillParams(pokemon, kind0, L, m) {
 }
 
 function prepCandidate(saved, set) {
-  const pokemon = pokemonDB.find(p => p.name === saved.p);
+  let pokemon = pokemonDB.find(p => p.name === saved.p);
   if (!pokemon) return null;
+  if (pokemon.mewIngredients || pokemon.mewSkills) {   // ミュウ：選んだ食材・メインスキルに差し替える
+    const ov = {};
+    const pools = pokemon.mewIngredients;
+    if (pools && saved.mi && saved.mi.some(Boolean)) {
+      const pick = i => (saved.mi[i] && pools[i] && pools[i][saved.mi[i]] != null) ? saved.mi[i] : null;
+      const m0 = pick(0), m1 = pick(1), m2 = pick(2);
+      if (m0) { ov.ingredientA = m0; ov["1a"] = pools[0][m0]; }
+      if (m1) { ov.ingredientB = m1; ov["2b"] = pools[1][m1]; }
+      if (m2) { ov.ingredientC = m2; ov["3c"] = pools[2][m2]; }
+      saved = Object.assign({}, saved, { pat: "a" + (m1 ? "b" : "a") + (m2 ? "c" : "a") });   // 1・2・3枠目をそれぞれ別の食材として扱う
+    }
+    const skName = saved.sk || pokemon.skillType;
+    if (saved.sk) ov.skillType = saved.sk;
+    if (pokemon.mewSkills && Object.prototype.hasOwnProperty.call(pokemon.mewSkills, skName)) ov.skillRate = pokemon.mewSkills[skName];   // ミュウは、スキルごとに発動確率が違う
+    pokemon = Object.assign({}, pokemon, ov);
+  } else if (saved.sk) {
+    pokemon = Object.assign({}, pokemon, { skillType: saved.sk });
+  }
   const m = modsFor(pokemon, set);
   const level = saved.lv, subs = saved.subs, pattern = saved.pat;
   const SUB_UNLOCK = [10, 25, 50, 70, 80];
@@ -997,7 +1049,7 @@ function prepCandidate(saved, set) {
   const invMult = campTicket ? ENERGY.pot.ticketInventoryMult : 1;
   const maxInv = (pokemon.maxInventory != null)
     ? Math.round((pokemon.maxInventory + cnt("最大所持数アップS") * 6 + cnt("最大所持数アップM") * 12 + cnt("最大所持数アップL") * 18 + m.invPlus) * invMult) : null;
-  const bp = (pokemon.category === "きのみ" ? 2 : 1) + cnt("きのみの数S");
+  const bp = (pokemon.berryCount ?? (pokemon.category === "きのみ" ? 2 : 1)) + cnt("きのみの数S");   // berryCount：きのみの数を個別に指定するポケモン（ミュウなど）
   const avgPerHelp = (1 - fr) * bp + fr * avgIng + extraTotal;
   const helpsUntilFull = (maxInv && maxInv > 0 && avgPerHelp > 0) ? maxInv / avgPerHelp : Infinity;
 
@@ -1025,6 +1077,7 @@ function prepCandidate(saved, set) {
     base0, ownSpeed: cnt("おてスピM") * 0.14 + cnt("おてスピS") * 0.07, otebo: cnt("おてぼ") * 0.05,
     fr, bp, ingList, extraList, helpsUntilFull, skillRate, kind, val, heal2, bbOwn, bbOther, bbGreat, grp, approx, helps, helpsL, latiosName, extra, firstIng, great, boostType, boostRow, ingSel, skTab, capNight, perBerry,
     category: pokemon.category, skillType: t, sl: Lraw, slEff: L,
+    dataMissing: pokemon.ingredientFindRate == null || pokemon.skillRate == null,
     plusMinus: PW.plusMinusGroup[LANG].includes(pokemon.name), isFav: m.isFav, isMain: m.isMain
   };
 }
@@ -1489,6 +1542,25 @@ function optsPattern() {
   return PATTERNS.map(p => `<option value="${p}">${p}</option>`).join("");
 }
 
+// ミュウだけは、食材（3枠）とメインスキルを選べる。選べる内容はpokemon_data.jsonのミュウの項目（mewIngredients・mewSkills）から読む
+const MEW_NAMES = ["ミュウ"];
+function mewEntry() { return pokemonDB.find(p => MEW_NAMES.includes(p.name)) || null; }
+function optsMewSkill() {
+  const m = mewEntry();
+  const types = m && m.mewSkills ? Object.keys(m.mewSkills) : [...new Set(pokemonDB.map(p => p.skillType).filter(Boolean))].sort();
+  return `<option value="">（データのスキルのまま）</option>` + types.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join("");
+}
+function optsMewIng(i) {
+  const m = mewEntry();
+  const pool = m && m.mewIngredients ? m.mewIngredients[i] : null;
+  if (!pool) return `<option value="">（データのまま）</option>`;
+  return `<option value="">（選ばない）</option>` + Object.entries(pool).map(([n, c]) => `<option value="${esc(n)}">${esc(n)} ×${c}</option>`).join("");
+}
+function onPokemonChange(pre) {
+  const name = document.getElementById(`${pre}_p`)?.value;
+  document.getElementById(`${pre}_skwrap`)?.classList.toggle("pks-hidden", !MEW_NAMES.includes(name));
+}
+
 function pokemonFormHTML(pre, category) {
   return `
     <div class="pks-saved-bar">
@@ -1498,7 +1570,7 @@ function pokemonFormHTML(pre, category) {
     </div>
     <div class="field">
       <label>ポケモン</label>
-      <div class="pks-sw"><select id="${pre}_p">${optsPokemon(category)}</select></div>
+      <div class="pks-sw"><select id="${pre}_p" onchange="onPokemonChange('${pre}')">${optsPokemon(category)}</select></div>
     </div>
     <div class="pks-row2">
       <div class="field">
@@ -1516,6 +1588,14 @@ function pokemonFormHTML(pre, category) {
         <input type="number" id="${pre}_sl" min="1" max="7" value="6">
       </div>
       <div class="field"></div>
+    </div>
+    <div class="field pks-hidden" id="${pre}_skwrap">
+      <label>ミュウ：メインスキル</label>
+      <div class="pks-sw"><select id="${pre}_sk">${optsMewSkill()}</select></div>
+      <label style="margin-top:8px;">ミュウ：食材（1枠目 / 2枠目 / 3枠目）</label>
+      <div class="pks-sw" style="margin-bottom:5px;"><select id="${pre}_mi0">${optsMewIng(0)}</select></div>
+      <div class="pks-sw" style="margin-bottom:5px;"><select id="${pre}_mi1">${optsMewIng(1)}</select></div>
+      <div class="pks-sw"><select id="${pre}_mi2">${optsMewIng(2)}</select></div>
     </div>
     <button class="pks-accordion-btn" type="button" onclick="toggleAccordion('${pre}_detail')">
       <span>性格・サブスキルを設定</span><span id="${pre}_detail_arrow">▼</span>
@@ -1586,11 +1666,16 @@ function sanitizeSaved(raw) {
   let sl = Math.round(Number(raw.sl));
   if (!Number.isFinite(sl)) sl = 6;
   sl = Math.min(7, Math.max(1, sl));
-  return { id, label, p, lv, pat, nu, nd, subs, sl };
+  const sk = typeof raw.sk === "string" ? raw.sk.trim().slice(0, 40) : "";   // ミュウのメインスキル
+  const mi = Array.isArray(raw.mi) ? [0, 1, 2].map(i => String(raw.mi[i] ?? "").trim().slice(0, 20)) : [];   // ミュウの食材（3枠）
+  const out = { id, label, p, lv, pat, nu, nd, subs, sl };
+  if (sk) out.sk = sk;
+  if (mi.some(Boolean)) out.mi = mi;
+  return out;
 }
 
 function sameContent(a, b) {
-  return a.p === b.p && a.lv === b.lv && a.pat === b.pat && a.nu === b.nu && a.nd === b.nd && a.sl === b.sl
+  return a.p === b.p && a.lv === b.lv && a.pat === b.pat && a.nu === b.nu && a.nd === b.nd && a.sl === b.sl && (a.sk || "") === (b.sk || "") && (a.mi || []).join("|") === (b.mi || []).join("|")
       && a.subs.join("|") === b.subs.join("|");
 }
 
@@ -1664,12 +1749,15 @@ function applyPokemonData(pre, data) {
   if (!pEl) return false;
   if (![...pEl.options].some(o => o.value === data.p)) return false;
   pEl.value = data.p;
+  onPokemonChange(pre);
   const set = (suffix, val) => {
     const el = document.getElementById(`${pre}_${suffix}`);
     if (el) el.value = val;
   };
   set("lv", data.lv);
   set("sl", data.sl);
+  set("sk", data.sk || "");
+  [0, 1, 2].forEach(i => set("mi" + i, (data.mi && data.mi[i]) || ""));
   set("pat", data.pat);
   set("nu", data.nu);
   set("nd", data.nd);
@@ -1710,6 +1798,8 @@ function saveCurrentPokemon(pre) {
   sl = Math.min(7, Math.max(1, sl));
   const entry = {
     p, lv, sl,
+    ...(MEW_NAMES.includes(p) && g("sk") ? { sk: g("sk") } : {}),
+    ...(MEW_NAMES.includes(p) && [g("mi0"), g("mi1"), g("mi2")].some(Boolean) ? { mi: [g("mi0") || "", g("mi1") || "", g("mi2") || ""] } : {}),
     pat: g("pat") || "aab",
     nu: g("nu") || "other",
     nd: g("nd") || "other",
@@ -1753,6 +1843,8 @@ function saveCurrentPokemon(pre) {
 // 削除確認はconfirm()を使わず画面内で行う（アプリ内ブラウザやiframeでconfirm()が無効でも動くように）
 let pendingDeleteId = null;
 let pendingDeleteAll = false;
+let pendingDeleteSel = false;
+let selDel = new Set();      // 選択削除で選んだポケモンのID
 
 function renderSavedManager() {
   const box = document.getElementById("savedList");
@@ -1763,7 +1855,7 @@ function renderSavedManager() {
     box.innerHTML = `<div class="pks-saved-empty">まだ保存されたポケモンはありません。各カードの「💾 保存」で登録できます。</div>`;
   } else {
     box.innerHTML = savedPokemon.map(s => {
-      const meta = `${esc(s.p)} / Lv${s.lv} / スキルLv${s.sl} / ${esc(s.pat)}`;
+      const meta = `${esc(s.p)} / Lv${s.lv} / スキルLv${s.sl} / ${esc(s.pat)}${s.sk ? " / " + esc(s.sk) : ""}`;
       if (s.id === pendingDeleteId) {
         return `
           <div class="pks-saved-item confirming">
@@ -1779,15 +1871,71 @@ function renderSavedManager() {
       }
       return `
         <div class="pks-saved-item">
-          <div class="pks-saved-main">
-            <div class="pks-saved-name">${esc(s.label)}</div>
-            <div class="pks-saved-meta">${meta}</div>
-          </div>
+          <label style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;margin:0;cursor:pointer;">
+            <input type="checkbox" style="width:18px;height:18px;accent-color:var(--pks-purple);flex-shrink:0;" ${selDel.has(s.id) ? "checked" : ""} onchange="onSelDelToggle('${esc(s.id)}', this.checked)">
+            <div class="pks-saved-main">
+              <div class="pks-saved-name">${esc(s.label)}</div>
+              <div class="pks-saved-meta">${meta}</div>
+            </div>
+          </label>
           <button class="pks-del-btn" type="button" onclick="askDeleteSaved('${esc(s.id)}')">削除</button>
         </div>`;
     }).join("");
   }
   renderDeleteAllBox();
+  renderSelBar();
+}
+
+/* --- 選択削除 --- */
+function renderSelBar() {
+  const el = document.getElementById("savedSelBar");
+  if (!el) return;
+  if (!savedPokemon.length) { selDel = new Set(); pendingDeleteSel = false; el.innerHTML = ""; return; }
+  selDel = new Set([...selDel].filter(id => savedPokemon.some(s => s.id === id)));
+  const n = selDel.size;
+  if (pendingDeleteSel && n > 0) {
+    el.innerHTML = `
+      <div class="pks-delall-confirm" style="margin-bottom:8px;">
+        <p>選んだ${n}件を削除します。元に戻せません。よろしいですか？</p>
+        <div class="pks-saved-actions">
+          <button class="pks-del-btn danger" type="button" onclick="confirmDeleteSel()">削除する</button>
+          <button class="pks-del-btn cancel" type="button" onclick="cancelDeleteSel()">やめる</button>
+        </div>
+      </div>`;
+    return;
+  }
+  pendingDeleteSel = false;
+  el.innerHTML = `
+    <div class="pks-row2" style="margin-bottom:6px;">
+      <button class="pks-btn-secondary" type="button" onclick="selDelAll(true)" style="margin-top:0">すべて選ぶ</button>
+      <button class="pks-btn-secondary" type="button" onclick="selDelAll(false)" style="margin-top:0">選択を外す</button>
+    </div>
+    <button class="pks-del-btn" type="button" onclick="askDeleteSel()" style="width:100%;margin-bottom:8px;${n ? "" : "opacity:0.4;"}" ${n ? "" : "disabled"}>選んだ${n}件を削除</button>`;
+}
+function onSelDelToggle(id, on) {
+  if (on) selDel.add(id); else selDel.delete(id);
+  pendingDeleteSel = false;
+  renderSelBar();
+}
+function selDelAll(flag) {
+  selDel = flag ? new Set(savedPokemon.map(s => s.id)) : new Set();
+  pendingDeleteSel = false;
+  renderSavedManager();
+}
+function askDeleteSel() {
+  if (!selDel.size) return;
+  pendingDeleteSel = true; pendingDeleteId = null; pendingDeleteAll = false;
+  renderSavedManager();
+}
+function cancelDeleteSel() { pendingDeleteSel = false; renderSelBar(); }
+function confirmDeleteSel() {
+  const n = selDel.size;
+  savedPokemon = savedPokemon.filter(s => !selDel.has(s.id));
+  selDel = new Set(); pendingDeleteSel = false;
+  const ok = persistSaved();
+  refreshAllSavedSelects();
+  renderSavedManager();
+  showMsg("savedMsg", ok ? `${n}件を削除しました` : "削除しましたが、この端末への保存に失敗しました", ok);
 }
 
 function renderDeleteAllBox() {
@@ -2074,6 +2222,20 @@ function importCsvFromTextarea() {
   if (importCsvText(text) && ta) ta.value = "";
 }
 
+/* ===== タブ ===== */
+const TAB_KEY = "pks_opt_tab_v1";
+function showTab(id) {
+  document.querySelectorAll(".pks-tab").forEach(el => el.classList.toggle("pks-hidden", el.id !== id));
+  document.querySelectorAll(".pks-tabbtn").forEach(b => b.classList.toggle("active", b.dataset.tab === id));
+  try { sessionStorage.setItem(TAB_KEY, id); } catch (e) { /* 保存できなくても動作は続ける */ }
+  window.scrollTo({ top: 0 });
+}
+function initTabs() {
+  let id = "tab_cond";
+  try { const t = sessionStorage.getItem(TAB_KEY); if (t && document.getElementById(t)) id = t; } catch (e) { /* 何もしない */ }
+  showTab(id);
+}
+
 /* ===== 状態 ===== */
 let pokemonDB = [];
 let campTicket = false;
@@ -2233,12 +2395,13 @@ function getSettings() {
   const prod = k => list.filter(e => e.kind === k).reduce((a, e) => a * (e.value > 0 ? e.value : 1), 1);
   const sum = k => list.filter(e => e.kind === k).reduce((a, e) => a + e.value, 0);
   const mode = val("enMode") || "normal";
-  const ex = { mode, main: val("enMain"), sub1: val("enSub1"), sub2: val("enSub2"), buff: val("enExBuff") || "berry" };
+  const exMode = (mode === "wakakusa" || mode === "cyan") ? mode : "normal";   // EXステージだけ、メイン・サブの設定が別になる
+  const ex = { mode: exMode, main: val("enMain"), sub1: val("enSub1"), sub2: val("enSub2"), buff: val("enExBuff") || "berry" };
   return {
     field: Math.max(0, num("enField", 0)) / 100,
     pot: Math.max(0, Math.floor(num("enPot", 15))),
     recipeLv: Math.min(70, Math.max(1, Math.round(num("enRecipeLv", 30)))),
-    favs: mode === "normal" ? [...document.querySelectorAll("#enFavs input:checked")].map(x => x.value) : [ex.main, ex.sub1, ex.sub2],
+    favs: exMode !== "normal" ? [ex.main, ex.sub1, ex.sub2] : (FIELD_FAVS[mode] || [...document.querySelectorAll("#enFavs input:checked")].map(x => x.value)),
     e0: Math.min(150, Math.max(0, num("enE0", 100))),
     genre: val("enGenre"),
     stockN: Math.max(0, Math.floor(num("enStock", 0))),
@@ -2251,10 +2414,25 @@ function getSettings() {
   };
 }
 
+// フィールドごとの好物のきのみ（選ぶと自動で確定する）
+const FIELD_FAVS = {
+  f_sian:  ["みず", "ひこう", "フェアリー"],
+  f_tope:  ["じめん", "いわ", "ほのお"],
+  f_uno:   ["こおり", "あく", "ノーマル"],
+  f_gold:  ["でんき", "はがね", "ゴースト"],
+  f_amber: ["ドラゴン", "どく", "むし"]
+};
 function onModeChange() {
   const mode = document.getElementById("enMode")?.value || "normal";
-  document.getElementById("exBox")?.classList.toggle("pks-hidden", mode === "normal");
+  const isEx = mode === "wakakusa" || mode === "cyan";
+  const fixed = FIELD_FAVS[mode];
+  document.getElementById("exBox")?.classList.toggle("pks-hidden", !isEx);
   document.getElementById("normalFavBox")?.classList.toggle("pks-hidden", mode !== "normal");
+  const note = document.getElementById("fieldFavNote");
+  if (note) {
+    note.classList.toggle("pks-hidden", !fixed);
+    note.textContent = fixed ? "好物のきのみ：" + fixed.join("・") + "（自動で設定されます）" : "";
+  }
 }
 
 function renderEnergySettings() {
@@ -2343,7 +2521,7 @@ function renderCandidateList() {
         <label style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;margin:0;cursor:pointer;">
           <input type="checkbox" ${des.has(s.id) ? "" : "checked"} onchange="onCandToggle('${esc(s.id)}', this.checked)">
           <span style="font-size:12.5px;color:var(--pks-text);font-weight:700;">${esc(s.label)}</span>
-          <small>${esc(s.p)} Lv${s.lv} / スキルLv${s.sl}</small>
+          <small>${esc(s.p)} Lv${s.lv} / スキルLv${s.sl}${s.sk ? " / " + esc(s.sk) : ""}</small>
         </label>
         <button class="pks-del-btn cancel" type="button" onclick="editCandidate('${esc(s.id)}')" style="min-width:52px;">編集</button>
       </div>`).join("");
@@ -2546,6 +2724,8 @@ function runOptimizer() {
   const C = saved.map(s => prepCandidate(s, set)).filter(Boolean);
   if (!C.length) { setOptMsg("候補のポケモンがデータにありません", false); return; }
   if (C.length < set.teamSize) warnings.push(`候補が${C.length}体のため、${C.length}体で編成します（${set.teamSize}体以上を登録すると提案の幅が広がります）`);
+  const missing = C.filter(c => c.dataMissing).map(c => c.label);
+  if (missing.length) warnings.push("食材確率またはスキル確率のデータが未登録のため、0として計算しています：" + missing.join("、"));
   const unsupported = C.filter(c => !c.kind && c.skillType).map(c => `${c.label}（${c.skillType}）`);
   if (unsupported.length) warnings.push("スキル効果を反映していない候補（実際より弱く評価されます）：" + unsupported.join("、"));
   const R = RECIPES.filter(r => !set.genre || r.genre === set.genre);   // 概算値のレシピも常に候補に入れる
@@ -2635,6 +2815,7 @@ async function loadDB() {
   renderEnergySettings();
 }
 
+initTabs();
 loadDB();
 </script>
 </body>
