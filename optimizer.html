@@ -629,26 +629,24 @@
 
 </div>
 
-<p class="pks-footnote">豆腐メンタルパパのポケモンスリープ攻略ツール<br><span id="verStamp">ver. 2026-11-26 エナジー最適化ツール v5.3</span></p>
+<p class="pks-footnote">豆腐メンタルパパのポケモンスリープ攻略ツール<br><span id="verStamp">ver. 2026-11-26 エナジー最適化ツール v6.1</span></p>
 </div>
 
+<script src="calc.js?v=1.0"></script>
 <script>
+if (typeof PKS === "undefined") {
+  document.body.insertAdjacentHTML("afterbegin", '<div style="position:relative;z-index:50;max-width:520px;margin:0 auto 14px;padding:10px 12px;border-radius:10px;border:1.5px solid rgba(255,126,126,0.6);background:rgba(255,126,126,0.12);color:#ffb3b3;font-size:12px;line-height:1.7;">calc.js を読み込めませんでした。calc.js が、このページと同じ場所にあるか確認してください。</div>');
+  throw new Error("calc.js not loaded");
+}
 /* ===== 定数 ===== */
-const SUB_SKILLS  = ["その他","きのみの数S","おてスピM","おてスピS","おてぼ","食材確率M","食材確率S","スキル確率M","スキル確率S","最大所持数アップS","最大所持数アップM","最大所持数アップL"];
-const PATTERNS    = ["aaa","aab","aac","aba","abb","abc"];
-const NATURES_UP  = [["other","その他（補正なし）"],["speedUp","おてスピ↑"],["foodUp","食材確率↑"],["skillUp","スキル確率↑"]];
-const NATURES_DOWN= [["other","その他（補正なし）"],["speedDown","おてスピ↓"],["foodDown","食材確率↓"],["skillDown","スキル確率↓"]];
-const SUB_IDS     = ["sub10","sub25","sub50","sub70","sub80"];
-const SUB_LABELS  = ["Lv10","Lv25","Lv50","Lv70","Lv80"];
+// 2つのツール共通の定数は calc.js（PKS）から読む
+const { SUB_SKILLS, PATTERNS, NATURES_UP, NATURES_DOWN, SUB_IDS, SUB_LABELS, WEEK_SECONDS, LEVEL_TIME_COEF } = PKS;
 const SLOT_CONFIG = [
   { key:"berry",  label:"きのみ",       emoji:"🍒", cls:"berry",  category:"きのみ" },
   { key:"ing",    label:"食材",         emoji:"🍳", cls:"ing",    category:"食材"   },
   { key:"skill",  label:"スキル",       emoji:"⚡", cls:"skill",  category:"スキル" }
 ];
 
-const WEEK_SECONDS   = 7 * 86400;
-const LEVEL_TIME_COEF= 0.002;
-const BASE_DIVISOR   = 2.222;
 
 const TEAM_SIZE = 5;               // 編成枠は5固定
 
@@ -978,81 +976,19 @@ function skillParams(pokemon, kind0, L, m) {
 function prepCandidate(saved, set) {
   let pokemon = pokemonDB.find(p => p.name === saved.p);
   if (!pokemon) return null;
-  if (pokemon.mewIngredients || pokemon.mewSkills) {   // ミュウ：選んだ食材・メインスキルに差し替える
-    const ov = {};
-    const pools = pokemon.mewIngredients;
-    if (pools && saved.mi && saved.mi.some(Boolean)) {
-      const pick = i => (saved.mi[i] && pools[i] && pools[i][saved.mi[i]] != null) ? saved.mi[i] : null;
-      const m0 = pick(0), m1 = pick(1), m2 = pick(2);
-      if (m0) { ov.ingredientA = m0; ov["1a"] = pools[0][m0]; }
-      if (m1) { ov.ingredientB = m1; ov["2b"] = pools[1][m1]; }
-      if (m2) { ov.ingredientC = m2; ov["3c"] = pools[2][m2]; }
-      saved = Object.assign({}, saved, { pat: "a" + (m1 ? "b" : "a") + (m2 ? "c" : "a") });   // 1・2・3枠目をそれぞれ別の食材として扱う
-    }
-    const skName = saved.sk || pokemon.skillType;
-    if (saved.sk) ov.skillType = saved.sk;
-    if (pokemon.mewSkills && Object.prototype.hasOwnProperty.call(pokemon.mewSkills, skName)) ov.skillRate = pokemon.mewSkills[skName];   // ミュウは、スキルごとに発動確率が違う
-    pokemon = Object.assign({}, pokemon, ov);
-  } else if (saved.sk) {
-    pokemon = Object.assign({}, pokemon, { skillType: saved.sk });
-  }
+  ({ pokemon, saved } = PKS.resolvePokemon(pokemon, saved));   // ミュウ：選んだ食材・メインスキルに差し替える
   const m = modsFor(pokemon, set);
-  const level = saved.lv, subs = saved.subs, pattern = saved.pat;
-  const SUB_UNLOCK = [10, 25, 50, 70, 80];
-  const act = subs.filter((_, i) => level >= SUB_UNLOCK[i]);
-  const cnt = s => act.filter(x => x === s).length;
-  let tf = 1.0;
-  if (saved.nu === "speedUp") tf *= 0.9;
-  if (saved.nd === "speedDown") tf *= 1.075;
-  const levelCoef = 1 - (level - 1) * LEVEL_TIME_COEF;
-  const campCoef = campTicket ? (1 / ENERGY.pot.ticketSpeedMult) : 1.0;
-  const base0 = pokemon.helpTime * levelCoef * tf * campCoef * m.timeMult;
-
-  let fr = (pokemon.ingredientFindRate ?? 0) / 100;
-  fr *= (1 + 0.36 * cnt("食材確率M") + 0.18 * cnt("食材確率S"));
-  if (saved.nu === "foodUp") fr *= 1.2;
-  if (saved.nd === "foodDown") fr *= 0.8;
-  fr = Math.max(0, Math.min(1, fr));
-
-  let skillRate = (pokemon.skillRate ?? 0) / 100;
-  skillRate *= (1 + 0.36 * cnt("スキル確率M") + 0.18 * cnt("スキル確率S"));
-  if (saved.nu === "skillUp") skillRate *= 1.1;
-  if (saved.nd === "skillDown") skillRate *= 0.9;
-  skillRate = Math.max(0, skillRate * m.skillRate);
-
-  const slots = level < 30 ? [1] : level < 60 ? [1, 2] : [1, 2, 3];
-  const sp = 1 / slots.length;
-  const ingList = [];
-  let avgIng = 0;
-  for (const slot of slots) {
-    let ing = null, c = 0;
-    if (slot === 1) { ing = pokemon.ingredientA; c = pokemon["1a"] ?? 0; }
-    else if (slot === 2) {
-      const t = pattern[1];
-      ing = t === "a" ? pokemon.ingredientA : pokemon.ingredientB;
-      c = t === "a" ? (pokemon["2a"] ?? 0) : (pokemon["2b"] ?? 0);
-    } else {
-      const t = pattern[2];
-      if (t === "a") { ing = pokemon.ingredientA; c = pokemon["3a"] ?? 0; }
-      else if (t === "b") { ing = pokemon.ingredientB; c = pokemon["3b"] ?? 0; }
-      else { ing = pokemon.ingredientC; c = pokemon["3c"] ?? 0; }
-    }
-    if (ing && c > 0) c += m.ingPlus;
-    if (ing && c > 0) {
-      const idx = ING_BY_LANG[ing];
-      if (idx !== undefined) ingList.push([idx, c * sp]);
-      avgIng += c * sp;
-    }
-  }
   // 追加で拾う食材（1回のお手伝いごと）
   const extraList = m.extra.slice();
   const extraTotal = extraList.reduce((a, x) => a + x[1], 0);
-  const invMult = campTicket ? ENERGY.pot.ticketInventoryMult : 1;
-  const maxInv = (pokemon.maxInventory != null)
-    ? Math.round((pokemon.maxInventory + cnt("最大所持数アップS") * 6 + cnt("最大所持数アップM") * 12 + cnt("最大所持数アップL") * 18 + m.invPlus) * invMult) : null;
-  const bp = (pokemon.berryCount ?? (pokemon.category === "きのみ" ? 2 : 1)) + cnt("きのみの数S");   // berryCount：きのみの数を個別に指定するポケモン（ミュウなど）
-  const avgPerHelp = (1 - fr) * bp + fr * avgIng + extraTotal;
-  const helpsUntilFull = (maxInv && maxInv > 0 && avgPerHelp > 0) ? maxInv / avgPerHelp : Infinity;
+  // 基本性能（お手伝い時間・食材確率・スキル確率・食材スロット・最大所持数・きのみの数）は、食材シミュレーターと共通の計算
+  const st = PKS.pokemonStats(pokemon, saved, {
+    camp: campTicket, campSpeed: ENERGY.pot.ticketSpeedMult, campInv: ENERGY.pot.ticketInventoryMult,
+    timeMult: m.timeMult, ingPlus: m.ingPlus, invPlus: m.invPlus, skillRateMult: m.skillRate, extraPerHelp: extraTotal
+  });
+  const level = saved.lv, cnt = st.cnt;
+  const base0 = st.baseTime, fr = st.fr, skillRate = st.skillRate, bp = st.bp, helpsUntilFull = st.helpsUntilFull;
+  const ingList = st.ingList.map(([n, c]) => [ING_BY_LANG[n], c]).filter(x => x[0] !== undefined);
 
   // スキル（コピー役以外は、レベル1〜7それぞれの効果を用意しておく）
   const PW = ENERGY.pot.skills;
@@ -1209,7 +1145,7 @@ function simulate(sched, C, set, track) {
         for (let z = 0; z < c.extraList.length; z++) supply[c.extraList[z][0]] += ingHelps * c.extraList[z][1];
       }
       if (c.kind) {
-        let trig = helps * c.skillRate;
+        let trig = ingHelps * c.skillRate;   // 睡眠中にタップなしで所持数が満タンになった後は、スキルも発動しない（食材シミュレーターと同じ扱い）
         if (!sleepTap && st.sleep) {
           const room = Math.max(0, c.capNight - nightTrig[i]);
           trig = Math.min(trig, room); nightTrig[i] += trig;
@@ -1638,77 +1574,13 @@ function toggleAccordion(id) {
 
 
 /* ===== 保存ポケモン（localStorage）・書き出し・読み込み ===== */
-const SAVED_KEY = "pks_ing_sim_saved_pokemon_v1";
-const SAVED_MAX = 200;
-let savedPokemon = []; // [{id,label,p,lv,pat,nu,nd,subs}]
-
-function esc(s) {
-  return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-}
-function newSavedId() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-}
-
-// 保存・読み込み時の値検証（不正なJSONが混ざっても壊れないようにする）
-function sanitizeSaved(raw) {
-  if (!raw || typeof raw !== "object") return null;
-  const p = String(raw.p ?? "").trim().slice(0, 60);
-  if (!p) return null;
-  let lv = Math.round(Number(raw.lv));
-  if (!Number.isFinite(lv)) lv = 50;
-  lv = Math.min(100, Math.max(1, lv));
-  const pat = PATTERNS.includes(raw.pat) ? raw.pat : "aab";
-  const nu = NATURES_UP.some(([v]) => v === raw.nu) ? raw.nu : "other";
-  const nd = NATURES_DOWN.some(([v]) => v === raw.nd) ? raw.nd : "other";
-  const subsIn = Array.isArray(raw.subs) ? raw.subs : [];
-  const subs = SUB_IDS.map((_, i) => SUB_SKILLS.includes(subsIn[i]) ? subsIn[i] : "その他");
-  const label = String(raw.label ?? "").trim().slice(0, 40) || `${p} Lv${lv}`;
-  const id = (typeof raw.id === "string" && /^[a-z0-9]{4,24}$/i.test(raw.id)) ? raw.id : newSavedId();
-  let sl = Math.round(Number(raw.sl));
-  if (!Number.isFinite(sl)) sl = 6;
-  sl = Math.min(7, Math.max(1, sl));
-  const sk = typeof raw.sk === "string" ? raw.sk.trim().slice(0, 40) : "";   // ミュウのメインスキル
-  const mi = Array.isArray(raw.mi) ? [0, 1, 2].map(i => String(raw.mi[i] ?? "").trim().slice(0, 20)) : [];   // ミュウの食材（3枠）
-  const out = { id, label, p, lv, pat, nu, nd, subs, sl };
-  if (sk) out.sk = sk;
-  if (mi.some(Boolean)) out.mi = mi;
-  return out;
-}
-
-function sameContent(a, b) {
-  return a.p === b.p && a.lv === b.lv && a.pat === b.pat && a.nu === b.nu && a.nd === b.nd && a.sl === b.sl && (a.sk || "") === (b.sk || "") && (a.mi || []).join("|") === (b.mi || []).join("|")
-      && a.subs.join("|") === b.subs.join("|");
-}
-
-function uniqueLabel(base) {
-  let label = base, n = 2;
-  while (savedPokemon.some(s => s.label === label)) label = `${base} (${n++})`;
-  return label;
-}
-
-function loadSavedFromStorage() {
-  try {
-    const raw = localStorage.getItem(SAVED_KEY);
-    if (!raw) { savedPokemon = []; return true; }
-    const arr = JSON.parse(raw);
-    savedPokemon = (Array.isArray(arr) ? arr : []).map(sanitizeSaved).filter(Boolean).slice(0, SAVED_MAX);
-    return true;
-  } catch (e) {
-    console.warn("保存データの読み込みに失敗:", e);
-    savedPokemon = [];
-    return false;
-  }
-}
-
-function persistSaved() {
-  try {
-    localStorage.setItem(SAVED_KEY, JSON.stringify(savedPokemon));
-    return true;
-  } catch (e) {
-    console.warn("保存データの書き込みに失敗:", e);
-    return false;
-  }
-}
+const SAVED_MAX = PKS.SAVED_MAX;
+let savedPokemon = []; // [{id,label,p,lv,pat,nu,nd,subs,sl,(sk,mi)}]
+// 検証・読み書きは calc.js に共通化（食材シミュレーターと同じ保存データを使うため）
+const esc = PKS.esc, newSavedId = PKS.newSavedId, sanitizeSaved = PKS.sanitizeSaved, sameContent = PKS.sameContent;
+function uniqueLabel(base) { return PKS.uniqueLabel(savedPokemon, base); }
+function loadSavedFromStorage() { const r = PKS.loadSaved(); savedPokemon = r.list; return r.ok; }
+function persistSaved() { return PKS.persistSaved(savedPokemon); }
 
 const msgTimers = {};
 function showMsg(id, text, ok = true, ms = 4000) {
@@ -2594,13 +2466,13 @@ function scheduleHtml(sched, C) {
 }
 
 /* ===== 食材の集計表（どの個体が、どの食材を1週間で何個集めるか）===== */
-function ingTableHtml(search, C, set, dish) {
+function ingTableHtml(search, C, set, dish, plan) {
   if (dish.status !== "optimal") return "";
   const simT = simulate(search.best, C, set, true);
   const cols = C.map((c, i) => i).filter(i => simT.onHours[i] > 0);
   const useStock = set.stockN > 0 && dish.stock;
   const usedR = new Float64Array(KN), usedE = new Float64Array(KN);   // 使用：レシピ食材（必須）／すきま食材（なべの余り枠）
-  for (const x of dish.xs) for (let k = 0; k < KN; k++) usedR[k] += x.v * dish.R[x.j].need[k];
+  for (const pl of plan) for (let k = 0; k < KN; k++) usedR[k] += pl.n * dish.R[pl.j].need[k];   // 表示している21食を作るのに、最低限必要な個数
   for (let k = 0; k < KN; k++) usedE[k] += dish.extra[k];
   const rows = [];
   for (let k = 0; k < KN; k++) {
@@ -2608,7 +2480,7 @@ function ingTableHtml(search, C, set, dish) {
     const st = useStock ? dish.stock[k] : 0;
     const total = per.reduce((a, b) => a + b, 0) + st;
     if (total < 0.5 && usedR[k] + usedE[k] < 0.5) continue;
-    rows.push({ k, per, st, total, usedR: usedR[k], usedE: usedE[k] });
+    rows.push({ k, per, st, total, usedR: usedR[k], usedE: usedE[k], short: usedR[k] - total });
   }
   if (!rows.length) return "";
   rows.sort((a, b) => b.total - a.total);
@@ -2621,11 +2493,12 @@ function ingTableHtml(search, C, set, dish) {
     <div style="overflow-x:auto;"><table style="border-collapse:collapse;font-size:11px;min-width:100%;">
     <thead><tr><th style="${th}text-align:left;">食材</th>${cols.map(i => `<th style="${th}max-width:84px;white-space:normal;">${esc(C[i].label)}</th>`).join("")}${useStock ? `<th style="${th}">備蓄</th>` : ""}<th style="${th}">合計</th><th style="${th}">使用<br>必須</th><th style="${th}">使用<br>すきま</th></tr></thead><tbody>`;
   for (const r of rows) {
-    h += `<tr><td style="${td}text-align:left;">${esc(ING_NAMES[r.k])}</td>${r.per.map(v => `<td style="${td}">${f(v)}</td>`).join("")}${useStock ? `<td style="${td}color:var(--pks-purple);">${f(r.st)}</td>` : ""}<td style="${td}color:var(--pks-green);font-weight:700;">${f(r.total)}</td><td style="${td}color:var(--pks-text-dim);">${f(r.usedR)}</td><td style="${td}color:var(--pks-text-dim);">${f(r.usedE)}</td></tr>`;
+    h += `<tr><td style="${td}text-align:left;">${esc(ING_NAMES[r.k])}</td>${r.per.map(v => `<td style="${td}">${f(v)}</td>`).join("")}${useStock ? `<td style="${td}color:var(--pks-purple);">${f(r.st)}</td>` : ""}<td style="${td}color:${r.short > 0.5 ? "var(--pks-red)" : "var(--pks-green)"};font-weight:700;">${f(r.total)}</td><td style="${td}color:var(--pks-text-dim);">${f(r.usedR)}</td><td style="${td}color:var(--pks-text-dim);">${f(r.usedE)}</td></tr>`;
   }
   h += `<tr><td style="${td}text-align:left;font-weight:700;">計</td>${colTot.map(v => `<td style="${td}font-weight:700;">${f(v)}</td>`).join("")}${useStock ? `<td style="${td}font-weight:700;color:var(--pks-purple);">${f(stTot)}</td>` : ""}<td style="${td}font-weight:700;color:var(--pks-green);">${f(rows.reduce((a, r) => a + r.total, 0))}</td><td style="${td}font-weight:700;color:var(--pks-text-dim);">${f(rows.reduce((a, r) => a + r.usedR, 0))}</td><td style="${td}font-weight:700;color:var(--pks-text-dim);">${f(rows.reduce((a, r) => a + r.usedE, 0))}</td></tr>`;
   h += `</tbody></table></div>
-    <p class="pks-note" style="margin:6px 0 0;">「使用 必須」は、作る料理のレシピ食材として使う数、「使用 すきま」は、なべの余り枠に追加食材（すきま食材）として入れる数です。「合計」より使用の合計が少ない分は余ります。おてつだいの即完了で得た食材は、おてつだいを受けたポケモンの欄に入れています。食材ゲットSなどのランダムな食材は、全食材に均等に配分する近似です。</p>`;
+    ${rows.some(r => r.short > 0.5) ? `<p class="pks-note" style="margin:6px 0 0;color:var(--pks-red);">⚠ 合計が赤い食材は、表示している料理（整数）を作るのに必要な数（使用 必須）より、集める数・備蓄が足りません：${rows.filter(r => r.short > 0.5).map(r => `${esc(ING_NAMES[r.k])}（あと${Math.ceil(r.short - 1e-9)}個）`).join("、")}。最適化の計算は、料理の個数を小数で扱ったあとに整数へ丸めているため、わずかなずれが出ることがあります。</p>` : ""}
+    <p class="pks-note" style="margin:6px 0 0;">「使用 必須」は、上に表示した21食（整数）のレシピを作るのに、最低限必要な数、「使用 すきま」は、なべの余り枠に追加食材（すきま食材）として入れる数です。「合計」より使用の合計が少ない分は余ります。おてつだいの即完了で得た食材は、おてつだいを受けたポケモンの欄に入れています。食材ゲットSなどのランダムな食材は、全食材に均等に配分する近似です。</p>`;
   return h;
 }
 
@@ -2662,13 +2535,14 @@ function renderOptResult(search, C, set, R, warnings) {
   if (dish.status === "optimal") {
     const { classes, xs, R: RR } = dish;
     let planned = 0, dhtml = "";
+    const plan = [];   // 画面に出している整数の料理（レシピ番号と食数）。食材の集計表の「使用 必須」は、これから数える
     const order = classes.map((k, i) => i).sort((a, b) => (classes[b].sunday - classes[a].sunday) || (classes[b].p - classes[a].p));
     for (const c of order) {
       const k = classes[c];
       const list = xs.filter(x => x.c === c);
       const ints = roundToSum(list.map(x => x.v));
       const lines = []; let sz = 0;
-      list.forEach((x, q) => { if (ints[q] > 0) { lines.push(`${esc(RR[x.j].label)} ×${ints[q]}`); sz += ints[q]; } });
+      list.forEach((x, q) => { if (ints[q] > 0) { lines.push(`${esc(RR[x.j].label)} ×${ints[q]}`); sz += ints[q]; plan.push({ j: x.j, n: ints[q] }); } });
       planned += sz;
       const head = k.sunday ? `日曜の${k.n}食（大成功で3倍）` : `月〜土の${k.n}食`;
       dhtml += `<div class="pks-pb-card" style="margin-top:6px;">
@@ -2677,7 +2551,7 @@ function renderOptResult(search, C, set, R, warnings) {
         <div style="font-size:12px;line-height:1.8;color:var(--pks-text);">${lines.length ? lines.join("<br>") : "作れる料理がありません（なべ容量や食材が不足）"}</div></div>`;
     }
     html += `<div class="pks-result-section-title">作る料理（21食）</div>${dhtml}`;
-    html += ingTableHtml(search, C, set, dish);
+    html += ingTableHtml(search, C, set, dish, plan);
     const fmtList = arr => arr.map((v, k) => [v, k]).filter(x => x[0] >= 0.5).sort((a, b) => b[0] - a[0]).map(x => `${esc(ING_NAMES[x[1]])} ${Math.round(x[0])}個`).join("、");
     const exList = fmtList(dish.extra), stList = fmtList(dish.stock);
     if (exList) html += `<div class="pks-result-section-title">追加食材として入れる食材（なべの余り枠）</div><div class="pks-extra-item">${exList}</div>`;
