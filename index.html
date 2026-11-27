@@ -476,7 +476,7 @@
       <div style="display:flex;align-items:center;justify-content:space-between;">
         <div>
           <div style="font-size:13px;font-weight:700;color:var(--pks-text);">使用する</div>
-          <div style="font-size:11px;color:var(--pks-text-dim);margin-top:2px;">お手伝いスピード×1.2倍（interval÷1.2）</div>
+          <div style="font-size:11px;color:var(--pks-text-dim);margin-top:2px;">お手伝いスピード×1.2倍（interval÷1.2）・最大所持数×1.2倍</div>
         </div>
         <div class="pks-toggle-wrap" onclick="toggleCamp()" id="campToggleWrap">
           <div class="pks-toggle" id="campToggle"></div>
@@ -560,9 +560,10 @@
     <div style="margin-top:8px;">
       <b style="color:var(--pks-text);">【その他】</b><br>
       ・ 食材確率はポケモンの基礎値×(1+食材確率M×36%+S×18%) で計算<br>
-      ・ いいキャンプチケット使用時はお手伝いスピード×1.2倍<br>
+      ・ いいキャンプチケット使用時はお手伝いスピード×1.2倍、最大所持数×1.2倍<br>
       ・ 週頭在庫（前週の持ち越し食材）は料理登録画面で入力できます<br>
-      ・ 計算結果は目安です。実際のゲームと若干異なる場合があります
+      ・ 計算結果は目安です。実際のゲームと若干異なる場合があります<br>
+      ・ ポケモンの基本性能（お手伝い時間・食材確率・食材スロット・最大所持数）の計算は、<b>⚡最適化ツールと共通</b>です。最適化ツールとの違いは、このツールが「げんき常時81%以上」「食材セレクトS以外のスキルは対象外」の簡易計算である点です
     </div>
     <div style="margin-top:8px;">
       <b style="color:var(--pks-text);">【所持数あふれについて】</b><br>
@@ -588,6 +589,7 @@
       <b style="color:var(--pks-text);">【ポケモンの保存について】</b><br>
       ・ 登録したポケモンは「保存」で<b>この端末のブラウザ</b>に記録され、次回以降は呼び出して使えます<br>
       ・ ブラウザのデータ削除や端末の変更で消えるため、「書き出し」でのバックアップをおすすめします<br>
+      ・ 保存データは⚡最適化ツールと共通です（最適化ツールで登録したポケモンも呼び出せます）<br>
     </div>
   </div>
 </div>
@@ -669,10 +671,16 @@
     <button class="pks-btn-secondary" id="btnRestart">最初からやり直す</button>
 </div>
 
-  <p class="pks-footnote">豆腐メンタルパパのポケモンスリープ攻略ツール<br><span id="verStamp">ver. 2026-11-20 データ読み込みの安全対策</span></p>
+  <p class="pks-footnote">豆腐メンタルパパのポケモンスリープ攻略ツール<br><span id="verStamp">ver. 2026-11-26 計算の共通化（calc.js）</span></p>
 </div>
 
+<script src="calc.js?v=1.0"></script>
 <script>
+if (typeof PKS === "undefined") {
+  document.body.insertAdjacentHTML("afterbegin", '<div style="position:relative;z-index:50;max-width:520px;margin:0 auto 14px;padding:10px 12px;border-radius:10px;border:1.5px solid rgba(255,126,126,0.6);background:rgba(255,126,126,0.12);color:#ffb3b3;font-size:12px;line-height:1.7;">calc.js を読み込めませんでした。calc.js が、このページと同じ場所にあるか確認してください。</div>');
+  throw new Error("calc.js not loaded");
+}
+
 /* ===== レシピデータ ===== */
 const RECIPE_DATA = {
   "genres": ["カレー","サラダ","デザート"],
@@ -774,21 +782,13 @@ const ING_NORM = {
 function normIng(n) { return ING_NORM[n] ?? n; }
 
 /* ===== 定数 ===== */
-const SUB_SKILLS  = ["その他","きのみの数S","おてスピM","おてスピS","おてぼ","食材確率M","食材確率S","スキル確率M","スキル確率S","最大所持数アップS","最大所持数アップM","最大所持数アップL"];
-const PATTERNS    = ["aaa","aab","aac","aba","abb","abc"];
-const NATURES_UP  = [["other","その他（補正なし）"],["speedUp","おてスピ↑"],["foodUp","食材確率↑"],["skillUp","スキル確率↑"]];
-const NATURES_DOWN= [["other","その他（補正なし）"],["speedDown","おてスピ↓"],["foodDown","食材確率↓"],["skillDown","スキル確率↓"]];
-const SUB_IDS     = ["sub10","sub25","sub50","sub70","sub80"];
-const SUB_LABELS  = ["Lv10","Lv25","Lv50","Lv70","Lv80"];
+// 2つのツール共通の定数は calc.js（PKS）から読む
+const { SUB_SKILLS, PATTERNS, NATURES_UP, NATURES_DOWN, SUB_IDS, SUB_LABELS, WEEK_SECONDS } = PKS;
 const SLOT_CONFIG = [
   { key:"berry",  label:"きのみ",       emoji:"🍒", cls:"berry",  category:"きのみ" },
   { key:"ing",    label:"食材",         emoji:"🍳", cls:"ing",    category:"食材"   },
   { key:"skill",  label:"スキル",       emoji:"⚡", cls:"skill",  category:"スキル" }
 ];
-
-const WEEK_SECONDS   = 7 * 86400;
-const LEVEL_TIME_COEF= 0.002;
-const BASE_DIVISOR   = 2.222;
 
 /* ===== 状態 ===== */
 let pokemonDB  = [];
@@ -1192,72 +1192,15 @@ function toggleAccordion(id) {
 }
 
 /* ===== 保存ポケモン（localStorage）・書き出し・読み込み ===== */
-const SAVED_KEY = "pks_ing_sim_saved_pokemon_v1";
-const SAVED_MAX = 200;
-let savedPokemon = []; // [{id,label,p,lv,pat,nu,nd,subs}]
+const SAVED_MAX = PKS.SAVED_MAX;
+let savedPokemon = []; // [{id,label,p,lv,pat,nu,nd,subs,sl,(sk,mi)}]
 
-function esc(s) {
-  return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-}
-function newSavedId() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-}
-
-// 保存・読み込み時の値検証（不正なJSONが混ざっても壊れないようにする）
-function sanitizeSaved(raw) {
-  if (!raw || typeof raw !== "object") return null;
-  const p = String(raw.p ?? "").trim().slice(0, 60);
-  if (!p) return null;
-  let lv = Math.round(Number(raw.lv));
-  if (!Number.isFinite(lv)) lv = 50;
-  lv = Math.min(100, Math.max(1, lv));
-  const pat = PATTERNS.includes(raw.pat) ? raw.pat : "aab";
-  const nu = NATURES_UP.some(([v]) => v === raw.nu) ? raw.nu : "other";
-  const nd = NATURES_DOWN.some(([v]) => v === raw.nd) ? raw.nd : "other";
-  const subsIn = Array.isArray(raw.subs) ? raw.subs : [];
-  const subs = SUB_IDS.map((_, i) => SUB_SKILLS.includes(subsIn[i]) ? subsIn[i] : "その他");
-  const label = String(raw.label ?? "").trim().slice(0, 40) || `${p} Lv${lv}`;
-  const id = (typeof raw.id === "string" && /^[a-z0-9]{4,24}$/i.test(raw.id)) ? raw.id : newSavedId();
-  // 最適化ツールで設定するスキルレベル(sl)を、このページで保存し直しても消さないよう引き継ぐ
-  let sl = Math.round(Number(raw.sl));
-  const keepSl = Number.isFinite(sl) && sl >= 1 && sl <= 7;
-  return keepSl ? { id, label, p, lv, pat, nu, nd, subs, sl } : { id, label, p, lv, pat, nu, nd, subs };
-}
-
-function sameContent(a, b) {
-  return a.p === b.p && a.lv === b.lv && a.pat === b.pat && a.nu === b.nu && a.nd === b.nd
-      && a.subs.join("|") === b.subs.join("|");
-}
-
-function uniqueLabel(base) {
-  let label = base, n = 2;
-  while (savedPokemon.some(s => s.label === label)) label = `${base} (${n++})`;
-  return label;
-}
-
-function loadSavedFromStorage() {
-  try {
-    const raw = localStorage.getItem(SAVED_KEY);
-    if (!raw) { savedPokemon = []; return true; }
-    const arr = JSON.parse(raw);
-    savedPokemon = (Array.isArray(arr) ? arr : []).map(sanitizeSaved).filter(Boolean).slice(0, SAVED_MAX);
-    return true;
-  } catch (e) {
-    console.warn("保存データの読み込みに失敗:", e);
-    savedPokemon = [];
-    return false;
-  }
-}
-
-function persistSaved() {
-  try {
-    localStorage.setItem(SAVED_KEY, JSON.stringify(savedPokemon));
-    return true;
-  } catch (e) {
-    console.warn("保存データの書き込みに失敗:", e);
-    return false;
-  }
-}
+// 検証・読み書きは calc.js に共通化（最適化ツールと同じ保存データを使うため）。
+// 最適化ツールで登録したスキルレベル（sl）・ミュウの食材とスキル（mi・sk）も、ここで保存し直して消えない
+const esc = PKS.esc, newSavedId = PKS.newSavedId, sanitizeSaved = PKS.sanitizeSaved, sameContent = PKS.sameContent;
+function uniqueLabel(base) { return PKS.uniqueLabel(savedPokemon, base); }
+function loadSavedFromStorage() { const r = PKS.loadSaved(); savedPokemon = r.list; return r.ok; }
+function persistSaved() { return PKS.persistSaved(savedPokemon); }
 
 const msgTimers = {};
 function showMsg(id, text, ok = true, ms = 4000) {
@@ -1359,7 +1302,9 @@ function saveCurrentPokemon(pre) {
 
   let overwrote = false;
   if (idx >= 0) {
-    savedPokemon[idx] = { ...entry, id: savedPokemon[idx].id, label, ...(savedPokemon[idx].sl ? { sl: savedPokemon[idx].sl } : {}) };
+    // このツールの画面にない項目（スキルレベル・ミュウの食材とスキル）は、元の保存内容を引き継ぐ
+    const old = savedPokemon[idx];
+    savedPokemon[idx] = { ...entry, id: old.id, label, sl: old.sl, ...(old.sk ? { sk: old.sk } : {}), ...(old.mi ? { mi: old.mi } : {}) };
     overwrote = true;
   } else {
     if (savedPokemon.length >= SAVED_MAX) {
@@ -1719,201 +1664,74 @@ function getEntry(pre) {
   };
 }
 
-function calcWeekly(entry, teamOtebonus = 0) {
-  // teamOtebonus: チームに編成中のおてぼ持ちポケモン数×5%の合計
-  if (!entry) return {};
-  const {pokemon, level, pattern, natureUp, natureDown, subs} = entry;
+/* 1匹の「1週間の食材獲得量」と「食材セレクトのスキル発動回数」を計算する。
+ * お手伝い時間・食材確率・スキル確率・食材スロット・最大所持数は calc.js（最適化ツールと共通）で計算する。
+ * このツールは「げんき常時81%以上」の前提なので、お手伝い時間にかけるげんきの倍率は PKS.GENKI_TOP_MULT 固定。
+ * teamOtebonus: チームに編成中のおてぼ持ちポケモン数×5%の合計
+ * 返り値: { result: {食材名: 週間獲得数}, triggers: 食材セレクトの発動回数（食材セレクト以外は null） } */
+function weeklyDetail(entry, teamOtebonus = 0) {
+  if (!entry) return { result: {}, triggers: null };
+  const { pokemon, level, pattern, natureUp, natureDown, subs } = entry;
   const ev = getEventBuff(); // イベントバフ（OFFなら add=0, mult=1）
 
-  // ── サブスキル解放レベルでフィルタリング ──
-  // Lv10:1枠目, Lv25:2枠目, Lv50:3枠目, Lv70:4枠目, Lv80:5枠目
-  const SUB_UNLOCK = [10, 25, 50, 70, 80];
-  const activeSubs = subs.filter((_, i) => level >= SUB_UNLOCK[i]);
+  const st = PKS.pokemonStats(pokemon, { lv: level, pat: pattern, nu: natureUp, nd: natureDown, subs }, {
+    camp: campTicket,
+    ingPlus: pokemon.category === "食材" ? ev.add : 0      // イベントバフ：食材タイプは食材獲得数に加算（所持数あふれ計算にも反映される）
+  });
 
-  // ── おてつだい時間補正 ──
-  const speedM = activeSubs.filter(s => s === "おてスピM").length;
-  const speedS = activeSubs.filter(s => s === "おてスピS").length;
+  // お手伝いスピードボーナス：自分のおてスピM/S＋チームのおてぼ合計を合算し、上限35%
+  const bonus = Math.min(st.ownSpeed + teamOtebonus, 0.35);
+  const interval = st.baseTime * (1 - bonus) * PKS.GENKI_TOP_MULT;
+  const hpw = WEEK_SECONDS / interval;                       // 週間行動回数
 
-  let tf = 1.0;
-  if (natureUp   === "speedUp")   tf *= 0.9;
-  if (natureDown === "speedDown") tf *= 1.075;
-
-  // お手伝いスピードボーナス:
-  // 自分のおてスピM×14% + おてスピS×7% + チームおてぼ合計
-  // を合算して上限35%、interval短縮に適用
-  const personalBonus = speedM * 0.14 + speedS * 0.07;
-  const totalBonus = Math.min(personalBonus + teamOtebonus, 0.35);
-  tf *= (1 - totalBonus);
-
-  // 実効おてつだい時間
-  const levelCoef = 1 - (level - 1) * LEVEL_TIME_COEF;
-  // いいキャンプチケット: スピード×1.2 = interval÷1.2
-  const campCoef = campTicket ? (1 / 1.2) : 1.0;
-  const interval  = (pokemon.helpTime * levelCoef * tf * campCoef) / BASE_DIVISOR;
-  const hpw       = WEEK_SECONDS / interval; // 週間行動回数
-
-  // ── 食材発見率 ──
-  // 正しい計算式: 基礎fr × (1 + 0.36×M + 0.18×S) × 性格補正
-  // ※サブスキル同士は加算、基礎frとは乗算（Wiki検証済み）
-  const foodM = activeSubs.filter(s => s === "食材確率M").length;
-  const foodS = activeSubs.filter(s => s === "食材確率S").length;
-  let fr = (pokemon.ingredientFindRate ?? 0) / 100;
-  fr *= (1 + 0.36 * foodM + 0.18 * foodS);
-  // 性格補正（乗算）
-  if (natureUp   === "foodUp")   fr *= 1.2;
-  if (natureDown === "foodDown") fr *= 0.8;
-  fr = Math.max(0, Math.min(1, fr));
-
-  // ── スキル確率 ──
-  // 基礎skillRate × (1 + 0.36×スキル確率M + 0.18×スキル確率S) × 性格補正
-  const skillM = activeSubs.filter(s => s === "スキル確率M").length;
-  const skillS = activeSubs.filter(s => s === "スキル確率S").length;
-  let skillRate = (pokemon.skillRate ?? 0) / 100;
-  skillRate *= (1 + 0.36 * skillM + 0.18 * skillS);
-  if (natureUp   === "skillUp")   skillRate *= 1.1;
-  if (natureDown === "skillDown") skillRate *= 0.9;
-  skillRate = Math.max(0, skillRate);
-
-  // ── 食材スロット ──
-  const slots = level < 30 ? [1] : level < 60 ? [1, 2] : [1, 2, 3];
-  const sp = 1 / slots.length; // スロット配分係数
-
-  // 1回のお手伝いあたりの平均食材個数（全スロット合計）
-  let avgIngPerHelp = 0;
-  const slotIngMap = {}; // slot -> {ing, cnt}
-  for (const slot of slots) {
-    let ing = null, cnt = 0;
-    if (slot === 1) {
-      ing = pokemon.ingredientA;
-      cnt = pokemon["1a"] ?? 0;
-    } else if (slot === 2) {
-      const t = pattern[1];
-      ing = t === "a" ? pokemon.ingredientA : pokemon.ingredientB;
-      cnt = t === "a" ? (pokemon["2a"] ?? 0) : (pokemon["2b"] ?? 0);
-    } else {
-      const t = pattern[2];
-      if      (t === "a") { ing = pokemon.ingredientA; cnt = pokemon["3a"] ?? 0; }
-      else if (t === "b") { ing = pokemon.ingredientB; cnt = pokemon["3b"] ?? 0; }
-      else                { ing = pokemon.ingredientC; cnt = pokemon["3c"] ?? 0; }
-    }
-    // イベントバフ: 食材タイプは食材獲得数に加算（所持数あふれ計算にも反映される）
-    if (ing && cnt > 0 && pokemon.category === "食材") cnt += ev.add;
-    slotIngMap[slot] = { ing, cnt };
-    if (ing && cnt > 0) avgIngPerHelp += cnt * sp;
-  }
-
-  // ── 最大所持数（基礎値 + サブスキル加算） ──
-  const invS = activeSubs.filter(s => s === "最大所持数アップS").length;
-  const invM = activeSubs.filter(s => s === "最大所持数アップM").length;
-  const invL = activeSubs.filter(s => s === "最大所持数アップL").length;
-  const invBonus = invS * 6 + invM * 12 + invL * 18;
-  const maxInventory = (pokemon.maxInventory != null)
-    ? pokemon.maxInventory + invBonus
-    : null;
-
-  // きのみ1回あたりの個数
-  // きのみタイプ=2個/回、食材・スキルタイプ=1個/回、きのみの数Sで+1
-  const berryNumS = activeSubs.filter(s => s === "きのみの数S").length;
-  const berryPerHelp = (pokemon.category === "きのみ" ? 2 : 1) + berryNumS;
-
-  // ── 所持数あふれ計算 ──
-  // 【正しい計算式（ユキさん方式）】
-  // avgPerHelp = きのみ個数×(1-fr) + 食材平均個数×fr
-  // helpsUntilFull = maxInventory ÷ avgPerHelp  → 満タンまでのお手伝い回数
-  //
-  // 起床中（15.5h）：毎分タップ前提 → 常にあふれなし
-  //   食材獲得 = awakeHelps × fr × 食材個数/回
-  //
-  // 睡眠中（8.5h）：
-  //   sleepTap=ON  → あふれなし（通常計算）
-  //   sleepTap=OFF → helpsUntilFull回まで食材獲得、それ以降はきのみのみ
-  //   睡眠中食材獲得 = min(sleepHelps, helpsUntilFull) × fr × 食材個数/回
-
+  // ── 所持数あふれ ──
+  // 起床中（15.5h）は毎分タップ前提であふれなし。睡眠中（8.5h）は、タップなしだと満タンまでのお手伝い回数まで食材を獲得
   const AWAKE_SECONDS = 15.5 * 3600;
   const SLEEP_SECONDS = 8.5 * 3600;
-
-  // 1回あたりの平均蓄積個数（きのみ+食材合算）
-  const avgPerHelp = (1 - fr) * berryPerHelp + fr * avgIngPerHelp;
-
-  // ── 食材セレクトスキル計算 ──
-  // スキル発動回数 = hpw × skillRate% / 100
-  // 睡眠中タップなしの場合:
-  //   きのみ・食材タイプ = 1日最大1回（7日で最大7回）
-  //   スキルタイプ      = 1日最大2回（7日で最大14回）
-  const skillIngResult = {};
-  if (pokemon.skillIngredients && pokemon.skillIngredients.length > 0
-      && pokemon.skillIngCount > 0 && pokemon.skillRate > 0) {
-
-    // ── スキル発動回数計算 ──
-    const AWAKE_SECS = 15.5 * 3600;
-    const SLEEP_SECS = 8.5 * 3600;
-    let skillTriggers;
-    let skillTriggersAwake7 = 0;  // 起床中週間発動回数（表示用）
-    let skillTriggersSleep7 = 0;  // 睡眠中週間発動回数（表示用）
-
-    if (sleepTap) {
-      // 毎分タップあり: 24時間上限なし
-      skillTriggers = hpw * skillRate;
-      skillTriggersAwake7 = skillTriggers;
-    } else {
-      // 起床中（15.5h）: 上限なし
-      const awakeHelpsPerWeek = AWAKE_SECS / interval * 7;
-      skillTriggersAwake7 = awakeHelpsPerWeek * skillRate;
-
-      // 睡眠中（8.5h）: 所持数があふれるまでのお手伝い回数 × skillRate
-      // → 上限（スキルタイプ2回/日、きのみ・食材1回/日）と比較して小さい方を使用
-      const sleepHelpsPerNight = SLEEP_SECS / interval;
-      let sleepHelpsEffective = sleepHelpsPerNight;
-      if (maxInventory != null && maxInventory > 0 && avgPerHelp > 0) {
-        const helpsUntilFull = maxInventory / avgPerHelp;
-        sleepHelpsEffective = Math.min(sleepHelpsPerNight, helpsUntilFull);
-      }
-      const sleepMaxPerNight = (pokemon.category === "スキル") ? 2 : 1;
-      const sleepTriggersCalc = sleepHelpsEffective * skillRate; // 期待値
-      const sleepTriggersCapped = Math.min(sleepTriggersCalc, sleepMaxPerNight); // 上限適用
-      skillTriggersSleep7 = sleepTriggersCapped * 7;
-
-      skillTriggers = skillTriggersAwake7 + skillTriggersSleep7;
-    }
-
-    // イベントバフ: 食材セレクトで獲得する食材数に倍率をかける
-    const ingPerTrigger = (pokemon.skillIngCount * ev.mult) / pokemon.skillIngredients.length;
-    for (const ingName of pokemon.skillIngredients) {
-      const k = normIng(ingName);
-      skillIngResult[k] = (skillIngResult[k] ?? 0) + skillTriggers * ingPerTrigger;
-    }
-  }
+  const overflowMode = !sleepTap && st.helpsUntilFull < Infinity;
+  const awakeHelps = AWAKE_SECONDS / interval;               // 起床中のお手伝い回数/日
+  const sleepHelps = SLEEP_SECONDS / interval;               // 睡眠中のお手伝い回数/日
+  const sleepHelpsEff = overflowMode ? Math.min(sleepHelps, st.helpsUntilFull) : sleepHelps;
 
   const result = {};
-  for (const slot of slots) {
-    const { ing, cnt } = slotIngMap[slot];
-    if (!ing || cnt <= 0) continue;
-    const k = normIng(ing);
+  const add = (name, v) => { const k = normIng(name); result[k] = (result[k] ?? 0) + v; };
 
-    if (!sleepTap && maxInventory != null && maxInventory > 0 && avgPerHelp > 0) {
-      // あふれ考慮モード
-      const awakeHelps     = AWAKE_SECONDS / interval;  // 起床中お手伝い回数/日
-      const sleepHelps     = SLEEP_SECONDS / interval;  // 睡眠中お手伝い回数/日
-      const helpsUntilFull = maxInventory / avgPerHelp; // 満タンまでの回数
-
-      // 睡眠中に有効なお手伝い回数（満タンになったら以降は食材取れない）
-      const effectiveSleepHelps = Math.min(sleepHelps, helpsUntilFull);
-
-      // 1日の食材獲得量
-      const dailyIng = (awakeHelps + effectiveSleepHelps) * fr * cnt * sp;
-
-      // 週間獲得量
-      result[k] = (result[k] ?? 0) + dailyIng * 7;
+  // ── 食材セレクトスキル ──
+  // 睡眠中タップなしの場合：きのみ・食材タイプは1晩1回まで、スキルタイプは1晩2回まで
+  let triggers = null;
+  if (pokemon.skillIngredients && pokemon.skillIngredients.length > 0 && pokemon.skillIngCount > 0) {
+    let total;
+    if (sleepTap) {
+      total = hpw * st.skillRate;
+      triggers = { total, awake: total, sleep: null };
     } else {
-      // あふれなしモード（通常計算）
-      result[k] = (result[k] ?? 0) + hpw * fr * cnt * sp;
+      const awake = awakeHelps * 7 * st.skillRate;
+      const sleepMax = (pokemon.category === "スキル") ? 2 : 1;
+      const sleep = Math.min(sleepHelpsEff * st.skillRate, sleepMax) * 7;
+      total = awake + sleep;
+      triggers = { total, awake, sleep, sleepMax };
+    }
+    if (pokemon.skillRate > 0) {
+      // イベントバフ：食材セレクトで獲得する食材数に倍率をかける
+      const perTrigger = (pokemon.skillIngCount * ev.mult) / pokemon.skillIngredients.length;
+      for (const ingName of pokemon.skillIngredients) add(ingName, total * perTrigger);
     }
   }
-  // スキル食材をresultにマージ
-  for (const [k, v] of Object.entries(skillIngResult)) {
-    result[k] = (result[k] ?? 0) + v;
+
+  // ── お手伝いで拾う食材 ──
+  for (const sl of st.slotIng) {
+    const weekly = overflowMode
+      ? (awakeHelps + sleepHelpsEff) * st.fr * sl.cnt * sl.sp * 7
+      : hpw * st.fr * sl.cnt * sl.sp;
+    add(sl.ing, weekly);
   }
-  return result;
+  return { result, triggers };
+}
+function calcWeekly(entry, teamOtebonus = 0) { return weeklyDetail(entry, teamOtebonus).result; }
+// スキル発動回数情報（表示用）
+function calcSkillTriggersInfo(entry, teamOtebonus) {
+  if (!entry || !entry.pokemon.skillIngredients || entry.pokemon.skillIngredients.length === 0) return null;
+  return weeklyDetail(entry, teamOtebonus).triggers;
 }
 
 /* ===== ポケモン設定 保存・復元 ===== */
@@ -1974,81 +1792,6 @@ function restorePokemonSettings(saved) {
       if (body) { body.classList.add("open"); }
       if (arrow) arrow.textContent = "▲";
     }
-  }
-}
-
-// スキル発動回数情報を計算（表示用）
-function calcSkillTriggersInfo(entry, teamOtebonus) {
-  if (!entry) return null;
-  const {pokemon, level, subs, natureUp, natureDown} = entry;
-  if (!pokemon.skillIngredients || pokemon.skillIngredients.length === 0) return null;
-
-  const SUB_UNLOCK = [10, 25, 50, 70, 80];
-  const activeSubs = subs.filter((_, i) => level >= SUB_UNLOCK[i]);
-  const skillM = activeSubs.filter(s => s === "スキル確率M").length;
-  const skillS = activeSubs.filter(s => s === "スキル確率S").length;
-  let skillRate = (pokemon.skillRate ?? 0) / 100;
-  skillRate *= (1 + 0.36 * skillM + 0.18 * skillS);
-  if (natureUp === "skillUp")   skillRate *= 1.1;
-  if (natureDown === "skillDown") skillRate *= 0.9;
-  skillRate = Math.max(0, skillRate);
-
-  const LEVEL_TIME_COEF = 0.002;
-  const BASE_DIVISOR = 2.222;
-  const WEEK_SECONDS = 7 * 86400;
-  const levelCoef = 1 - (level - 1) * LEVEL_TIME_COEF;
-
-  // おてスピ補正
-  // calcWeekly と同じ方式：自分のおてスピM/S + チームおてぼ合計を加算し、上限35%
-  const speedM = activeSubs.filter(s => s === "おてスピM").length;
-  const speedS = activeSubs.filter(s => s === "おてスピS").length;
-  let tf = 1.0;
-  if (natureUp === "speedUp") tf *= 0.9;
-  if (natureDown === "speedDown") tf *= 1.075;
-  const personalBonus = speedM * 0.14 + speedS * 0.07;
-  const totalBonus = Math.min(personalBonus + teamOtebonus, 0.35);
-  tf *= (1 - totalBonus);
-  const campCoef = campTicket ? (1 / 1.2) : 1.0;
-  const interval = (pokemon.helpTime * levelCoef * tf * campCoef) / BASE_DIVISOR;
-  const hpw = WEEK_SECONDS / interval;
-
-  const AWAKE_SECS = 15.5 * 3600;
-  const SLEEP_SECS = 8.5 * 3600;
-
-  if (sleepTap) {
-    const total = hpw * skillRate;
-    return { total, awake: total, sleep: null };
-  } else {
-    const awakeHelpsPerWeek = AWAKE_SECS / interval * 7;
-    const awake = awakeHelpsPerWeek * skillRate;
-
-    // 所持数あふれ考慮
-    const fr = (pokemon.ingredientFindRate ?? 0) / 100;
-    const berryPerHelp = (pokemon.category === "きのみ" ? 2 : 1);
-    const slots = level < 30 ? [1] : level < 60 ? [1,2] : [1,2,3];
-    const evAdd = getEventBuff().add;
-    let avgIng = 0;
-    for (const slot of slots) {
-      let cnt = 0;
-      if (slot === 1) cnt = pokemon["1a"] ?? 0;
-      else if (slot === 2) cnt = pokemon["2a"] ?? 0;
-      else cnt = pokemon["3a"] ?? 0;
-      if (cnt > 0 && pokemon.category === "食材") cnt += evAdd; // イベントバフ
-      avgIng += cnt / slots.length;
-    }
-    const avgPerHelp = (1 - fr) * berryPerHelp + fr * avgIng;
-    const maxInv = pokemon.maxInventory != null ? pokemon.maxInventory : null;
-
-    const sleepHelpsPerNight = SLEEP_SECS / interval;
-    let sleepHelpsEff = sleepHelpsPerNight;
-    if (maxInv && avgPerHelp > 0) {
-      sleepHelpsEff = Math.min(sleepHelpsPerNight, maxInv / avgPerHelp);
-    }
-    const sleepMax = (pokemon.category === "スキル") ? 2 : 1;
-    const sleepCalc = sleepHelpsEff * skillRate;
-    const sleepCapped = Math.min(sleepCalc, sleepMax);
-    const sleep = sleepCapped * 7;
-    return { total: awake + sleep, awake, sleep, sleepMax };
   }
 }
 
@@ -2140,7 +1883,7 @@ function calculate() {
   // ── チームおてぼボーナス集計 ──
   let teamOtebonusRaw = 0;
 
-  const SUB_UNLOCK_LEVELS = [10, 25, 50, 70, 80];
+  const SUB_UNLOCK_LEVELS = PKS.SUB_UNLOCK;
   for (const slot of pokemonSlots.filter(s => s.slotType !== "ing")) {
     const e = getEntry(slot.prefix);
     if (!e) continue;
@@ -2377,8 +2120,6 @@ function renderResult(have, need, surplus, perPokemon, allOk, minRatio, surplusD
 
 loadDB();
 </script>
-  </script>
-</div> <!-- pks-wrap 終了 -->
 
 <!-- ★★★ ここに BMC セクションを追加 ★★★ -->
 <div style="margin: 24px 0; padding: 20px; background: rgba(169,142,232,0.08); border: 1px solid rgba(169,142,232,0.3); border-radius: 14px;">
@@ -2401,9 +2142,6 @@ loadDB();
   <a href="privacy.html" style="color: var(--pks-text-dim); margin: 0 8px;">プライバシーポリシー</a>
   <a href="contact.html" style="color: var(--pks-text-dim); margin: 0 8px;">お問い合わせ</a>
 </footer>
-
-</body>
-</html>
 
 </body>
 </html>
