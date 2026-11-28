@@ -2547,6 +2547,42 @@ function renderCandidateList() {
 /* ===== 結果の表示 ===== */
 const DAY_NAMES = ["月", "火", "水", "木", "金", "土", "日"];
 const BLOCK_LABELS = ["朝〜昼", "昼〜夜", "睡眠中"];
+function fmtE(v) { return Math.round(v).toLocaleString("ja-JP"); }
+function roundToSum(vals) {
+  const total = Math.round(vals.reduce((a, b) => a + b, 0));
+  const fl = vals.map(v => Math.floor(v + 1e-9));
+  let rem = total - fl.reduce((a, b) => a + b, 0);
+  const fr = vals.map((v, i) => [v - fl[i], i]).sort((a, b) => b[0] - a[0]);
+  for (let q = 0; q < rem && q < fr.length; q++) fl[fr[q][1]]++;
+  return fl;
+}
+function roleTags(c) {
+  const t = [];
+  if (c.kind) t.push("スキルLv" + c.slEff);
+  if (c.kind === "charge") t.push("自己回復");
+  if (c.kind === "all") t.push(c.approx ? "全体回復（近似）" : "全体回復");
+  if (c.kind === "bb") t.push(c.bbGreat > 1 ? "きのみバースト（大成功の期待値込み）" : "きのみバースト");
+  if (c.kind === "bbGroup") t.push(c.skillType + "（きのみバースト" + (c.val > 0 ? "＋全体回復" : "") + "）");
+  if (c.kind === "copy") t.push("スキルコピー");
+  if (c.kind === "ingGet" || c.kind === "gift" || c.kind === "plus") t.push("食材ゲット");
+  if (c.kind === "assist") t.push("食材ゲット＋大成功率");
+  if (c.kind === "helpSup") t.push("おてつだい即完了");
+  if (c.kind === "boost") t.push("全員のおてつだい即完了");
+  if (c.skillType === "たくわえる") t.push("たくわえる（期待値）");
+  if (c.kind === "heal2") t.push("2匹回復＋おてつだい完了");
+  if (c.kind === "cheer") t.push("味方回復");
+  if (c.kind === "cc") t.push("料理チャンス");
+  if (c.kind === "pot") t.push("鍋容量アップ");
+  if (c.kind === "ingsel") t.push("食材セレクト");
+  if (c.kind === "eS" || c.kind === "eM" || c.kind === "eSR") t.push("エナジーチャージ");
+  if (c.category === "食材") t.push("食材");
+  if (c.category === "きのみ") t.push("きのみ");
+  if (c.isMain) t.push("EXメイン");
+  else if (c.isFav) t.push("好物");
+  return t.join("・");
+}
+
+// 曜日ごとの編成の中に、朝・昼・夜の献立を入れて表示する
 function scheduleHtml(sched, C, mealIdx, RR) {
   let html = "";
   for (let d = 0; d < 7; d++) {
