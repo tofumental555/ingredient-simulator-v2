@@ -9,6 +9,11 @@
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2480117696040690"
      crossorigin="anonymous"></script>
   <title>エナジー最適化ツール｜ポケモンスリープ攻略</title>
+  <meta name="apple-mobile-web-app-title" content="ポケスリ最適化">
+  <meta name="application-name" content="ポケスリ最適化">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="icon-192.png">
+  <link rel="manifest" href="manifest.json">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Nunito:wght@600;700;800&display=swap');
 
@@ -436,7 +441,7 @@
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0;">
     <div><div style="font-size:13px;font-weight:700;color:var(--pks-text);">睡眠中も毎分タップする</div>
       <div style="font-size:11px;color:var(--pks-text-dim);margin-top:2px;">OFFだと、睡眠中に所持数が満タンになると食材を取れず、スキル発動も1晩に1〜2回まで</div></div>
-    <div class="pks-toggle-wrap on" onclick="toggleSleepTap()" id="sleepTapToggleWrap"><div class="pks-toggle"></div></div>
+    <div class="pks-toggle-wrap" onclick="toggleSleepTap()" id="sleepTapToggleWrap"><div class="pks-toggle"></div></div>
   </div>
 </div>
 
@@ -629,7 +634,7 @@
 
 </div>
 
-<p class="pks-footnote">豆腐メンタルパパのポケモンスリープ攻略ツール<br><span id="verStamp">ver. 2026-11-26 エナジー最適化ツール v6.1</span></p>
+<p class="pks-footnote">豆腐メンタルパパのポケモンスリープ攻略ツール<br><span id="verStamp">ver. 2026-11-27 エナジー最適化ツール v6.2</span></p>
 </div>
 
 <script src="calc.js?v=1.0"></script>
@@ -1358,6 +1363,95 @@ function solveDishes(supply, classes, set, R) {
     stock[k] = x[nx + nu + k];
   }
   return { value: res.value * SC, status: "optimal", xs, extra, stock, classes, recipeVal, extraVal, R, Edish };
+}
+
+/* ---------- 料理の整数化（集める食材＋備蓄 ≧ 使用必須 を必ず成り立たせる）---------- */
+// 料理を固定して、すきま食材と備蓄だけを解き直す
+function solveExtrasFixed(counts, supply, classes, set, R, boostK) {
+  const Cn = classes.length, SC = 1000;
+  const need = new Float64Array(KN), slots = new Array(Cn).fill(0);
+  for (let c = 0; c < Cn; c++) for (const [j, n] of counts[c]) {
+    for (let k = 0; k < KN; k++) need[k] += n * R[j].need[k];
+    slots[c] += n * (classes[c].cap - R[j].count);
+  }
+  const mulC = classes.map(k => (1 + set.field) * set.dishMul * k.mu);
+  const nu = KN * Cn, nv = nu + KN;
+  const A = [], b = [], row = () => new Array(nv).fill(0);
+  for (let c = 0; c < Cn; c++) { const r = row(); for (let k = 0; k < KN; k++) r[k * Cn + c] = 1; A.push(r); b.push(slots[c]); }
+  for (let k = 0; k < KN; k++) {
+    const r = row(); for (let c = 0; c < Cn; c++) r[k * Cn + c] = 1; r[nu + k] = -1;
+    A.push(r); b.push(supply[k] - need[k]);
+  }
+  { const r = row(); for (let k = 0; k < KN; k++) r[nu + k] = 1; A.push(r); b.push(set.stockN); }
+  if (set.stockMode === "recipe") for (let k = 0; k < KN; k++) { const r = row(); r[nu + k] = 1; A.push(r); b.push(need[k]); }
+  const cc = new Array(nv).fill(0);
+  for (let k = 0; k < KN; k++) for (let c = 0; c < Cn; c++) cc[k * Cn + c] = ING_BASE[k] * boostK[k] * mulC[c] / SC;
+  return { res: lpMaximize(A, b, cc), mulC, nu, SC };
+}
+
+// 食材が足りないとき、「失うエナジー÷減る不足数」が最小になる料理の差し替えを選ぶ
+function pickSwap(counts, supply, classes, R, Edish, mulC) {
+  const Cn = counts.length, need = new Float64Array(KN);
+  for (let c = 0; c < Cn; c++) for (const [j, n] of counts[c]) for (let k = 0; k < KN; k++) need[k] += n * R[j].need[k];
+  let T0 = 0; for (let k = 0; k < KN; k++) T0 += Math.max(0, need[k] - supply[k]);
+  let best = null;
+  for (let c = 0; c < Cn; c++) for (const j of counts[c].keys()) {
+    for (let j2 = 0; j2 < R.length; j2++) {
+      if (j2 === j || R[j2].count > classes[c].cap) continue;
+      let T1 = 0;
+      for (let k = 0; k < KN; k++) T1 += Math.max(0, need[k] - R[j].need[k] + R[j2].need[k] - supply[k]);
+      const red = T0 - T1;
+      if (red <= 1e-9) continue;
+      const score = (Edish[j] - Edish[j2]) * mulC[c] / red;
+      if (!best || score < best.score) best = { c, from: j, to: j2, score };
+    }
+  }
+  return best;
+}
+
+function finalizeDishes(dish, supply, set) {
+  if (dish.status !== "optimal") return dish;
+  const { classes, R, Edish, xs } = dish, Cn = classes.length;
+  const boostK = new Float64Array(KN).fill(1);
+  for (const b of (set.ingBoost || [])) { const bi = ING_BY_LANG[b.ing]; if (bi !== undefined) boostK[bi] *= b.m; }
+  const counts = classes.map(() => new Map());
+  for (let c = 0; c < Cn; c++) {   // ① 整数に丸める
+    const list = xs.filter(x => x.c === c), ints = roundToSum(list.map(x => x.v));
+    list.forEach((x, q) => { if (ints[q] > 0) counts[c].set(x.j, (counts[c].get(x.j) || 0) + ints[q]); });
+  }
+  let fx = solveExtrasFixed(counts, supply, classes, set, R, boostK);
+  for (let it = 0; it < 100 && fx.res.status !== "optimal"; it++) {   // ③ 足りなければ、料理を差し替える
+    const sw = pickSwap(counts, supply, classes, R, Edish, fx.mulC);
+    if (!sw) break;
+    const m = counts[sw.c], n = m.get(sw.from);
+    if (n <= 1) m.delete(sw.from); else m.set(sw.from, n - 1);
+    m.set(sw.to, (m.get(sw.to) || 0) + 1);
+    fx = solveExtrasFixed(counts, supply, classes, set, R, boostK);
+  }
+  if (fx.res.status !== "optimal") return Object.assign({}, dish, { integer: false });
+  const x = fx.res.x, mulC = fx.mulC;
+  const extra = new Array(KN).fill(0), stock = new Array(KN).fill(0);
+  let extraVal = 0, recipeVal = 0;
+  for (let k = 0; k < KN; k++) {
+    for (let c = 0; c < Cn; c++) { const v = x[k * Cn + c]; extra[k] += v; extraVal += v * ING_BASE[k] * boostK[k] * mulC[c]; }
+    stock[k] = x[fx.nu + k];
+  }
+  const xs2 = [];
+  for (let c = 0; c < Cn; c++) for (const [j, n] of counts[c]) { xs2.push({ j, c, v: n }); recipeVal += n * Edish[j] * mulC[c]; }
+  return Object.assign({}, dish, { xs: xs2, extra, stock, recipeVal, extraVal, value: recipeVal + extraVal, integer: true });
+}
+
+// どの食事に、どの料理を作るか：大成功の期待値が高い食事に、エナジーの高い料理を回す
+function assignMeals(dish, gs) {
+  const meals = new Array(21).fill(null);
+  dish.classes.forEach((k, c) => {
+    const slots = k.meals.slice().sort((a, b) => (gs.mu[b] - gs.mu[a]) || (a - b));
+    const list = [];
+    dish.xs.filter(x => x.c === c).sort((a, b) => dish.Edish[b.j] - dish.Edish[a.j])
+      .forEach(x => { for (let q = 0; q < Math.round(x.v); q++) list.push(x.j); });
+    slots.forEach((m, i) => { meals[m] = i < list.length ? list[i] : null; });
+  });
+  return meals;
 }
 
 function evaluatePlan(sched, C, set, R) {
@@ -2112,15 +2206,56 @@ function initTabs() {
 /* ===== 状態 ===== */
 let pokemonDB = [];
 let campTicket = false;
-let sleepTap = true;   // 睡眠中も毎分タップ（初期値ON）
+let sleepTap = false;   // 睡眠中も毎分タップ（初期値OFF）
 
 function toggleCamp() {
   campTicket = !campTicket;
   document.getElementById("campToggleWrap").classList.toggle("on", campTicket);
+  saveCond();
 }
 function toggleSleepTap() {
   sleepTap = !sleepTap;
   document.getElementById("sleepTapToggleWrap").classList.toggle("on", sleepTap);
+  saveCond();
+}
+
+/* ===== ①条件の保存・復元（前回の入力を次回も使う）===== */
+const COND_KEY = "pks_opt_cond_v1";
+const COND_FIELDS = ["enMode", "enMain", "enSub1", "enSub2", "enExBuff", "enField", "enPot", "enE0", "enGenre", "enStock", "enStockMode", "enEffort"];
+let condReady = false;
+function saveCond() {
+  if (!condReady) return;
+  try {
+    const f = {};
+    for (const id of COND_FIELDS) { const el = document.getElementById(id); if (el) f[id] = el.value; }
+    const favs = [...document.querySelectorAll("#enFavs input:checked")].map(x => x.value);
+    localStorage.setItem(COND_KEY, JSON.stringify({ camp: campTicket, sleepTap, favs, f }));
+  } catch (e) { /* 保存できなくても動作は続ける */ }
+}
+function loadCond() {
+  let o = null;
+  try { o = JSON.parse(localStorage.getItem(COND_KEY) || "null"); } catch (e) { o = null; }
+  if (o && typeof o === "object") {
+    campTicket = !!o.camp;
+    sleepTap = !!o.sleepTap;
+    for (const [id, v] of Object.entries(o.f || {})) {
+      const el = document.getElementById(id);
+      if (!el || !COND_FIELDS.includes(id)) continue;
+      if (el.tagName === "SELECT" && ![...el.options].some(op => op.value === v)) continue;
+      el.value = v;
+    }
+    const fs = new Set(Array.isArray(o.favs) ? o.favs : []);
+    document.querySelectorAll("#enFavs input").forEach(x => { x.checked = fs.has(x.value); });
+  }
+  document.getElementById("campToggleWrap")?.classList.toggle("on", campTicket);
+  document.getElementById("sleepTapToggleWrap")?.classList.toggle("on", sleepTap);
+  onModeChange();
+  if (!condReady) {
+    condReady = true;
+    const h = e => { if (e.target.closest && e.target.closest("#tab_cond, #tab_run")) saveCond(); };
+    document.addEventListener("change", h);
+    document.addEventListener("input", h);
+  }
 }
 
 /* ===== イベントバフ（効果の一覧を自由に組み合わせる）===== */
@@ -2325,6 +2460,7 @@ function renderEnergySettings() {
   renderEventList();
   loadRecipeLv();
   renderRecipeLvList();
+  loadCond();
 }
 
 /* ===== エナジー計算に含まれないスキルの一覧（pokemon_data.json から自動生成）===== */
@@ -2411,6 +2547,7 @@ function renderCandidateList() {
 /* ===== 結果の表示 ===== */
 const DAY_NAMES = ["月", "火", "水", "木", "金", "土", "日"];
 const BLOCK_LABELS = ["朝〜昼", "昼〜夜", "睡眠中"];
+const MEAL_NAMES = ["朝", "昼", "夜"];
 function fmtE(v) { return Math.round(v).toLocaleString("ja-JP"); }
 function roundToSum(vals) {
   const total = Math.round(vals.reduce((a, b) => a + b, 0));
@@ -2446,23 +2583,19 @@ function roleTags(c) {
   return t.join("・");
 }
 
-function scheduleHtml(sched, C) {
-  const daySig = [];
-  for (let d = 0; d < 7; d++) daySig.push([0, 1, 2].map(b => sched[3 * d + b].map(i => C[i].label).sort()));
-  const groups = [];
+// 曜日ごとの編成の中に、朝・昼・夜の献立を入れて表示する
+function scheduleHtml(sched, C, mealIdx, RR) {
+  let html = "";
   for (let d = 0; d < 7; d++) {
-    const key = JSON.stringify(daySig[d]);
-    if (groups.length && groups[groups.length - 1].key === key) groups[groups.length - 1].to = d;
-    else groups.push({ key, from: d, to: d, blocks: daySig[d] });
+    const parts = [];
+    for (let b = 0; b < 3; b++) {
+      const m = 3 * d + b, di = mealIdx ? mealIdx[m] : null;
+      parts.push(`<div class="pks-sched-line" style="color:var(--pks-star-soft);"><b>🍽 ${MEAL_NAMES[b]}</b>${di == null ? "–" : esc(RR[di].label)}</div>`);
+      parts.push(`<div class="pks-sched-line"><b>${BLOCK_LABELS[b]}</b>${sched[m].map(i => esc(C[i].label)).join("、")}</div>`);
+    }
+    html += `<div class="pks-pb-card" style="margin-top:6px;"><div class="pks-pb-name">${DAY_NAMES[d]}</div>${parts.join("")}</div>`;
   }
-  return groups.map(g => {
-    const title = g.from === g.to ? DAY_NAMES[g.from] : `${DAY_NAMES[g.from]}〜${DAY_NAMES[g.to]}`;
-    const same = g.blocks.every(b => JSON.stringify(b) === JSON.stringify(g.blocks[0]));
-    const lines = same
-      ? `<div class="pks-sched-line"><b>終日</b>${g.blocks[0].map(esc).join("、")}</div>`
-      : g.blocks.map((b, i) => `<div class="pks-sched-line"><b>${BLOCK_LABELS[i]}</b>${b.map(esc).join("、")}</div>`).join("");
-    return `<div class="pks-pb-card" style="margin-top:6px;"><div class="pks-pb-name">${title}</div>${lines}</div>`;
-  }).join("");
+  return html;
 }
 
 /* ===== 食材の集計表（どの個体が、どの食材を1週間で何個集めるか）===== */
@@ -2485,34 +2618,41 @@ function ingTableHtml(search, C, set, dish, plan) {
   if (!rows.length) return "";
   rows.sort((a, b) => b.total - a.total);
   const f = v => v < 0.5 ? "–" : Math.round(v).toLocaleString("ja-JP");
+  const stk = "position:sticky;left:0;z-index:1;background:#2b2152;box-shadow:1px 0 0 rgba(169,142,232,0.3);min-width:84px;";
   const th = "padding:4px 6px;text-align:right;font-weight:700;color:var(--pks-text-dim);border-bottom:1px solid var(--pks-border);white-space:nowrap;vertical-align:bottom;";
   const td = "padding:4px 6px;text-align:right;color:var(--pks-text);border-bottom:1px solid rgba(169,142,232,0.12);white-space:nowrap;";
   const colTot = cols.map((i, ci) => rows.reduce((a, r) => a + r.per[ci], 0));
   const stTot = rows.reduce((a, r) => a + r.st, 0);
   let h = `<div class="pks-result-section-title">食材の集計（1週間・個）</div>
-    <div style="overflow-x:auto;"><table style="border-collapse:collapse;font-size:11px;min-width:100%;">
-    <thead><tr><th style="${th}text-align:left;">食材</th>${cols.map(i => `<th style="${th}max-width:84px;white-space:normal;">${esc(C[i].label)}</th>`).join("")}${useStock ? `<th style="${th}">備蓄</th>` : ""}<th style="${th}">合計</th><th style="${th}">使用<br>必須</th><th style="${th}">使用<br>すきま</th></tr></thead><tbody>`;
+    <div style="overflow-x:auto;"><table style="border-collapse:separate;border-spacing:0;font-size:11px;min-width:100%;">
+    <thead><tr><th style="${th}text-align:left;${stk}z-index:2;">食材</th>${cols.map(i => `<th style="${th}max-width:84px;white-space:normal;">${esc(C[i].label)}</th>`).join("")}${useStock ? `<th style="${th}">備蓄</th>` : ""}<th style="${th}">合計</th><th style="${th}">使用<br>必須</th><th style="${th}">使用<br>すきま</th></tr></thead><tbody>`;
   for (const r of rows) {
-    h += `<tr><td style="${td}text-align:left;">${esc(ING_NAMES[r.k])}</td>${r.per.map(v => `<td style="${td}">${f(v)}</td>`).join("")}${useStock ? `<td style="${td}color:var(--pks-purple);">${f(r.st)}</td>` : ""}<td style="${td}color:${r.short > 0.5 ? "var(--pks-red)" : "var(--pks-green)"};font-weight:700;">${f(r.total)}</td><td style="${td}color:var(--pks-text-dim);">${f(r.usedR)}</td><td style="${td}color:var(--pks-text-dim);">${f(r.usedE)}</td></tr>`;
+    h += `<tr><td style="${td}text-align:left;${stk}">${esc(ING_NAMES[r.k])}</td>${r.per.map(v => `<td style="${td}">${f(v)}</td>`).join("")}${useStock ? `<td style="${td}color:var(--pks-purple);">${f(r.st)}</td>` : ""}<td style="${td}color:${r.short > 0.5 ? "var(--pks-red)" : "var(--pks-green)"};font-weight:700;">${f(r.total)}</td><td style="${td}color:var(--pks-text-dim);">${f(r.usedR)}</td><td style="${td}color:var(--pks-text-dim);">${f(r.usedE)}</td></tr>`;
   }
-  h += `<tr><td style="${td}text-align:left;font-weight:700;">計</td>${colTot.map(v => `<td style="${td}font-weight:700;">${f(v)}</td>`).join("")}${useStock ? `<td style="${td}font-weight:700;color:var(--pks-purple);">${f(stTot)}</td>` : ""}<td style="${td}font-weight:700;color:var(--pks-green);">${f(rows.reduce((a, r) => a + r.total, 0))}</td><td style="${td}font-weight:700;color:var(--pks-text-dim);">${f(rows.reduce((a, r) => a + r.usedR, 0))}</td><td style="${td}font-weight:700;color:var(--pks-text-dim);">${f(rows.reduce((a, r) => a + r.usedE, 0))}</td></tr>`;
+  h += `<tr><td style="${td}text-align:left;font-weight:700;${stk}">計</td>${colTot.map(v => `<td style="${td}font-weight:700;">${f(v)}</td>`).join("")}${useStock ? `<td style="${td}font-weight:700;color:var(--pks-purple);">${f(stTot)}</td>` : ""}<td style="${td}font-weight:700;color:var(--pks-green);">${f(rows.reduce((a, r) => a + r.total, 0))}</td><td style="${td}font-weight:700;color:var(--pks-text-dim);">${f(rows.reduce((a, r) => a + r.usedR, 0))}</td><td style="${td}font-weight:700;color:var(--pks-text-dim);">${f(rows.reduce((a, r) => a + r.usedE, 0))}</td></tr>`;
   h += `</tbody></table></div>
-    ${rows.some(r => r.short > 0.5) ? `<p class="pks-note" style="margin:6px 0 0;color:var(--pks-red);">⚠ 合計が赤い食材は、表示している料理（整数）を作るのに必要な数（使用 必須）より、集める数・備蓄が足りません：${rows.filter(r => r.short > 0.5).map(r => `${esc(ING_NAMES[r.k])}（あと${Math.ceil(r.short - 1e-9)}個）`).join("、")}。最適化の計算は、料理の個数を小数で扱ったあとに整数へ丸めているため、わずかなずれが出ることがあります。</p>` : ""}
-    <p class="pks-note" style="margin:6px 0 0;">「使用 必須」は、上に表示した21食（整数）のレシピを作るのに、最低限必要な数、「使用 すきま」は、なべの余り枠に追加食材（すきま食材）として入れる数です。「合計」より使用の合計が少ない分は余ります。おてつだいの即完了で得た食材は、おてつだいを受けたポケモンの欄に入れています。食材ゲットSなどのランダムな食材は、全食材に均等に配分する近似です。</p>`;
+    ${rows.some(r => r.short > 0.5) ? `<p class="pks-note" style="margin:6px 0 0;color:var(--pks-red);">⚠ 合計が赤い食材は、使用 必須より、集める数・備蓄が足りません：${rows.filter(r => r.short > 0.5).map(r => `${esc(ING_NAMES[r.k])}（あと${Math.ceil(r.short - 1e-9)}個）`).join("、")}。</p>` : ""}
+    <p class="pks-note" style="margin:6px 0 0;">「使用 必須」は、上に表示した21食（整数）のレシピを作るのに必要な数です。「合計」（集める数＋備蓄）が必ずこれ以上になるように、料理を決めています。「使用 すきま」は、なべの余り枠に追加食材（すきま食材）として入れる数です。「合計」より使用の合計が少ない分は余ります。おてつだいの即完了で得た食材は、おてつだいを受けたポケモンの欄に入れています。食材ゲットSなどのランダムな食材は、全食材に均等に配分する近似です。</p>`;
   return h;
 }
 
 function renderOptResult(search, C, set, R, warnings) {
   const host = document.getElementById("optResult");
-  const best = search.bestEv, base = search.baseline || search.bestEv;
-  const sim = best.sim, dish = best.dish;
-  const gain = base.total > 0 ? (best.total / base.total - 1) * 100 : 0;
+  const best = search.bestEv, base0 = search.baseline || search.bestEv;
+  const sim = best.sim;
+  // 料理を整数にそろえ、「集める食材＋備蓄 ≧ 使用必須」が成り立つ献立にする
+  const dish = finalizeDishes(best.dish, sim.supply, set);
+  const baseDish = finalizeDishes(base0.dish, base0.sim.supply, set);
+  const bestTotal = sim.berryE + sim.skillE + dish.value;
+  const baseTotal = base0.sim.berryE + base0.sim.skillE + baseDish.value;
+  const gain = baseTotal > 0 ? (bestTotal / baseTotal - 1) * 100 : 0;
+  const mealIdx = dish.status === "optimal" ? assignMeals(dish, best.gs) : null;
   let html = `<div class="pks-panel">
     <div class="pks-panel-title">⚡ 提案結果</div>
     <div class="pks-surplus">
       <div class="pks-surplus-label">週間エナジー（提案どおりに進めた場合の目安）</div>
-      <div class="pks-surplus-val">${fmtE(best.total)}</div>
-      <div class="pks-surplus-desc">最も良い「${set.teamSize}体固定の編成」 ${fmtE(base.total)} に対して ${gain >= 0 ? "+" : ""}${gain.toFixed(1)}%</div>
+      <div class="pks-surplus-val">${fmtE(bestTotal)}</div>
+      <div class="pks-surplus-desc">最も良い「${set.teamSize}体固定の編成」 ${fmtE(baseTotal)} に対して ${gain >= 0 ? "+" : ""}${gain.toFixed(1)}%</div>
     </div>
     <div class="pks-result-section-title">内訳</div>
     <div class="pks-pb-row"><span class="pks-pb-ing">きのみ</span><span class="pks-pb-val">${fmtE(sim.berryE)}</span></div>
@@ -2520,7 +2660,7 @@ function renderOptResult(search, C, set, R, warnings) {
     <div class="pks-pb-row"><span class="pks-pb-ing">料理（レシピ食材）</span><span class="pks-pb-val">${fmtE(dish.recipeVal || 0)}</span></div>
     <div class="pks-pb-row"><span class="pks-pb-ing">追加食材（なべの余り枠）</span><span class="pks-pb-val">${fmtE(dish.extraVal || 0)}</span></div>`;
 
-  html += `<div class="pks-result-section-title">編成スケジュール（${set.teamSize}枠・同じ時間帯のポケモンは同時に編成）</div>${scheduleHtml(search.best, C)}`;
+  html += `<div class="pks-result-section-title">曜日ごとの編成と献立（${set.teamSize}枠・同じ時間帯のポケモンは同時に編成）</div>${scheduleHtml(search.best, C, mealIdx, dish.R)}`;
 
   const rows = C.map((c, i) => ({ c, h: sim.onHours[i], e: sim.onHours[i] > 0 ? sim.eSum[i] / sim.onHours[i] : 0, n: sim.helpsTot[i] }))
     .filter(r => r.h > 0).sort((a, b) => b.h - a.h);
@@ -2535,12 +2675,12 @@ function renderOptResult(search, C, set, R, warnings) {
   if (dish.status === "optimal") {
     const { classes, xs, R: RR } = dish;
     let planned = 0, dhtml = "";
-    const plan = [];   // 画面に出している整数の料理（レシピ番号と食数）。食材の集計表の「使用 必須」は、これから数える
+    const plan = [];   // 画面に出している整数の料理。食材の集計表の「使用 必須」は、これから数える
     const order = classes.map((k, i) => i).sort((a, b) => (classes[b].sunday - classes[a].sunday) || (classes[b].p - classes[a].p));
     for (const c of order) {
       const k = classes[c];
       const list = xs.filter(x => x.c === c);
-      const ints = roundToSum(list.map(x => x.v));
+      const ints = dish.integer ? list.map(x => Math.round(x.v)) : roundToSum(list.map(x => x.v));
       const lines = []; let sz = 0;
       list.forEach((x, q) => { if (ints[q] > 0) { lines.push(`${esc(RR[x.j].label)} ×${ints[q]}`); sz += ints[q]; plan.push({ j: x.j, n: ints[q] }); } });
       planned += sz;
@@ -2557,6 +2697,7 @@ function renderOptResult(search, C, set, R, warnings) {
     if (exList) html += `<div class="pks-result-section-title">追加食材として入れる食材（なべの余り枠）</div><div class="pks-extra-item">${exList}</div>`;
     if (set.stockN > 0) html += `<div class="pks-result-section-title">週末備蓄（${set.stockN}個）の内訳の提案</div><div class="pks-extra-item">${stList || "備蓄は使いません"}</div>`;
     if (planned < 20.5) warnings.push(`なべ容量や食材が足りず、${planned}食分しか作れません。なべ容量・備蓄・編成を見直してください`);
+    if (!dish.integer) warnings.push("料理を整数にそろえられなかったため、料理の個数は小数で計算した目安です");
   } else {
     warnings.push("料理の計算に失敗しました");
   }
@@ -2567,7 +2708,8 @@ function renderOptResult(search, C, set, R, warnings) {
     "なべ容量は「(基本容量×日曜2倍＋料理パワーアップS)×キャンプチケット1.5倍」で計算し、容量を超える食材数のレシピは作れません。料理パワーアップSは次の料理だけに効き、料理のたびにリセットされます（期待値で計算）",
     "最終エナジーは「(レシピ画面のエナジー＋追加食材の基礎エナジー)×フィールドボーナス×イベントボーナス」で、大成功は2倍（日曜3倍）がかかります。食材の数ボーナスとレシピレベルは、レシピ食材だけにかかります",
     "回復スキル・料理チャンスS・料理パワーアップS・エナジーチャージ・食材セレクト・きのみバースト系（ばけのかわ・りゅうせいぐん・みかづきのいのり含む）を反映しています。ミミッキュは大成功（3倍）が18%で起きる前提の期待値、ラティオスはドラゴンタイプの種類数とラティアスの編成、クレセリアはエスパータイプの種類数で獲得数が増えます。それ以外のスキル（保留中のゆびをふる・きのみゾーンを含む）は含めていません（ページ下部の一覧を参照）。バリヤード・メタモンは、チームの他のポケモンからランダムにコピーする期待値（スキルレベルは自身の値）で計算しています",
-    "週の食材は、1週間のどの食事にも使える前提です。料理の割り当ては概算です",
+    "料理は整数の個数に直し、「集める食材（期待値）＋備蓄 ≧ レシピに必要な食材」が成り立つように決めています。食材ゲットSなどランダムな食材は期待値のため、実際の獲得数とはずれることがあります",
+    "どの食事に何を作るかは、大成功の期待値が高い食事に、エナジーの高い料理を回す形で割り当てています。食材は1週間のどの食事にも使える前提のため、週の前半は食材が足りない場合があります（週末備蓄などで調整してください）",
     "探索は近似解法です。実行するたびに同じ結果になりますが、最適とは限りません",
     "結果は目安です。実際のゲームとは差が出る場合があります"
   ];
