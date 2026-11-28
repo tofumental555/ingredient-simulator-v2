@@ -371,6 +371,13 @@
     .pks-delall-confirm { background: rgba(255,126,126,0.08); border: 1.5px solid rgba(255,126,126,0.4); border-radius: 10px; padding: 10px; }
     .pks-delall-confirm p { font-size: 12px; color: var(--pks-text); margin-bottom: 8px; line-height: 1.6; }
     .pks-delall-confirm .pks-saved-actions { justify-content: center; }
+
+    /* ===== イベントバフ（最適化ツールと同じ入力方法）===== */
+    #eventBuffBody.off { opacity: 0.45; }
+    .pks-ev-row { display:flex; flex-direction:column; gap:6px; padding:10px; border:1.5px solid var(--pks-border); border-radius:10px; margin-bottom:8px; background:rgba(22,16,41,0.5); }
+    .pks-ev-row select { font-size:12.5px; }
+    .pks-ev-val { display:flex; gap:8px; align-items:center; }
+    .pks-ev-val input { flex:1; }
   </style>
 </head>
 <body>
@@ -504,29 +511,23 @@
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
         <div>
           <div style="font-size:13px;font-weight:700;color:var(--pks-text);">イベントバフを適用する</div>
-          <div style="font-size:11px;color:var(--pks-text-dim);margin-top:2px;">OFFの間は、入力した数値を残したまま計算に反映しません</div>
+          <div style="font-size:11px;color:var(--pks-text-dim);margin-top:2px;">OFFの間は、入れた効果を残したまま計算に反映しません</div>
         </div>
         <div class="pks-toggle-wrap" onclick="toggleEventBuff()" id="eventBuffToggleWrap">
           <div class="pks-toggle" id="eventBuffToggle"></div>
         </div>
       </div>
-      <div id="eventBuffInputs" class="off">
-        <div class="pks-row2">
-          <div class="field">
-            <label for="eventAdd">食材タイプの食材獲得数（＋個）</label>
-            <input type="number" id="eventAdd" min="0" step="1" value="1" inputmode="decimal">
-          </div>
-          <div class="field">
-            <label for="eventMult">スキルで獲得する食材数（×倍）</label>
-            <input type="number" id="eventMult" min="0" step="0.1" value="1.5" inputmode="decimal">
-          </div>
-        </div>
+      <div id="eventBuffBody" class="off">
+        <div id="evList"></div>
+        <button class="pks-btn-add" type="button" onclick="addEventEffect()">＋ 効果を追加</button>
+        <p class="pks-note" style="margin:10px 0 0;">
+          ・効果を1つずつ追加し、「種類」「対象」「数値」を選びます。複数の効果を組み合わせられます<br>
+          ・対象は「全員」「とくいなもの（きのみ・食材・スキル）」「タイプ（18種）」から選びます。<b style="color:var(--pks-star);">とくいなものがオールのポケモンは、3種すべての対象</b>になります<br>
+          ・「追加で拾う食材」は、お手伝い1回ごとに指定の食材を指定の個数、追加で拾う想定です<br>
+          ・「食材セレクトの食材数 ×倍」は<b style="color:var(--pks-star);">食材セレクトのみ</b>計算に考慮します（食材ゲットSなど、そのほかのスキルで獲得する食材は計算対象外です）<br>
+          ・料理エナジー・なべ容量など、食材の量に関係しない効果は、⚡最適化ツールで設定してください
+        </p>
       </div>
-      <p class="pks-event-note">
-        ・「＋個」は食材タイプのポケモンの、お手伝い1回あたりの食材獲得数に加算します<br>
-        ・「×倍」は<b style="color:var(--pks-star);">食材セレクトのみ</b>計算に考慮します（食材ゲットSなど、そのほかのスキルで獲得する食材は計算対象外です）<br>
-        ・数値はイベントごとに手入力してください
-      </p>
     </div>
     <button class="pks-btn-primary" id="btnToStep1" disabled style="margin-bottom:22px;">次へ：ポケモンを登録する →</button>
 <!-- 注意書き -->
@@ -581,7 +582,7 @@
     </div>
     <div style="margin-top:8px;">
       <b style="color:var(--pks-text);">【イベントバフについて】</b><br>
-      ・ 食材タイプのポケモンは、お手伝い1回あたりの食材獲得数に入力した個数を加算して計算します<br>
+      ・ 効果を1つずつ追加し、種類・対象・数値を選びます（食材獲得数＋個、最大所持数＋個、スキル発生確率×倍、追加で拾う食材、食材セレクトの食材数×倍）<br>
       ・ スキルで獲得する食材数の倍率は、<b style="color:var(--pks-star);">食材セレクトのみ</b>計算に考慮します（そのほかのスキルは計算対象外）<br>
       ・ トグルがOFFのときは通常の計算になります<br>
     </div>
@@ -671,7 +672,7 @@
     <button class="pks-btn-secondary" id="btnRestart">最初からやり直す</button>
 </div>
 
-  <p class="pks-footnote">豆腐メンタルパパのポケモンスリープ攻略ツール<br><span id="verStamp">ver. 2026-11-26 計算の共通化（calc.js）</span></p>
+  <p class="pks-footnote">豆腐メンタルパパのポケモンスリープ攻略ツール<br><span id="verStamp">ver. 2026-11-27 イベントバフ入力を最適化ツールと統一</span></p>
 </div>
 
 <script src="calc.js?v=1.0"></script>
@@ -814,23 +815,104 @@ function toggleSleepTap() {
   wrap.classList.toggle("on", sleepTap);
 }
 
-// イベントバフ（手入力の数値＋適用トグル）
+// イベントバフ（効果の一覧を自由に組み合わせる。最適化ツールと同じ入力方法）
+const TYPE_LIST = ["ノーマル","ほのお","みず","でんき","くさ","こおり","かくとう","どく","じめん","ひこう","エスパー","むし","いわ","ゴースト","ドラゴン","あく","はがね","フェアリー"];
+const EV_KINDS = {
+  ingPlus:   { label: "食材獲得数 ＋個",                 target: true, def: 1,    step: 1,    tdef: "spec:食材" },
+  invPlus:   { label: "最大所持数 ＋個",                 target: true, def: 10,   step: 1,    tdef: "spec:食材" },
+  skillRate: { label: "スキル発生確率 ×倍",              target: true, def: 1.25, step: 0.05, tdef: "spec:スキル" },
+  extraDrop: { label: "追加で拾う食材（1回のお手伝いごと・個数）", target: true, def: 1, step: 1, tdef: "spec:食材", ing: true },
+  ingSel:    { label: "食材セレクトの食材数 ×倍",        target: true, def: 1.5,  step: 0.1,  tdef: "all" }
+};
+const EV_KEY = "pks_idx_events_v1";
 let eventBuffOn = false;
+let eventEffects = [];       // { kind, target, value, ing }
+
 function toggleEventBuff() {
   eventBuffOn = !eventBuffOn;
   document.getElementById("eventBuffToggleWrap").classList.toggle("on", eventBuffOn);
-  document.getElementById("eventBuffInputs").classList.toggle("off", !eventBuffOn);
+  document.getElementById("eventBuffBody").classList.toggle("off", !eventBuffOn);
+  persistEvents();
 }
-// add: 食材タイプの食材獲得数に加算する個数 / mult: 食材セレクトで獲得する食材数にかける倍率
+function persistEvents() {
+  try { localStorage.setItem(EV_KEY, JSON.stringify({ on: eventBuffOn, list: eventEffects })); } catch (e) { /* 保存できなくても動作は続ける */ }
+}
+function loadEvents() {
+  try {
+    const o = JSON.parse(localStorage.getItem(EV_KEY) || "null");
+    if (o && Array.isArray(o.list)) {
+      eventEffects = o.list.filter(e => EV_KINDS[e.kind]).map(e => ({ kind: e.kind, target: e.target || "all", value: Number(e.value), ing: e.ing || "" }));
+      eventBuffOn = !!o.on;
+    }
+  } catch (e) { eventEffects = []; }
+  document.getElementById("eventBuffToggleWrap")?.classList.toggle("on", eventBuffOn);
+  document.getElementById("eventBuffBody")?.classList.toggle("off", !eventBuffOn);
+}
+function targetOptionsHtml(sel) {
+  const opt = (v, l) => `<option value="${esc(v)}"${v === sel ? " selected" : ""}>${esc(l)}</option>`;
+  let h = opt("all", "全員");
+  h += ["きのみ", "食材", "スキル"].map(k => opt("spec:" + k, "とくいなもの：" + k)).join("");
+  h += TYPE_LIST.map(t => opt("type:" + t, "タイプ：" + t)).join("");
+  return h;
+}
+function renderEventList() {
+  const box = document.getElementById("evList");
+  if (!box) return;
+  if (!eventEffects.length) { box.innerHTML = `<div class="pks-saved-empty">効果がまだありません。「＋ 効果を追加」から追加してください。</div>`; return; }
+  const ingNames = getAllIngredientNames();
+  box.innerHTML = eventEffects.map((e, i) => {
+    const K = EV_KINDS[e.kind];
+    const kindSel = `<select onchange="onEvKind(${i}, this.value)">${Object.entries(EV_KINDS).map(([k, v]) => `<option value="${k}"${k === e.kind ? " selected" : ""}>${esc(v.label)}</option>`).join("")}</select>`;
+    const tgt = K.target ? `<div class="pks-sw"><select onchange="onEvField(${i}, 'target', this.value)">${targetOptionsHtml(e.target)}</select></div>` : "";
+    const ing = K.ing ? `<div class="pks-sw"><select onchange="onEvField(${i}, 'ing', this.value)">${ingNames.map(n => `<option value="${esc(n)}"${n === e.ing ? " selected" : ""}>${esc(n)}</option>`).join("")}</select></div>` : "";
+    return `<div class="pks-ev-row">
+      <div class="pks-sw">${kindSel}</div>
+      ${tgt}${ing}
+      <div class="pks-ev-val"><input type="number" step="${K.step}" value="${Number.isFinite(e.value) ? e.value : ""}" onchange="onEvField(${i}, 'value', this.value)" inputmode="decimal">
+        <button class="pks-del-btn" type="button" onclick="delEvent(${i})" style="min-width:48px;">削除</button></div>
+    </div>`;
+  }).join("");
+}
+function newEffect(kind) {
+  const K = EV_KINDS[kind];
+  return { kind, target: K.tdef || "all", value: K.def, ing: K.ing ? "とくせんリンゴ" : "" };
+}
+function addEventEffect() { eventEffects.push(newEffect("ingPlus")); persistEvents(); renderEventList(); }
+function onEvKind(i, kind) { eventEffects[i] = newEffect(kind); persistEvents(); renderEventList(); }
+function onEvField(i, f, v) {
+  if (f === "value") { const n = Number(v); eventEffects[i].value = Number.isFinite(n) ? n : NaN; }
+  else eventEffects[i][f] = v;
+  persistEvents();
+}
+function delEvent(i) { eventEffects.splice(i, 1); persistEvents(); renderEventList(); }
+
+// 効果の対象判定（オールのポケモンは、とくいなもの3種すべての対象）
+function targetMatch(pokemon, target) {
+  if (!target || target === "all") return true;
+  if (target.startsWith("spec:")) {
+    const k = target.slice(5);
+    return pokemon.category === k || pokemon.category === "オール" || pokemon.category === "All";
+  }
+  if (target.startsWith("type:")) return pokemon.type === target.slice(5);
+  return false;
+}
+// 1体に適用されるイベントバフをまとめる
+function evMods(pokemon) {
+  const m = { ingPlus: 0, invPlus: 0, skillRate: 1, ingSel: 1, extra: [] };
+  if (!eventBuffOn) return m;
+  for (const e of eventEffects) {
+    if (!Number.isFinite(e.value) || !targetMatch(pokemon, e.target)) continue;
+    if (e.kind === "ingPlus") m.ingPlus += e.value;
+    else if (e.kind === "invPlus") m.invPlus += e.value;
+    else if (e.kind === "skillRate") m.skillRate *= e.value;
+    else if (e.kind === "ingSel") m.ingSel *= e.value;
+    else if (e.kind === "extraDrop" && e.ing) m.extra.push([normIng(e.ing), e.value]);
+  }
+  return m;
+}
 function getEventBuff() {
-  if (!eventBuffOn) return { on: false, add: 0, mult: 1 };
-  const rawAdd  = document.getElementById("eventAdd")?.value;
-  const rawMult = document.getElementById("eventMult")?.value;
-  let add = Number(rawAdd);
-  if (rawAdd === "" || rawAdd == null || !Number.isFinite(add) || add < 0) add = 0;
-  let mult = Number(rawMult);
-  if (rawMult === "" || rawMult == null || !Number.isFinite(mult) || mult <= 0) mult = 1;
-  return { on: true, add, mult };
+  const n = eventBuffOn ? eventEffects.filter(e => Number.isFinite(e.value)).length : 0;
+  return { on: n > 0, count: n };
 }
 
 // 登録済みポケモンスロット: [{slotType, slotLabel, prefix}]
@@ -900,9 +982,11 @@ async function loadDB() {
 }
 
 function initEvents() {
-  // 保存済みポケモンを読み込み
+  // 保存済みポケモン・イベントバフを読み込み
   loadSavedFromStorage();
   renderSavedManager();
+  loadEvents();
+  renderEventList();
 
   document.getElementById("btnToStep1").addEventListener("click", () => {
     const saved = savePokemonSettings();
@@ -1672,11 +1756,12 @@ function getEntry(pre) {
 function weeklyDetail(entry, teamOtebonus = 0) {
   if (!entry) return { result: {}, triggers: null };
   const { pokemon, level, pattern, natureUp, natureDown, subs } = entry;
-  const ev = getEventBuff(); // イベントバフ（OFFなら add=0, mult=1）
+  const m = evMods(pokemon); // イベントバフ（OFFなら加算0・倍率1）
+  const extraTotal = m.extra.reduce((a, x) => a + x[1], 0);
 
   const st = PKS.pokemonStats(pokemon, { lv: level, pat: pattern, nu: natureUp, nd: natureDown, subs }, {
     camp: campTicket,
-    ingPlus: pokemon.category === "食材" ? ev.add : 0      // イベントバフ：食材タイプは食材獲得数に加算（所持数あふれ計算にも反映される）
+    ingPlus: m.ingPlus, invPlus: m.invPlus, skillRateMult: m.skillRate, extraPerHelp: extraTotal   // 所持数あふれ計算にも反映される
   });
 
   // お手伝いスピードボーナス：自分のおてスピM/S＋チームのおてぼ合計を合算し、上限35%
@@ -1713,7 +1798,7 @@ function weeklyDetail(entry, teamOtebonus = 0) {
     }
     if (pokemon.skillRate > 0) {
       // イベントバフ：食材セレクトで獲得する食材数に倍率をかける
-      const perTrigger = (pokemon.skillIngCount * ev.mult) / pokemon.skillIngredients.length;
+      const perTrigger = (pokemon.skillIngCount * m.ingSel) / pokemon.skillIngredients.length;
       for (const ingName of pokemon.skillIngredients) add(ingName, total * perTrigger);
     }
   }
@@ -1725,6 +1810,9 @@ function weeklyDetail(entry, teamOtebonus = 0) {
       : hpw * st.fr * sl.cnt * sl.sp;
     add(sl.ing, weekly);
   }
+  // ── イベントバフ：お手伝い1回ごとに追加で拾う食材 ──
+  const helpsForExtra = overflowMode ? (awakeHelps + sleepHelpsEff) * 7 : hpw;
+  for (const [nm, c] of m.extra) add(nm, helpsForExtra * c);
   return { result, triggers };
 }
 function calcWeekly(entry, teamOtebonus = 0) { return weeklyDetail(entry, teamOtebonus).result; }
@@ -2010,7 +2098,7 @@ function renderResult(have, need, surplus, perPokemon, allOk, minRatio, surplusD
   // イベントバフ適用中の表示
   const evInfo = getEventBuff();
   const evNote = evInfo.on
-    ? `<div style="font-size:11px;color:var(--pks-star);margin-top:4px;">🎉 イベントバフ適用中（食材タイプ＋${evInfo.add}個／食材セレクト×${evInfo.mult}倍）</div>`
+    ? `<div style="font-size:11px;color:var(--pks-star);margin-top:4px;">🎉 イベントバフ適用中（効果${evInfo.count}件）</div>`
     : "";
 
   // 食材充足バー
