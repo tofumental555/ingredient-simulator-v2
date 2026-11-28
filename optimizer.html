@@ -58,6 +58,12 @@
       z-index: 0;
     }
     .pks-wrap { position: relative; z-index: 1; max-width: 520px; margin: 0 auto; }
+    @media (min-width: 700px) {
+      body { padding-left: 24px; padding-right: 24px; }
+      .pks-wrap { max-width: none; }
+      .pks-sched-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 8px; }
+      .pks-sched-grid > .pks-pb-card { margin-top: 0 !important; }
+    }
 
     .pks-eyebrow {
       display: flex; align-items: center; gap: 8px;
@@ -619,6 +625,7 @@
   ・ げんきの帯でお手伝い時間が変わります（150〜81：×0.45／80〜61：×0.52／60〜41：×0.58／40〜1：×0.66／0：×1.0）。げんきチャージ・げんきオール・げんきエールで回復し、上限は150です<br>
   ・ 料理チャンスSは大成功が出るまで積み上がります（合計の上限は月〜土が80%、日曜が100%）。大成功が出ると基本の率（月〜土10%、日曜30%）に戻ります。日曜は大成功が3倍です<br>
   ・ なべ容量を超える食材数のレシピは作れません。日曜は容量が2倍、いいキャンプチケットで1.5倍、料理パワーアップSで次の料理だけ増えます<br>
+  ・ 料理は、起床後1・7・13時間に作る想定で、その時点までに集まった食材（と週末備蓄）だけで作れるように決めます。日曜の夜に集めた食材は使えません<br>
   ・ 余った食材は、なべの余り枠に追加食材として入れます（基礎エナジーのみで、食材の数ボーナスとレシピレベルはかかりません）<br>
   ・ きのみバースト系のスキルは計算に含めています。ミミッキュは大成功（3倍）が18%で起きる前提の期待値、ラティオスはチームのドラゴンタイプの種類数とラティアスの編成、クレセリアはチームのエスパータイプの種類数で、獲得できるきのみが増えます<br>
   ・ 食材ゲットS（標準タイプ）は、ランダムな食材を全食材に均等に配分する近似です。いやしのはどう（ラティアス）は、自分以外のランダムな2匹がげんき回復とおてつだい即完了（きのみ・食材の獲得）を受ける想定です（ラティオスがいると即完了の回数が増えます）<br>
@@ -634,7 +641,7 @@
 
 </div>
 
-<p class="pks-footnote">豆腐メンタルパパのポケモンスリープ攻略ツール<br><span id="verStamp">ver. 2026-11-27 エナジー最適化ツール v6.2</span></p>
+<p class="pks-footnote">豆腐メンタルパパのポケモンスリープ攻略ツール<br><span id="verStamp">ver. 2026-11-28 エナジー最適化ツール v6.3</span></p>
 </div>
 
 <script src="calc.js?v=1.0"></script>
@@ -1116,8 +1123,10 @@ function simulate(sched, C, set, track) {
   const extraH = new Float64Array(n);
   const by = track ? Array.from({ length: n }, () => new Float64Array(KN)) : null;   // 個体ごとの食材獲得量（結果の集計表用）
   const snap = track ? new Float64Array(KN) : null;
+  const stepSnap = new Float64Array(KN), supBy = new Float64Array(22 * KN);   // 食事ごとに、その食事の前に集まった食材
   const X = { berryE: 0, skillE: 0, add, acc, accPot, supply, hasPM: 0, extraH };
   for (const st of STEP_LIST) {
+    stepSnap.set(supply);
     const T = sched[st.d * 3 + st.bi];
     if (st.first) {
       if (st.bi === 0 && st.d > 0) {
@@ -1169,7 +1178,7 @@ function simulate(sched, C, set, track) {
           }
         } else applySkill(c, trig, i, T, C, st, set, X);
       }
-      if (track) for (let k = 0; k < KN; k++) by[i][k] += supply[k] - snap[k];
+      if (track && st.meal >= 0) for (let k = 0; k < KN; k++) by[i][k] += supply[k] - snap[k];
     }
     // いやしのはどうで即完了したおてつだい（きのみ・食材のみ。そこでのスキル発動は数えない）
     for (let q = 0; q < T.length; q++) {
@@ -1182,14 +1191,17 @@ function simulate(sched, C, set, track) {
       for (let z = 0; z < c.ingList.length; z++) supply[c.ingList[z][0]] += f * c.ingList[z][1];
       for (let z = 0; z < c.extraList.length; z++) supply[c.extraList[z][0]] += x * c.extraList[z][1];
       extraH[i] = 0;
-      if (track) for (let k = 0; k < KN; k++) by[i][k] += supply[k] - snap[k];
+      if (track && st.meal >= 0) for (let k = 0; k < KN; k++) by[i][k] += supply[k] - snap[k];
     }
     for (let q = 0; q < T.length; q++) {
       const i = T[q];
       e[i] = Math.min(150, Math.max(0, e[i] - 6 * st.dt + add[i]));
     }
+    // 最後の食事（日曜の夜）のあとに集めた食材は、料理に使えないので数えない
+    if (st.meal < 0) { for (let k = 0; k < KN; k++) supply[k] = stepSnap[k]; }
+    else { const o = st.meal * KN; for (let k = 0; k < KN; k++) supBy[o + k] += supply[k] - stepSnap[k]; }
   }
-  return { berryE: berryE + X.berryE, skillE: X.skillE, supply, acc, accPot, onHours, eSum, helpsTot, by };
+  return { berryE: berryE + X.berryE, skillE: X.skillE, supply, acc, accPot, onHours, eSum, helpsTot, by, supBy };
 }
 
 /* ---------- 料理チャンス＋大成功（21食）---------- */
@@ -1452,6 +1464,171 @@ function assignMeals(dish, gs) {
     slots.forEach((m, i) => { meals[m] = i < list.length ? list[i] : null; });
   });
   return meals;
+}
+
+/* ---------- 食材が集まる時間を考えた献立（その食事の時点までに集まった食材＋備蓄だけで作る）---------- */
+// 食事は1日3回（起床後1・7・13時間）。月曜の朝から数えて、食事 m = 0〜20。
+// 各食事の前に集まった食材（simulate の supBy）を足していき、「ここまでに使った食材 ≦ 備蓄＋ここまでに集まった食材」を全食事で守る
+function recipeEnergy(R, set) {
+  const lvOf = r => {
+    const lv = clampLv(set.recipeLvMap && set.recipeLvMap[r.jp] != null ? set.recipeLvMap[r.jp] : set.recipeLv);
+    return ENERGY.recipeLevelBonusPercent[lv - 1] / 100;
+  };
+  const boostK = new Float64Array(KN).fill(1);
+  for (const b of (set.ingBoost || [])) { const bi = ING_BY_LANG[b.ing]; if (bi !== undefined) boostK[bi] *= b.m; }
+  const Edish = R.map(r => {
+    let bm = 1; for (let k = 0; k < KN; k++) if (r.need[k] > 0 && boostK[k] !== 1) bm *= boostK[k];
+    return (r.lv0 + Math.round(r.lv0 * lvOf(r))) * bm;
+  });
+  return { Edish, boostK };
+}
+
+function buildTimeline(sim, gs, caps, set, R) {
+  const { Edish, boostK } = recipeEnergy(R, set);
+  const mul = new Float64Array(21), cap = new Float64Array(21), cumSup = new Float64Array(21 * KN);
+  let maxMul = 0;
+  for (let m = 0; m < 21; m++) {
+    mul[m] = (1 + set.field) * set.dishMul * gs.mu[m]; cap[m] = caps[m]; if (mul[m] > maxMul) maxMul = mul[m];
+    for (let k = 0; k < KN; k++) cumSup[m * KN + k] = (m ? cumSup[(m - 1) * KN + k] : 0) + sim.supBy[m * KN + k];
+  }
+  const unit = new Float64Array(KN);
+  for (let k = 0; k < KN; k++) unit[k] = ING_BASE[k] * boostK[k];
+  const order = Array.from({ length: KN }, (_, k) => k).sort((a, b) => unit[b] - unit[a]);
+  const mulOrder = Array.from({ length: 21 }, (_, m) => m).sort((a, b) => mul[b] - mul[a]);
+  const cand = [];
+  for (let m = 0; m < 21; m++) {
+    const l = [-1];
+    for (let j = 0; j < R.length; j++) if (R[j].count <= cap[m]) l.push(j);
+    cand.push(l);
+  }
+  return { R, Edish, boostK, mul, cap, cumSup, unit, order, mulOrder, cand, stockN: set.stockN, stockMode: set.stockMode, pen: 1500 * Math.max(1, maxMul) };
+}
+
+// P[m] = 食事mで作る料理（-1=作らない）。返り値 S = 必要な備蓄の数（これが備蓄の総数以下なら、時間的に矛盾のない献立）
+function tlEval(P, T, detail) {
+  const cum = new Float64Array(KN), def = new Float64Array(KN), needCum = new Float64Array(21 * KN);
+  let energy = 0;
+  for (let m = 0; m < 21; m++) {
+    const j = P[m], o = m * KN;
+    if (j >= 0) { const nd = T.R[j].need; for (let k = 0; k < KN; k++) cum[k] += nd[k]; energy += T.Edish[j] * T.mul[m]; }
+    for (let k = 0; k < KN; k++) { needCum[o + k] = cum[k]; const d = cum[k] - T.cumSup[o + k]; if (d > def[k]) def[k] = d; }
+  }
+  let S = 0; for (let k = 0; k < KN; k++) S += def[k];
+  if (S > T.stockN + 1e-7) return { total: energy, energy, extraVal: 0, S };
+  // 余った食材は、なべの余り枠に「すきま食材」として入れる（あとの食事の材料を食べてしまわない範囲で）
+  const free = new Float64Array(21 * KN);
+  for (let k = 0; k < KN; k++) {
+    let mn = Infinity;
+    for (let m = 20; m >= 0; m--) { const a = def[k] + T.cumSup[m * KN + k] - needCum[m * KN + k]; if (a < mn) mn = a; free[m * KN + k] = mn; }
+  }
+  const used = new Float64Array(KN), slotsLeft = new Float64Array(21);
+  const ex = detail ? new Float64Array(21 * KN) : null;
+  let extraVal = 0;
+  for (let m = 0; m < 21; m++) {
+    const j = P[m]; let slots = j >= 0 ? T.cap[m] - T.R[j].count : 0;
+    if (slots > 0) for (const k of T.order) {
+      if (slots <= 1e-9) break;
+      const f = free[m * KN + k] - used[k];
+      if (f <= 1e-9) continue;
+      const t = Math.min(slots, f);
+      used[k] += t; slots -= t; extraVal += t * T.unit[k] * T.mul[m];
+      if (ex) ex[m * KN + k] += t;
+    }
+    slotsLeft[m] = Math.max(0, slots);
+  }
+  const stockVec = detail ? Array.from(def) : null;
+  let spare = T.stockN - S;   // 使い道のない備蓄の枠は、すきま食材に回す
+  if (spare > 1e-9) {
+    for (const k of T.order) {
+      let capk = T.stockMode === "recipe" ? Math.max(0, cum[k] - def[k]) : Infinity;
+      for (const m of T.mulOrder) {
+        if (spare <= 1e-9 || capk <= 1e-9) break;
+        if (slotsLeft[m] <= 1e-9) continue;
+        const t = Math.min(spare, capk, slotsLeft[m]);
+        spare -= t; capk -= t; slotsLeft[m] -= t; extraVal += t * T.unit[k] * T.mul[m];
+        if (detail) { ex[m * KN + k] += t; stockVec[k] += t; }
+      }
+      if (spare <= 1e-9) break;
+    }
+  }
+  const out = { total: energy + extraVal, energy, extraVal, S };
+  if (detail) { out.ex = ex; out.stockVec = stockVec; out.needTot = cum; }
+  return out;
+}
+
+function planTimeline(T, P0, iters) {
+  const PEN = 1e7;
+  const objHard = P => { const r = tlEval(P, T); return r.total - PEN * Math.max(0, r.S - T.stockN - 1e-7); };
+  const capOk = (j, m) => j < 0 || T.R[j].count <= T.cap[m];
+  const climb = (P, f) => {   // 1食だけ変える・2食を入れ替える、のうち一番よくなる変更を、よくならなくなるまで繰り返す
+    let cur = f(P);
+    for (let pass = 0; pass < 80; pass++) {
+      let bestV = cur, mv = null;
+      for (let m = 0; m < 21; m++) {
+        const old = P[m];
+        for (const j of T.cand[m]) {
+          if (j === old) continue;
+          P[m] = j; const v = f(P);
+          if (v > bestV + 1e-6) { bestV = v; mv = { m, j }; }
+        }
+        P[m] = old;
+      }
+      for (let a = 0; a < 21; a++) for (let b = a + 1; b < 21; b++) {
+        const ja = P[a], jb = P[b];
+        if (ja === jb || !capOk(jb, a) || !capOk(ja, b)) continue;
+        P[a] = jb; P[b] = ja; const v = f(P); P[a] = ja; P[b] = jb;
+        if (v > bestV + 1e-6) { bestV = v; mv = { a, b }; }
+      }
+      if (!mv) break;
+      if (mv.a !== undefined) { const x = P[mv.a]; P[mv.a] = P[mv.b]; P[mv.b] = x; } else P[mv.m] = mv.j;
+      cur = bestV;
+    }
+    return cur;
+  };
+  let P = P0.slice();
+  climb(P, objHard);                       // まず、時間的に矛盾のない献立にする
+  let bestP = P.slice(), bestV = objHard(P);
+  const rnd = makeRng(20261128);
+  let cur = P.slice(), curV = bestV;
+  const scale = Math.max(1, bestV);
+  for (let it = 0; it < iters; it++) {     // 焼きなまし：食材の足りなさを軽い罰にして、よい献立を探す
+    const temp = scale * 0.01 * Math.pow(0.01, it / iters);
+    const cand = cur.slice();
+    if (rnd() < 0.7) { const m = Math.floor(rnd() * 21), l = T.cand[m]; cand[m] = l[Math.floor(rnd() * l.length)]; }
+    else {
+      const a = Math.floor(rnd() * 21), b = Math.floor(rnd() * 21);
+      if (a === b || cand[a] === cand[b] || !capOk(cand[b], a) || !capOk(cand[a], b)) continue;
+      const x = cand[a]; cand[a] = cand[b]; cand[b] = x;
+    }
+    const r = tlEval(cand, T);
+    const v = r.total - T.pen * Math.max(0, r.S - T.stockN - 1e-7);
+    if (v >= curV || rnd() < Math.exp((v - curV) / temp)) {
+      cur = cand; curV = v;
+      if (r.S <= T.stockN + 1e-7 && v > bestV) { bestV = v; bestP = cand.slice(); }
+    }
+  }
+  climb(bestP, objHard);
+  return bestP;
+}
+
+function timelinePlan(sched, C, set, R, ev0, iters) {
+  const sim = simulate(sched, C, set, true);
+  const gs = ev0.gs, caps = ev0.caps;
+  const T = buildTimeline(sim, gs, caps, set, R);
+  const P0 = new Array(21).fill(-1);
+  const fin = finalizeDishes(ev0.dish, ev0.sim.supply, set);   // 出発点：時間を考えない最適解
+  if (fin.status === "optimal" && fin.integer) {
+    const mi = assignMeals(fin, gs);
+    for (let m = 0; m < 21; m++) if (mi[m] != null && R[mi[m]].count <= caps[m]) P0[m] = mi[m];
+  }
+  let P = planTimeline(T, P0, iters);
+  let det = tlEval(P, T, true);
+  if (!det.ex) { P = new Array(21).fill(-1); det = tlEval(P, T, true); }
+  const extra = new Array(KN).fill(0);
+  for (let m = 0; m < 21; m++) for (let k = 0; k < KN; k++) extra[k] += det.ex[m * KN + k];
+  const dish = { status: "optimal", integer: true, timeline: true, P, R, Edish: T.Edish, gs, caps, extra, stock: det.stockVec,
+                 recipeVal: det.energy, extraVal: det.extraVal, value: det.total };
+  return { sim, dish };
 }
 
 function evaluatePlan(sched, C, set, R) {
@@ -2583,18 +2760,19 @@ function roleTags(c) {
 }
 
 // 曜日ごとの編成の中に、朝・昼・夜の献立を入れて表示する
-function scheduleHtml(sched, C, mealIdx, RR) {
+const MEAL_NAMES = ["朝", "昼", "夜"];
+function scheduleHtml(sched, C, P, RR) {
   let html = "";
   for (let d = 0; d < 7; d++) {
-    // その日に作る3食（食事の時間帯は指定しない）
-    const cnt = new Map();
-    if (mealIdx) for (let b = 0; b < 3; b++) { const di = mealIdx[3 * d + b]; if (di != null) cnt.set(di, (cnt.get(di) || 0) + 1); }
-    const dishes = [...cnt].map(([j, n]) => esc(RR[j].label) + (n > 1 ? " ×" + n : "")).join("、") || "–";
-    const lines = [0, 1, 2].map(b => `<div class="pks-sched-line"><b>${BLOCK_LABELS[b]}</b>${sched[3 * d + b].map(i => esc(C[i].label)).join("、")}</div>`).join("");
-    html += `<div class="pks-pb-card" style="margin-top:6px;"><div class="pks-pb-name">${DAY_NAMES[d]}</div>
-      <div class="pks-sched-line" style="color:var(--pks-star-soft);"><b>🍽 3食</b>${dishes}</div>${lines}</div>`;
+    const parts = [];
+    for (let b = 0; b < 3; b++) {
+      const m = 3 * d + b, j = P ? P[m] : -1;
+      parts.push(`<div class="pks-sched-line" style="color:var(--pks-star-soft);"><b>🍽 ${MEAL_NAMES[b]}</b>${j >= 0 ? esc(RR[j].label) : "なし（食材が足りない）"}</div>`);
+      parts.push(`<div class="pks-sched-line"><b>${BLOCK_LABELS[b]}</b>${sched[m].map(i => esc(C[i].label)).join("、")}</div>`);
+    }
+    html += `<div class="pks-pb-card" style="margin-top:6px;"><div class="pks-pb-name">${DAY_NAMES[d]}</div>${parts.join("")}</div>`;
   }
-  return html;
+  return `<div class="pks-sched-grid">${html}</div>`;
 }
 
 /* ===== 食材の集計表（どの個体が、どの食材を1週間で何個集めるか）===== */
@@ -2638,14 +2816,13 @@ function ingTableHtml(search, C, set, dish, plan) {
 function renderOptResult(search, C, set, R, warnings) {
   const host = document.getElementById("optResult");
   const best = search.bestEv, base0 = search.baseline || search.bestEv;
-  const sim = best.sim;
-  // 料理を整数にそろえ、「集める食材＋備蓄 ≧ 使用必須」が成り立つ献立にする
-  const dish = finalizeDishes(best.dish, sim.supply, set);
-  const baseDish = finalizeDishes(base0.dish, base0.sim.supply, set);
+  // 食材が集まる時間を考えて、「その食事の時点までに集まった食材（＋備蓄）」だけで作れる献立にする
+  const tl = timelinePlan(search.best, C, set, R, best, 30000);
+  const tlBase = (search.baselineSched && search.baselineSched !== search.best) ? timelinePlan(search.baselineSched, C, set, R, base0, 8000) : tl;
+  const sim = tl.sim, dish = tl.dish;
   const bestTotal = sim.berryE + sim.skillE + dish.value;
-  const baseTotal = base0.sim.berryE + base0.sim.skillE + baseDish.value;
+  const baseTotal = tlBase.sim.berryE + tlBase.sim.skillE + tlBase.dish.value;
   const gain = baseTotal > 0 ? (bestTotal / baseTotal - 1) * 100 : 0;
-  const mealIdx = dish.status === "optimal" ? assignMeals(dish, best.gs) : null;
   let html = `<div class="pks-panel">
     <div class="pks-panel-title">⚡ 提案結果</div>
     <div class="pks-surplus">
@@ -2659,7 +2836,9 @@ function renderOptResult(search, C, set, R, warnings) {
     <div class="pks-pb-row"><span class="pks-pb-ing">料理（レシピ食材）</span><span class="pks-pb-val">${fmtE(dish.recipeVal || 0)}</span></div>
     <div class="pks-pb-row"><span class="pks-pb-ing">追加食材（なべの余り枠）</span><span class="pks-pb-val">${fmtE(dish.extraVal || 0)}</span></div>`;
 
-  html += `<div class="pks-result-section-title">曜日ごとの編成と献立（${set.teamSize}枠・同じ時間帯のポケモンは同時に編成）</div>${scheduleHtml(search.best, C, mealIdx, dish.R)}`;
+  html += `<div class="pks-result-section-title">曜日ごとの編成と献立（${set.teamSize}枠・同じ時間帯のポケモンは同時に編成）</div>
+    <p class="pks-note" style="margin:0 0 4px;">各ごはんは、その時点までに集まった食材（と週末備蓄）だけで作れます。ごはんの下の編成が集めた食材は、次のごはん以降に使います。</p>
+    ${scheduleHtml(search.best, C, dish.P, dish.R)}`;
 
   const rows = C.map((c, i) => ({ c, h: sim.onHours[i], e: sim.onHours[i] > 0 ? sim.eSum[i] / sim.onHours[i] : 0, n: sim.helpsTot[i] }))
     .filter(r => r.h > 0).sort((a, b) => b.h - a.h);
@@ -2671,34 +2850,29 @@ function renderOptResult(search, C, set, R, warnings) {
       <div class="pks-pb-row"><span class="pks-pb-ing">お手伝い回数</span><span class="pks-pb-val">${Math.round(r.n)}回</span></div>
     </div>`).join("");
 
-  if (dish.status === "optimal") {
-    const { classes, xs, R: RR } = dish;
-    let planned = 0, dhtml = "";
-    const plan = [];   // 画面に出している整数の料理。食材の集計表の「使用 必須」は、これから数える
-    const order = classes.map((k, i) => i).sort((a, b) => (classes[b].sunday - classes[a].sunday) || (classes[b].p - classes[a].p));
-    for (const c of order) {
-      const k = classes[c];
-      const list = xs.filter(x => x.c === c);
-      const ints = dish.integer ? list.map(x => Math.round(x.v)) : roundToSum(list.map(x => x.v));
-      const lines = []; let sz = 0;
-      list.forEach((x, q) => { if (ints[q] > 0) { lines.push(`${esc(RR[x.j].label)} ×${ints[q]}`); sz += ints[q]; plan.push({ j: x.j, n: ints[q] }); } });
-      planned += sz;
-      const head = k.sunday ? `日曜の${k.n}食（大成功で3倍）` : `月〜土の${k.n}食`;
-      dhtml += `<div class="pks-pb-card" style="margin-top:6px;">
+  {
+    const RR = dish.R, P = dish.P;
+    const cnt = new Map();
+    P.forEach(j => { if (j >= 0) cnt.set(j, (cnt.get(j) || 0) + 1); });
+    const plan = [...cnt].map(([j, n]) => ({ j, n }));   // 食材の集計表の「使用 必須」は、この整数の献立から数える
+    const planned = P.filter(j => j >= 0).length;
+    const grp = (ms, head) => {
+      const c = new Map();
+      ms.forEach(m => { if (P[m] >= 0) c.set(P[m], (c.get(P[m]) || 0) + 1); });
+      const lines = [...c].sort((a, b) => dish.Edish[b[0]] - dish.Edish[a[0]]).map(([j, n]) => `${esc(RR[j].label)} ×${n}`);
+      const p = ms.reduce((a, m) => a + dish.gs.p[m], 0) / ms.length, cap = ms.reduce((a, m) => a + dish.caps[m], 0) / ms.length;
+      return `<div class="pks-pb-card" style="margin-top:6px;">
         <div class="pks-pb-name">${head}</div>
-        <div style="font-size:11px;color:var(--pks-text-dim);margin-bottom:4px;">大成功率 約${(k.p * 100).toFixed(0)}% ／ なべ容量 約${k.cap}個</div>
+        <div style="font-size:11px;color:var(--pks-text-dim);margin-bottom:4px;">大成功率 約${(p * 100).toFixed(0)}% ／ なべ容量 約${Math.round(cap)}個</div>
         <div style="font-size:12px;line-height:1.8;color:var(--pks-text);">${lines.length ? lines.join("<br>") : "作れる料理がありません（なべ容量や食材が不足）"}</div></div>`;
-    }
-    html += `<div class="pks-result-section-title">作る料理（21食）</div>${dhtml}`;
+    };
+    html += `<div class="pks-result-section-title">作る料理（21食）</div>${grp([18, 19, 20], "日曜の3食（大成功で3倍）")}${grp(Array.from({ length: 18 }, (_, m) => m), "月〜土の18食")}`;
     html += ingTableHtml(search, C, set, dish, plan);
     const fmtList = arr => arr.map((v, k) => [v, k]).filter(x => x[0] >= 0.5).sort((a, b) => b[0] - a[0]).map(x => `${esc(ING_NAMES[x[1]])} ${Math.round(x[0])}個`).join("、");
     const exList = fmtList(dish.extra), stList = fmtList(dish.stock);
     if (exList) html += `<div class="pks-result-section-title">追加食材として入れる食材（なべの余り枠）</div><div class="pks-extra-item">${exList}</div>`;
     if (set.stockN > 0) html += `<div class="pks-result-section-title">週末備蓄（${set.stockN}個）の内訳の提案</div><div class="pks-extra-item">${stList || "備蓄は使いません"}</div>`;
-    if (planned < 20.5) warnings.push(`なべ容量や食材が足りず、${planned}食分しか作れません。なべ容量・備蓄・編成を見直してください`);
-    if (!dish.integer) warnings.push("料理を整数にそろえられなかったため、料理の個数は小数で計算した目安です");
-  } else {
-    warnings.push("料理の計算に失敗しました");
+    if (planned < 20.5) warnings.push(`その食事の時点までに集まった食材が足りず、${planned}食分しか作れません。週末備蓄を増やすか、食材を集める編成・なべ容量を見直してください`);
   }
 
   const notes = [
@@ -2707,9 +2881,9 @@ function renderOptResult(search, C, set, R, warnings) {
     "なべ容量は「(基本容量×日曜2倍＋料理パワーアップS)×キャンプチケット1.5倍」で計算し、容量を超える食材数のレシピは作れません。料理パワーアップSは次の料理だけに効き、料理のたびにリセットされます（期待値で計算）",
     "最終エナジーは「(レシピ画面のエナジー＋追加食材の基礎エナジー)×フィールドボーナス×イベントボーナス」で、大成功は2倍（日曜3倍）がかかります。食材の数ボーナスとレシピレベルは、レシピ食材だけにかかります",
     "回復スキル・料理チャンスS・料理パワーアップS・エナジーチャージ・食材セレクト・きのみバースト系（ばけのかわ・りゅうせいぐん・みかづきのいのり含む）を反映しています。ミミッキュは大成功（3倍）が18%で起きる前提の期待値、ラティオスはドラゴンタイプの種類数とラティアスの編成、クレセリアはエスパータイプの種類数で獲得数が増えます。それ以外のスキル（保留中のゆびをふる・きのみゾーンを含む）は含めていません（ページ下部の一覧を参照）。バリヤード・メタモンは、チームの他のポケモンからランダムにコピーする期待値（スキルレベルは自身の値）で計算しています",
-    "料理は整数の個数に直し、「集める食材（期待値）＋備蓄 ≧ レシピに必要な食材」が成り立つように決めています。食材ゲットSなどランダムな食材は期待値のため、実際の獲得数とはずれることがあります",
-    "曜日ごとの3食は、その日の編成が集める食材とは無関係に割り当てています（食材は1週間のどの食事にも使える前提）。そのため、その日の食材が足りない場合は、前日までの食材や週末備蓄でまかなってください。朝・昼・夜のどれに作るかは、決めていません",
-    "探索は近似解法です。実行するたびに同じ結果になりますが、最適とは限りません",
+    "ごはんは、起床後1時間・7時間・13時間に作る想定です。その時点までに集まった食材（期待値）と週末備蓄の合計が、それまでに使う食材の合計以上になるように、料理を決めています。月曜の朝は、集まった食材が少ないため、備蓄がないと作れないことがあります。最終日（日曜）の夜に集めた食材は、料理に使えません",
+    "編成の探索は、食材が集まる時間を考えない近似で行い、そのあとで、時間を考えた献立を作っています。そのため、編成は最適とは限りません",
+    "食材ゲットSなどランダムな食材は期待値のため、実際の獲得数とはずれることがあります",
     "結果は目安です。実際のゲームとは差が出る場合があります"
   ];
   if (set.ex.mode !== "normal") notes.push(`EXモード（${set.ex.mode === "cyan" ? "シアンの砂浜EX" : "ワカクサ本島EX"}）：メイン=${set.ex.main}、サブ=${set.ex.sub1}・${set.ex.sub2}。好物以外のポケモンはお手伝い時間が長くなります`);
